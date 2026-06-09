@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Central de Validadores CNAB240</title>
+<style>
+  * { box-sizing: border-box; }
+  body { 
+    margin: 0; 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    display: flex; 
+    height: 100vh; 
+    overflow: hidden; 
+    background: #f4f6f8; 
+  }
+  
+  .sidebar { 
+    width: 280px; /* Aumentado levemente para caber logos e nomes */
+    background: #1e293b; 
+    color: #fff; 
+    display: flex; 
+    flex-direction: column; 
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    z-index: 10;
+  }
+  
+  .sidebar h2 { 
+    text-align: center; 
+    padding: 20px; 
+    margin: 0; 
+    font-size: 14px; 
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    background: #0f172a;
+    border-bottom: 1px solid #334155; 
+  }
+  
+  .menu { 
+    list-style: none; 
+    padding: 0; 
+    margin: 0; 
+    flex: 1; 
+    overflow-y: auto; 
+  }
+  
+  .menu li { 
+    padding: 12px 15px; 
+    cursor: pointer; 
+    border-bottom: 1px solid #334155; 
+    transition: all 0.2s ease; 
+    display: flex; 
+    align-items: center; 
+    gap: 12px;
+    font-weight: 500;
+    font-size: 13px;
+    color: #cbd5e1;
+  }
+  
+  .menu li:hover { 
+    background: #334155; 
+    color: #fff;
+  }
+  
+  .menu li.active {
+    background: #3b82f6;
+    color: #fff;
+    border-left: 4px solid #60a5fa;
+  }
+
+  .menu li.section-label {
+    cursor: default;
+    background: #0f172a;
+    color: #64748b;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 10px 15px 8px;
+    border-bottom: 1px solid #334155;
+  }
+  .menu li.section-label:hover {
+    background: #0f172a;
+    color: #64748b;
+  }
+
+  /* Estilização das Logos */
+  .bank-logo {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    border-radius: 4px;
+    background: white; /* Fundo branco para logos vazadas aparecerem no menu escuro */
+    padding: 2px;
+  }
+
+  .content { 
+    flex: 1; 
+    display: flex; 
+    flex-direction: column; 
+    background: #fff;
+  }
+  
+  iframe { 
+    flex: 1; 
+    border: none; 
+    width: 100%; 
+    height: 100%; 
+  }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <h2>Validadores CNAB</h2>
+  <ul class="menu">
+    <li class="active" onclick="loadTab('Validador_CNAB240_BancoDoBrasil.html', this)">
+      <img src="logos/Banco%20do%20Brasil%20S.A/banco-do-brasil-com-fundo.svg" class="bank-logo" alt="BB">
+      Banco do Brasil (001)
+    </li>
+    
+    <li onclick="loadTab('Validador_CNAB240_Santander.html', this)">
+      <img src="logos/Banco%20Santander%20Brasil%20S.A/santander-fundo-vermelho.svg" class="bank-logo" alt="Santander">
+      Santander (033)
+    </li>
+    
+    <li onclick="loadTab('Validador_CNAB240_Bradesco_Multipag.html', this)">
+      <img src="logos/Bradesco%20S.A/bradesco%20com%20nome.svg" class="bank-logo" alt="Bradesco">
+      Bradesco (237)
+    </li>
+    
+    <li onclick="loadTab('Validador_CNAB240_Itau.html', this)">
+      <img src="logos/Itaú%20Unibanco%20S.A/itau-2-laranja.svg" class="bank-logo" alt="Itaú">
+      Itaú (341)
+    </li>
+    
+    <li onclick="loadTab('Validador_CNAB240_Sicredi%20-%20v2%201.html', this)">
+      <img src="logos/Sicredi/logo-svg2.svg" class="bank-logo" alt="Sicredi">
+      Sicredi (748)
+    </li>
+    
+    <li onclick="loadTab('Validador_CNAB240_Sicoob.html', this)">
+      <img src="logos/Sicoob/sicoob-vector-logo.svg" class="bank-logo" alt="Sicoob">
+      Sicoob (756)
+    </li>
+
+    <li class="section-label">Ferramentas</li>
+
+    <li onclick="loadTab('Preenchedor_SRB.html', this)">
+      <img src="logos/srb-icon.svg" class="bank-logo" alt="SRB">
+      Preenchedor .srb
+    </li>
+  </ul>
+</div>
+
+<div class="content">
+  <iframe id="viewer" src="Validador_CNAB240_BancoDoBrasil.html" title="Validador"></iframe>
+</div>
+
+<script>
+  function loadTab(url, element) {
+    document.getElementById('viewer').src = url;
+    document.querySelectorAll('.menu li').forEach(li => li.classList.remove('active'));
+    element.classList.add('active');
+  }
+</script>
+
+</body>
+</html>
