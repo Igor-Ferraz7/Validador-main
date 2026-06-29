@@ -19,43 +19,28 @@
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:var(--bg);color:var(--tx);font-family:var(--mono);min-height:100vh;overflow-x:hidden;}
-
-/* --- MELHORIA DA LOGO --- */
-.bank-logo {
-    width: 28px;
-    height: 28px;
-    object-fit: contain;
-    background: white;
-    padding: 3px;
-    border-radius: 6px;
-    flex-shrink: 0;
-}
-
-.bank-logo-large {
-    width: 60px;
-    height: 60px;
-    margin-bottom: 16px;
-    background: white;
-    padding: 8px;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-}
-/* ------------------------ */
-
 body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 40% at 110% -10%,rgba(245,197,24,.07),transparent 60%),radial-gradient(ellipse 60% 50% at -10% 110%,rgba(245,197,24,.04),transparent 60%);pointer-events:none;z-index:0;}
 header{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:64px;background:#fff;border-bottom:3px solid var(--bk);box-shadow:0 2px 8px rgba(0,0,0,.06);}
 .logo{display:flex;align-items:center;gap:16px;}
-.lb{background:var(--bk);color:var(--tx);font-family:var(--sans);font-weight:800;font-size:14px;padding:6px 12px;border-radius:6px;display:flex;align-items:center;gap:10px;}
+.lb{background:var(--bk);color:var(--tx);font-family:var(--sans);font-weight:800;font-size:14px;padding:6px 12px;border-radius:6px;display:flex;align-items:center;gap:6px;}
+.lbbb{font-size:18px;}
+.bank-logo{width:28px;height:28px;object-fit:contain;background:#fff;padding:3px;border-radius:6px;flex-shrink:0;}
+.bank-logo-large{width:60px;height:60px;margin-bottom:16px;background:#fff;padding:8px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.05);display:inline-block;}
 .lt h1{font-family:var(--sans);font-weight:700;font-size:15px;line-height:1.1;}
 .lt p{font-size:10px;color:var(--txd);letter-spacing:.07em;text-transform:uppercase;margin-top:2px;}
 .htag{font-size:10px;color:var(--txd);border:1px solid var(--br);padding:4px 10px;border-radius:100px;letter-spacing:.06em;background:var(--bg);}
 .wrap{position:relative;z-index:1;max-width:1140px;margin:0 auto;padding:40px 24px;}
 .dz{border:2px dashed var(--br2);border-radius:16px;padding:56px 40px;text-align:center;cursor:pointer;transition:all .2s;background:var(--cd);position:relative;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.04);}
+.dz::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 50% 100%,rgba(245,197,24,.06),transparent);pointer-events:none;}
 .dz:hover,.dz.over{border-color:var(--bkd);box-shadow:0 0 0 4px rgba(245,197,24,.12);}
+.dz.over{transform:scale(1.004);}
+.di{font-size:42px;margin-bottom:16px;display:block;opacity:.6;}
 .dz h2{font-family:var(--sans);font-weight:700;font-size:20px;margin-bottom:8px;}
 .dz p{font-size:12px;color:var(--txd);line-height:1.7;}
-.bup{display:inline-flex;align-items:center;gap:8px;margin-top:24px;padding:11px 24px;background:var(--bk);color:var(--tx);border:none;border-radius:8px;font-family:var(--mono);font-weight:700;font-size:12px;cursor:pointer;transition:background .15s;}
+.dz p strong{color:var(--bkd);font-weight:700;}
 #fi{display:none;}
+.bup{display:inline-flex;align-items:center;gap:8px;margin-top:24px;padding:11px 24px;background:var(--bk);color:var(--tx);border:none;border-radius:8px;font-family:var(--mono);font-weight:700;font-size:12px;cursor:pointer;transition:background .15s;}
+.bup:hover{background:var(--bkl);}
 #pb{display:none;margin-top:20px;}
 .pt{height:4px;background:var(--br);border-radius:2px;overflow:hidden;}
 .pf{height:100%;background:linear-gradient(90deg,var(--bkd),var(--bk));border-radius:2px;width:0%;transition:width .3s;}
@@ -66,50 +51,129 @@ header{position:relative;z-index:10;display:flex;align-items:center;justify-cont
 .sc.ok::after{background:var(--ok);}.sc.er::after{background:var(--er);}.sc.wa::after{background:var(--wa);}.sc.in::after{background:var(--in);}
 .sl{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--txd);margin-bottom:8px;}
 .sv{font-family:var(--sans);font-weight:800;font-size:32px;line-height:1;}
+.sc.ok .sv{color:var(--ok);}.sc.er .sv{color:var(--er);}.sc.wa .sv{color:var(--wa);}.sc.in .sv{color:var(--in);}
 .ss{font-size:10px;color:var(--txd);margin-top:4px;}
-.fb{display:flex;align-items:center;gap:10px;background:var(--cd);border:1px solid var(--br);border-radius:10px;padding:12px 16px;margin-bottom:24px;font-size:11px;}
+.fb{display:flex;align-items:center;gap:10px;background:var(--cd);border:1px solid var(--br);border-radius:10px;padding:12px 16px;margin-bottom:24px;font-size:11px;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+.fb .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);}.fb .dot.er{background:var(--er);}
+.fb .fn{font-weight:700;}.fb .fm{color:var(--txd);}
 .vd{border-radius:12px;padding:20px 24px;display:flex;align-items:center;gap:16px;margin-bottom:28px;border:1px solid;}
+.vd.vok{background:var(--okb);border-color:rgba(46,125,50,.3);}
+.vd.ver{background:var(--erb);border-color:rgba(183,28,28,.3);}
+.vd.vwa{background:var(--wab);border-color:rgba(192,123,0,.3);}
 .vi{font-size:28px;}
 .vt strong{display:block;font-family:var(--sans);font-weight:700;font-size:15px;margin-bottom:3px;}
+.vd.vok .vt strong{color:var(--ok);}.vd.ver .vt strong{color:var(--er);}.vd.vwa .vt strong{color:var(--wa);}
+.vt p{font-size:11px;color:var(--txd);}
 .sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
 .st{font-family:var(--sans);font-weight:600;font-size:13px;display:flex;align-items:center;gap:8px;}
-.badge{background:var(--cd2);border:1px solid var(--br);border-radius:100px;padding:1px 8px;font-size:10px;color:var(--txd);}
-.flb{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
-.btn{padding:5px 13px;border-radius:100px;border:1px solid var(--br);background:var(--cd);font-family:var(--mono);font-size:10px;cursor:pointer;}
+.badge{background:var(--cd2);border:1px solid var(--br);border-radius:100px;padding:1px 8px;font-size:10px;color:var(--txd);font-weight:500;}
+.flb{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
+.btn{padding:5px 13px;border-radius:100px;border:1px solid var(--br);background:var(--cd);font-family:var(--mono);font-size:10px;color:var(--txd);cursor:pointer;transition:all .15s;}
+.btn:hover{border-color:var(--bkd);color:var(--bkd);}
 .btn.act{background:var(--bkd);border-color:var(--bkd);color:#fff;}
+.btn.be.act{background:var(--er);border-color:var(--er);color:#fff;}
+.btn.bw.act{background:var(--wa);border-color:var(--wa);color:#fff;}
+.btn.bo.act{background:var(--ok);border-color:var(--ok);color:#fff;}
 .tabs{display:flex;border-bottom:2px solid var(--br);margin-bottom:20px;}
-.tb{padding:10px 18px;font-family:var(--mono);font-size:11px;color:var(--txd);background:transparent;border:none;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;}
-.tb.act{color:var(--bkd);border-bottom-color:var(--bkd);font-weight:700;}
+.tb{padding:10px 18px;font-family:var(--mono);font-size:11px;color:var(--txd);background:transparent;border:none;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .15s;}
+.tb:hover{color:var(--bkd);}.tb.act{color:var(--bkd);border-bottom-color:var(--bkd);font-weight:700;}
 .tp{display:none;}.tp.act{display:block;}
 #el{display:flex;flex-direction:column;gap:6px;}
-.ei{background:var(--cd);border:1px solid var(--br);border-radius:9px;padding:11px 14px;display:grid;grid-template-columns:56px 64px auto 1fr;gap:10px;font-size:11px;}
+.ei{background:var(--cd);border:1px solid var(--br);border-radius:9px;padding:11px 14px;display:grid;grid-template-columns:56px 64px auto 1fr;align-items:start;gap:10px;font-size:11px;}
+.ei:hover{border-color:var(--br2);}
 .eln{font-weight:700;color:var(--txm);}
-.esv{font-size:9px;font-weight:700;padding:2px 8px;border-radius:100px;text-transform:uppercase;}
+.esv{font-size:9px;font-weight:700;padding:2px 8px;border-radius:100px;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;}
 .sER{background:var(--erb);color:var(--er);}.sWA{background:var(--wab);color:var(--wa);}.sOK{background:var(--okb);color:var(--ok);}
+.esg{font-size:9px;color:var(--txd);text-transform:uppercase;letter-spacing:.05em;padding-top:1px;}
 .emg{color:var(--txm);line-height:1.5;}
 .rtree{display:flex;flex-direction:column;gap:4px;}
-.ri{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--cd);border:1px solid var(--br);border-radius:7px;font-size:11px;}
-.rd{width:7px;height:7px;border-radius:50%;}
+.ri{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--cd);border:1px solid var(--br);border-radius:7px;font-size:11px;color:var(--txm);}
+.ri.i1{margin-left:24px;}.ri.i2{margin-left:48px;}
+.rd{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
 .rd.ok{background:var(--ok);}.rd.er{background:var(--er);}
 .rs{font-size:9px;padding:2px 8px;border-radius:100px;font-weight:700;}
 .rso{background:var(--okb);color:var(--ok);}.rse{background:var(--erb);color:var(--er);}
-.ibox{background:var(--okb);border:1px solid rgba(46,125,50,.3);border-radius:8px;padding:12px 16px;font-size:11px;color:var(--txm);margin-bottom:20px;}
+.empty{text-align:center;padding:48px 0;color:var(--txd);font-size:12px;}
+.empty .bi{font-size:40px;display:block;margin-bottom:12px;}
+.empty strong{display:block;color:var(--bkd);font-size:14px;margin-bottom:6px;font-family:var(--sans);}
+.bcp{padding:5px 12px;background:var(--cd2);border:1px solid var(--br);border-radius:5px;font-family:var(--mono);font-size:10px;color:var(--txd);cursor:pointer;transition:all .15s;}
+.bcp:hover{border-color:var(--bkd);color:var(--bkd);}
+.brs{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:transparent;border:1px solid var(--br);border-radius:6px;font-family:var(--mono);font-size:10px;color:var(--txd);cursor:pointer;transition:all .15s;margin-left:auto;}
+.brs:hover{border-color:var(--bkd);color:var(--bkd);}
+.ibox{background:var(--okb);border:1px solid rgba(46,125,50,.3);border-radius:8px;padding:12px 16px;font-size:11px;color:var(--txm);margin-bottom:20px;line-height:1.7;}
+.ibox strong{color:var(--ok);}
+
+/* FIELD INSPECTION */
+.fpw{display:flex;flex-direction:column;gap:5px;}
+.okr{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--cd);border:1px solid var(--br);border-left:3px solid var(--ok);border-radius:8px;padding:7px 12px 7px 10px;font-size:10.5px;transition:background .12s;}
+.okr:hover{background:var(--cd2);}
+.okdot{width:6px;height:6px;border-radius:50%;background:var(--ok);flex-shrink:0;}
+.oln{font-size:9.5px;color:var(--txd);min-width:36px;}
+.osg{font-size:8px;padding:2px 7px;border-radius:100px;background:var(--cd2);border:1px solid var(--br);color:var(--txd);white-space:nowrap;text-transform:uppercase;letter-spacing:.04em;flex-shrink:0;}
+.onm{flex:1;color:var(--txm);min-width:100px;}
+.ops{font-size:8.5px;font-family:var(--mono);color:var(--txd);background:var(--cd2);padding:2px 6px;border-radius:3px;white-space:nowrap;flex-shrink:0;}
+.ovw{display:flex;align-items:center;gap:5px;flex-shrink:0;}
+.ovl{font-family:var(--mono);font-size:10px;color:var(--ok);background:var(--okb);padding:2px 7px;border-radius:4px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ock{color:var(--ok);font-size:11px;}
+.fcc{background:var(--cd);border:1px solid var(--br);border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+.fcc.fcer{border-left:3px solid var(--er);}.fcc.fcwa{border-left:3px solid var(--wa);}
+.fch{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:10px 14px;border-bottom:1px solid var(--br);background:var(--cd2);}
+.fcsvtag{font-size:8.5px;font-weight:700;padding:3px 9px;border-radius:100px;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;flex-shrink:0;}
+.fcsvtag.er{background:var(--erb);color:var(--er);}.fcsvtag.wa{background:var(--wab);color:var(--wa);}
+.fcnm{font-family:var(--sans);font-weight:600;font-size:12px;color:var(--tx);flex:1;min-width:140px;}
+.fcps{font-size:9px;font-family:var(--mono);color:var(--txd);background:var(--cd);border:1px solid var(--br);padding:2px 7px;border-radius:4px;white-space:nowrap;}
+.fcmt{font-size:9px;color:var(--txd);margin-left:auto;white-space:nowrap;}
+.fcbody{padding:14px 16px 12px;}
+.tsec{display:inline-flex;flex-direction:column;gap:0;overflow-x:auto;max-width:100%;}
+.trow{display:flex;align-items:stretch;}
+.tlbl{width:94px;min-width:94px;flex-shrink:0;font-size:9px;display:flex;align-items:center;padding-right:8px;font-family:var(--sans);letter-spacing:.02em;white-space:nowrap;}
+.tlbl.lp{color:var(--txd);font-size:7.5px;font-family:var(--mono);}
+.tlbl.la{color:var(--er);font-weight:600;}
+.tlbl.lm{color:var(--ok);font-weight:600;}
+.tcells{display:flex;gap:2px;flex-wrap:nowrap;}
+.tpc{width:26px;min-width:26px;font-size:7.5px;font-family:var(--mono);color:var(--txd);text-align:center;padding:2px 0 4px;user-select:none;line-height:1.2;}
+.tc{width:26px;min-width:26px;height:28px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:700;border-radius:4px;border:1px solid transparent;}
+.tc.ts{background:var(--cd2);border-color:var(--br);color:var(--txm);}
+.tc.td{background:var(--erb);border-color:var(--er);color:var(--er);}
+.tc.tfs{background:var(--okb);border-color:rgba(46,125,50,.25);color:var(--txm);}
+.tc.tfd{background:var(--okm);border-color:var(--ok);color:var(--ok);}
+.tc.tsp{font-size:0;position:relative;}.tc.tsp::after{content:'·';font-size:13px;opacity:.3;}
+.tc.ttr{background:transparent;border:none;color:var(--txd);font-size:15px;letter-spacing:-2px;}
+.tgap{height:5px;}
+.tleg{font-size:9px;color:var(--txd);margin-top:6px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+.tlegdot{display:inline-block;width:10px;height:10px;border-radius:2px;vertical-align:middle;margin-right:3px;}
+.tcw{display:grid;grid-template-columns:1fr 26px 1fr;gap:0;align-items:start;}
+.tcc{display:flex;flex-direction:column;gap:5px;}
+.tclbl{font-size:9px;text-transform:uppercase;letter-spacing:.07em;font-family:var(--sans);font-weight:600;padding-bottom:2px;}
+.tclbl.la{color:var(--er);}.tclbl.lm{color:var(--ok);}.tclbl.lk{color:var(--txd);}
+.tcv{font-family:var(--mono);font-size:10.5px;padding:8px 10px;border-radius:6px;line-height:1.5;word-break:break-all;}
+.tvat{background:var(--erb);color:var(--er);border:1px solid rgba(183,28,28,.2);}
+.tvfi{background:var(--okb);color:var(--ok);border:1px solid rgba(46,125,50,.2);}
+.tvok{background:var(--cd2);color:var(--txm);border:1px solid var(--br);}
+.tvds{background:var(--inb);color:var(--in);border:1px solid rgba(13,71,161,.2);font-size:10px;font-family:var(--sans);}
+.tvem{color:var(--txd);font-style:italic;background:var(--cd2);border:1px dashed var(--br);}
+.tcarr{display:flex;align-items:center;justify-content:center;color:var(--txd);font-size:18px;padding:0 2px;}
+.fcrule{padding:9px 14px;background:var(--cd2);border-top:1px solid var(--br);font-size:10.5px;color:var(--txm);line-height:1.6;display:flex;align-items:flex-start;gap:6px;}
+.fcri{flex-shrink:0;font-size:12px;margin-top:1px;}.fcrt{flex:1;}
+.smore{text-align:center;padding:16px;}
+.smore button{padding:7px 18px;border:1px solid var(--br);border-radius:6px;background:var(--cd);font-family:var(--mono);font-size:10px;color:var(--txd);cursor:pointer;transition:all .15s;}
+.smore button:hover{border-color:var(--bkd);color:var(--bkd);}
+.fltex{margin-left:auto;font-size:10px;color:var(--txd);display:flex;align-items:center;gap:8px;}
+.fltex label{display:flex;align-items:center;gap:5px;cursor:pointer;user-select:none;}
 
 @media(max-width:640px){
   .ei{grid-template-columns:1fr 1fr;}.emg{grid-column:1/-1;}
+  .sg{grid-template-columns:1fr 1fr;}
   header{padding:0 16px;}.wrap{padding:20px 14px;}
-  .htag{display:none;}
+  .tlbl{width:70px;min-width:70px;}.tc,.tpc{width:22px;min-width:22px;}
+  .tc{font-size:10px;}.tcw{grid-template-columns:1fr;}.tcarr{display:none;}
 }
 </style>
 </head>
 <body>
-
 <header>
   <div class="logo">
-    <div class="lb">
-        <img src="logos/Banco%20do%20Brasil%20S.A/banco-do-brasil-com-fundo.svg" class="bank-logo" alt="BB">
-        Banco do Brasil
-    </div>
+    <div class="lb"><img src="logos/Banco%20do%20Brasil%20S.A/banco-do-brasil-com-fundo.svg" class="bank-logo" alt="BB" onerror="this.outerHTML='&lt;span class=&quot;lbbb&quot;&gt;\u{1F3E6}&lt;/span&gt;'"> BB</div>
     <div class="lt">
       <h1>Validador CNAB240</h1>
       <p>Arquivo de Pagamentos · Banco do Brasil</p>
@@ -120,34 +184,623 @@ header{position:relative;z-index:10;display:flex;align-items:center;justify-cont
 
 <div class="wrap">
   <div class="dz" id="dz" onclick="document.getElementById('fi').click()">
-    <img src="logos/Banco%20do%20Brasil%20S.A/banco-do-brasil-com-fundo.svg" class="bank-logo-large" alt="Logo BB">
+    <img src="logos/Banco%20do%20Brasil%20S.A/banco-do-brasil-com-fundo.svg" class="bank-logo-large" alt="Logo BB" onerror="this.outerHTML='&lt;span class=&quot;di&quot;&gt;\u{1F3E6}&lt;/span&gt;'">
     <h2>Arraste o arquivo CNAB240 aqui</h2>
     <p>Suporta arquivos <strong>.REM</strong> e <strong>.TXT</strong> de remessa Banco do Brasil<br>
     Codificação ANSI (ISO-8859-1) · Linhas de <strong>240 bytes</strong> + CRLF · Banco <strong>001</strong></p>
     <button class="bup" onclick="event.stopPropagation();document.getElementById('fi').click()">↑ Selecionar arquivo</button>
     <input type="file" id="fi" accept=".rem,.REM,.txt,.TXT">
   </div>
-
   <div id="pb">
     <div class="pt"><div class="pf" id="pf"></div></div>
     <p style="font-size:10px;color:var(--txd);margin-top:8px;text-align:center">Analisando estrutura CNAB240 Banco do Brasil...</p>
   </div>
-
   <div id="sum">
     <div class="fb">
       <div class="dot" id="ds"></div>
       <span class="fn" id="fn">—</span><span class="fm" id="fm">—</span>
-      <button class="brs" style="margin-left:auto" onclick="rst()">↺ Novo arquivo</button>
+      <button class="brs" onclick="rst()">↺ Novo arquivo</button>
     </div>
     <div class="vd" id="vb"><span class="vi" id="vi">—</span><div class="vt"><strong id="vtt">—</strong><p id="vts">—</p></div></div>
     <div class="sg" id="sg"></div>
+    <div class="tabs">
+      <button class="tb act" onclick="swT('oc',this)">Ocorrências</button>
+      <button class="tb" onclick="swT('st',this)">Estrutura</button>
+      <button class="tb" onclick="swT('fi',this)">Inspeção de Campos</button>
     </div>
+    <div class="tp act" id="tab-oc">
+      <div class="sh">
+        <span class="st">Lista de Ocorrências <span class="badge" id="ecb">0</span></span>
+        <button class="bcp" onclick="cpR()">⎘ Copiar relatório</button>
+      </div>
+      <div class="flb">
+        <button class="btn act" onclick="sf('ALL',this)">Todos</button>
+        <button class="btn be" onclick="sf('ERROR',this)">Erros</button>
+        <button class="btn bw" onclick="sf('WARN',this)">Avisos</button>
+        <button class="btn bo" onclick="sf('OK',this)">OK</button>
+      </div>
+      <div id="el"></div>
+    </div>
+    <div class="tp" id="tab-st">
+      <div class="sh"><span class="st">Estrutura do Arquivo</span></div>
+      <div class="rtree" id="rt"></div>
+    </div>
+    <div class="tp" id="tab-fi">
+      <div class="ibox">
+        <strong>Como usar a Inspeção de Campos:</strong><br>
+        Cada campo exibe duas fitas CNAB empilhadas:
+        a fita <span style="color:var(--er);font-weight:700">📄 atual</span> mostra os bytes exatos do seu arquivo;
+        a fita <span style="color:var(--ok);font-weight:700">✓ manual</span> mostra como deve ficar segundo o manual BB (nov/2020).
+        Células <span style="display:inline-block;width:10px;height:10px;background:var(--erb);border:1px solid var(--er);border-radius:2px;vertical-align:middle"></span> são bytes errados no arquivo;
+        células <span style="display:inline-block;width:10px;height:10px;background:var(--okm);border:1px solid var(--ok);border-radius:2px;vertical-align:middle"></span> são a correção exata.
+        Campos ✓ OK ficam compactos. Para campos longos é exibida uma comparação de texto.<br>
+        <strong>Regras BB:</strong> Convênio BB = posições 33–41 (9 dígitos) + Código 42–45 = "0126" · PIX usa Câmara 009 (SPI) · TED usa Câmara 018 (STR/CIP) · Crédito em conta BB usa Câmara 000 · Arquivo em ANSI (ISO-8859-1) · Arquivo teste: pos 51–52 = "TS" (produção = brancos).
+      </div>
+      <div class="flb">
+        <button class="btn act" onclick="sff('ALL',this)">Todos os campos</button>
+        <button class="btn be" onclick="sff('ERROR',this)">Somente Erros</button>
+        <button class="btn bw" onclick="sff('WARN',this)">Somente Avisos</button>
+        <button class="btn bo" onclick="sff('OK',this)">Somente OK</button>
+        <div class="fltex">
+          <label><input type="checkbox" id="chkOk" checked onchange="renderFP(allFR)"> Compactar campos OK</label>
+        </div>
+      </div>
+      <div id="fp"></div>
+    </div>
+  </div>
 </div>
 
 <script>
-    // Toda a sua lógica de validação Banco do Brasil que você enviou acima continua aqui...
-    // (Mantida igual para não estourar o limite de texto, mas integre os scripts do seu código anterior)
-</script>
+const BANCO='001';
+let allIssues=[],allFR=[],curF='ALL',curFF='ALL',fpSh=80;
+const $=id=>document.getElementById(id);
+const dz=$('dz');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('over');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('over'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('over');const f=e.dataTransfer.files[0];if(f)pfile(f);});
+$('fi').addEventListener('change',e=>{if(e.target.files[0])pfile(e.target.files[0]);});
+function rst(){$('sum').style.display='none';$('dz').style.display='';$('pb').style.display='none';$('fi').value='';allIssues=[];allFR=[];curF='ALL';curFF='ALL';fpSh=80;}
+function swT(n,b){document.querySelectorAll('.tb').forEach(x=>x.classList.remove('act'));document.querySelectorAll('.tp').forEach(x=>x.classList.remove('act'));b.classList.add('act');$('tab-'+n).classList.add('act');if(n==='fi')renderFP(allFR);}
+function sf(f,b){curF=f;document.querySelectorAll('#tab-oc .btn').forEach(x=>x.classList.remove('act'));b.classList.add('act');renderOcc(allIssues);}
+function sff(f,b){curFF=f;fpSh=80;document.querySelectorAll('#tab-fi .btn').forEach(x=>x.classList.remove('act'));b.classList.add('act');renderFP(allFR);}
+function pfile(file){
+  if(!['rem','txt'].includes(file.name.split('.').pop().toLowerCase())){alert('Apenas .REM e .TXT são aceitos.');$('fi').value='';return;}
+  $('dz').style.display='none';$('pb').style.display='block';
+  const r=new FileReader();
+  r.onload=e=>{simP(()=>{const t=e.target.result;const ls=t.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n').filter(l=>l.length>0);const res=validate(ls);$('pb').style.display='none';$('sum').style.display='block';renderRes(file,ls,res);});};
+  r.readAsText(file,'ISO-8859-1');
+}
+function simP(cb){let w=0;const f=$('pf');const iv=setInterval(()=>{w=Math.min(w+Math.random()*14,90);f.style.width=w+'%';if(w>=90){clearInterval(iv);f.style.width='100%';setTimeout(cb,200);}},60);}
 
+/* helpers */
+function p(l,a,b){return l.substring(a-1,b);}
+function isBl(s){return/^\s*$/.test(s);}
+function isZero(s){return/^0+$/.test(s);}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function chkDt(s){
+  if(!/^\d{8}$/.test(s))return{ok:false,msg:`Formato inválido (DDMMAAAA): "${s}"`};
+  const d=+s.slice(0,2),m=+s.slice(2,4),y=+s.slice(4);
+  const mx=[0,31,29,31,30,31,30,31,31,30,31,30,31];
+  if(m<1||m>12)return{ok:false,msg:`Mês inválido: ${m}`};
+  if(d<1||d>mx[m])return{ok:false,msg:`Dia ${d} inválido para mês ${m}`};
+  if(y<2000||y>2099)return{ok:false,msg:`Ano ${y} fora de 2000–2099`};
+  return{ok:true};
+}
+function chkCPF(s){const n=s.replace(/\D/g,'');if(n.length!==11||/^(\d)\1{10}$/.test(n))return false;let a=0;for(let i=0;i<9;i++)a+=+n[i]*(10-i);let r=(a*10)%11;if(r>=10)r=0;if(r!==+n[9])return false;let b2=0;for(let i=0;i<10;i++)b2+=+n[i]*(11-i);let s2=(b2*10)%11;if(s2>=10)s2=0;return s2===+n[10];}
+function chkCNPJ(s){const n=s.replace(/\D/g,'');if(n.length!==14||/^(\d)\1{13}$/.test(n))return false;const c=(str,l)=>{let sm=0,pp=l-7;for(let i=l;i>=1;i--){sm+=+str[l-i]*pp--;if(pp<2)pp=9;}return sm%11<2?0:11-sm%11;};return c(n,12)===+n[12]&&c(n,13)===+n[13];}
+
+/* CF = checkField */
+function CF(ctx,campo,ini,fim,ln,checks,esp,fix=null){
+  const val=p(ln,ini,fim);let st='OK',det='',af=fix;
+  for(const c of checks){
+    if(!c.test){
+      st=c.sev==='ERROR'?'ERROR':(st!=='ERROR'?'WARN':'ERROR');
+      det=c.msg;if(c.fix!==undefined)af=c.fix;
+      ctx.iss.push({line:ctx.ln,sev:c.sev,seg:ctx.seg,msg:`[${campo}] ${c.msg}`});
+    }
+  }
+  ctx.fr.push({ln:ctx.ln,seg:ctx.seg,campo,pi:ini,pf:fim,esp,enc:val,st,det,fix:af});
+}
+function addI(ln,sev,seg,msg){allIssues_tmp.push({line:ln,sev,seg,msg});}
+let allIssues_tmp=[];
+
+/* ══════════════════════════════════════════════
+   VALIDATORS — BB CNAB240
+══════════════════════════════════════════════ */
+
+/* HEADER DO ARQUIVO (Tipo 0) */
+function vHA(ctx,ln){
+  CF(ctx,'01.0 Código do Banco',1,3,ln,[{test:p(ln,1,3)===BANCO,sev:'ERROR',msg:`Deve ser "${BANCO}", encontrado "${p(ln,1,3)}"`}],'"001"',BANCO);
+  CF(ctx,'02.0 Lote de Serviço',4,7,ln,[{test:p(ln,4,7)==='0000',sev:'ERROR',msg:`Deve ser "0000", encontrado "${p(ln,4,7)}"`}],'"0000"','0000');
+  CF(ctx,'03.0 Tipo de Registro',8,8,ln,[{test:p(ln,8,8)==='0',sev:'ERROR',msg:`Deve ser "0", encontrado "${p(ln,8,8)}"`}],'"0"','0');
+  CF(ctx,'04.0 Uso FEBRABAN (9–17)',9,17,ln,[{test:isBl(p(ln,9,17)),sev:'WARN',msg:`Deve ser 9 brancos, encontrado: "${p(ln,9,17).trim()}"`}],'9 brancos','         ');
+  const ti=p(ln,18,18);
+  CF(ctx,'05.0 Tipo de Inscrição',18,18,ln,[{test:['1','2'].includes(ti),sev:'ERROR',msg:`Deve ser "1"(CPF) ou "2"(CNPJ), encontrado "${ti}"`}],'"1"=CPF / "2"=CNPJ');
+  const ni=p(ln,19,32);
+  CF(ctx,'06.0 Número de Inscrição (19–32)',19,32,ln,[
+    {test:/^\d{14}$/.test(ni),sev:'ERROR',msg:`Deve ter 14 dígitos, encontrado "${ni}"`},
+    {test:!(ti==='1'&&!chkCPF(ni.slice(-11))),sev:'WARN',msg:`CPF "${ni.slice(-11)}" com DV inválido`},
+    {test:!(ti==='2'&&!chkCNPJ(ni)),sev:'WARN',msg:`CNPJ "${ni}" com DV inválido`}
+  ],'14 dígitos numéricos (CPF com zeros à esq. ou CNPJ)');
+  /* BB: Convênio pos 33–52 subdivide em: 33–41=Nº Convênio, 42–45='0126', 46–50=brancos, 51–52=prod/teste */
+  const conv=p(ln,33,41);
+  CF(ctx,'07.0 BB1 Nº do Convênio (33–41)',33,41,ln,[
+    {test:/^\d{9}$/.test(conv),sev:'ERROR',msg:`Deve ter 9 dígitos, encontrado "${conv}"`},
+    {test:parseInt(conv,10)>0,sev:'WARN',msg:'Número de convênio zerado — verifique'}
+  ],'9 dígitos numéricos (número do convênio BB)');
+  CF(ctx,'07.0 BB2 Código (42–45)',42,45,ln,[{test:p(ln,42,45)==='0126',sev:'ERROR',msg:`Deve ser "0126", encontrado "${p(ln,42,45)}"`}],'"0126"','0126');
+  CF(ctx,'07.0 BB3 Uso Reservado Banco (46–50)',46,50,ln,[{test:isBl(p(ln,46,50)),sev:'WARN',msg:'Deve ser brancos'}],'5 brancos','     ');
+  const tst=p(ln,51,52);
+  CF(ctx,'07.0 BB4 Arquivo Teste (51–52)',51,52,ln,[{test:isBl(tst)||tst==='TS',sev:'WARN',msg:`Produção=brancos, Teste="TS". Encontrado: "${tst}"`}],'Brancos (produção) ou "TS" (teste)');
+  CF(ctx,'08.0 Agência Mantenedora (53–57)',53,57,ln,[{test:/^\d{5}$/.test(p(ln,53,57)),sev:'ERROR',msg:`Deve ser 5 dígitos, encontrado "${p(ln,53,57)}"`}],'5 dígitos numéricos, zeros à esquerda');
+  CF(ctx,'09.0 DV Agência (58)',58,58,ln,[{test:p(ln,58,58).trim().length>0,sev:'WARN',msg:'DV da agência deve ser informado (ou X para dígito X)'}],'1 caractere (X se dígito X)');
+  CF(ctx,'10.0 Conta Corrente (59–70)',59,70,ln,[{test:/^\d{12}$/.test(p(ln,59,70)),sev:'ERROR',msg:`Deve ter 12 dígitos, encontrado "${p(ln,59,70)}"`}],'12 dígitos numéricos, zeros à esquerda');
+  CF(ctx,'11.0 DV Conta (71)',71,71,ln,[{test:p(ln,71,71).trim().length>0,sev:'WARN',msg:'DV da conta deve ser informado (ou X para dígito X)'}],'1 caractere (X se dígito X)');
+  CF(ctx,'12.0 DV Ag/Conta (72)',72,72,ln,[{test:p(ln,72,72)==='0',sev:'WARN',msg:`BB usa "0" na posição 72, encontrado "${p(ln,72,72)}"`}],'"0"','0');
+  CF(ctx,'13.0 Nome da Empresa (73–102)',73,102,ln,[{test:p(ln,73,102).trim().length>0,sev:'ERROR',msg:'Nome da empresa não pode ser vazio'}],'Alfanumérico, obrigatório');
+  CF(ctx,'14.0 Nome do Banco (103–132)',103,132,ln,[{test:p(ln,103,132).toUpperCase().includes('BANCO DO BRASIL')||p(ln,103,132).toUpperCase().includes('BB'),sev:'WARN',msg:`Deve conter "BANCO DO BRASIL SA", encontrado "${p(ln,103,132).trim()}"`}],'"BANCO DO BRASIL SA" (30 posições)');
+  CF(ctx,'15.0 Filler (133–142)',133,142,ln,[{test:isBl(p(ln,133,142)),sev:'WARN',msg:'Deve ser branco'}],'10 brancos','          ');
+  const rr=p(ln,143,143);
+  CF(ctx,'16.0 Código Remessa/Retorno (143)',143,143,ln,[{test:['1','2'].includes(rr),sev:'ERROR',msg:`Deve ser "1"(Remessa) ou "2"(Retorno), encontrado "${rr}"`}],'"1"=Remessa / "2"=Retorno','1');
+  const dg=p(ln,144,151);
+  CF(ctx,'17.0 Data de Geração (144–151)',144,151,ln,[
+    {test:/^\d{8}$/.test(dg),sev:'ERROR',msg:`Deve ser DDMMAAAA, encontrado "${dg}"`},
+    {test:dg==='00000000'||!(/^\d{8}$/.test(dg))||chkDt(dg).ok,sev:'ERROR',msg:/^\d{8}$/.test(dg)&&dg!=='00000000'?chkDt(dg).msg||'':''}
+  ].filter(c=>c.msg!==''),'DDMMAAAA (ex: 15032025)');
+  CF(ctx,'18.0 Hora de Geração (152–157)',152,157,ln,[{test:/^\d{6}$/.test(p(ln,152,157))||isZero(p(ln,152,157))||isBl(p(ln,152,157)),sev:'WARN',msg:`Deve ser HHMMSS ou zeros, encontrado "${p(ln,152,157)}"`}],'HHMMSS ou zeros');
+  CF(ctx,'19.0 NSA Número Sequencial (158–163)',158,163,ln,[{test:/^\d{6}$/.test(p(ln,158,163)),sev:'WARN',msg:`Deve ser 6 dígitos, encontrado "${p(ln,158,163)}"`}],'6 dígitos, incremental');
+  CF(ctx,'20.0 Versão do Layout (164–166)',164,166,ln,[{test:/^\d{3}$/.test(p(ln,164,166)),sev:'WARN',msg:`Deve ser 3 dígitos, encontrado "${p(ln,164,166)}"`}],'3 dígitos numéricos');
+  CF(ctx,'21.0 Densidade de Gravação (167–171)',167,171,ln,[{test:p(ln,167,171)==='00000',sev:'WARN',msg:`BB usa "00000", encontrado "${p(ln,167,171)}"`}],'"00000"','00000');
+  CF(ctx,'26.0 Uso VANs (226–228)',226,228,ln,[{test:p(ln,226,228)==='000',sev:'WARN',msg:`Deve ser "000", encontrado "${p(ln,226,228)}"`}],'"000"','000');
+  CF(ctx,'27.0 Tipo de Serviço (229–230)',229,230,ln,[{test:p(ln,229,230)==='00',sev:'WARN',msg:`Deve ser "00", encontrado "${p(ln,229,230)}"`}],'"00"','00');
+  CF(ctx,'28.0 Ocorrências (231–240)',231,240,ln,[{test:isBl(p(ln,231,240))||p(ln,231,240)==='0000000000',sev:'WARN',msg:'Remessa deve ter zeros ou brancos neste campo'}],'0000000000 (remessa)','0000000000');
+}
+
+/* HEADER DO LOTE (Tipo 1) */
+function vHL(ctx,ln){
+  CF(ctx,'01.1 Código do Banco',1,3,ln,[{test:p(ln,1,3)===BANCO,sev:'ERROR',msg:`Deve ser "${BANCO}", encontrado "${p(ln,1,3)}"`}],'"001"',BANCO);
+  CF(ctx,'03.1 Tipo de Registro (8)',8,8,ln,[{test:p(ln,8,8)==='1',sev:'ERROR',msg:`Deve ser "1", encontrado "${p(ln,8,8)}"`}],'"1"','1');
+  CF(ctx,'04.1 Tipo da Operação (9)',9,9,ln,[{test:p(ln,9,9)==='C',sev:'ERROR',msg:`Deve ser "C", encontrado "${p(ln,9,9)}"`}],'"C" (crédito)','C');
+  const ts=p(ln,10,11);
+  const tsValidos=['20','30','98'];
+  CF(ctx,'05.1 Tipo de Serviço (10–11)',10,11,ln,[{test:tsValidos.includes(ts),sev:'WARN',msg:`Tipo "${ts}" incomum. BB aceita: 20=Fornecedor 30=Salário/Outros 98=Diversos`}],'20=Fornecedor · 30=Salário · 98=Diversos');
+  const fo=p(ln,12,13);
+  const foValidos=['01','05','10','11','16','17','18','21','22','23','24','30','31','45','47'];
+  CF(ctx,'06.1 Forma de Lançamento (12–13)',12,13,ln,[{test:foValidos.includes(fo),sev:'WARN',msg:`Forma "${fo}" incomum. BB aceita: 01=CC 05=TED Poupança 10=OP 11=CodBarras 16=DARF 17=GPS 18=DARFSimples 21=DARJ 22=GARE-ICMS 23=GARE-DR 24=GARE-ITCMD 30=Boleto BB 31=Boleto OutrosBancos 45=PIX ChaveEmail/Tel 47=PIX Dados Bancários`}],'01 05 10 11 16 17 18 21 22 23 24 30 31 45 47');
+  CF(ctx,'07.1 Versão Layout do Lote (14–16)',14,16,ln,[{test:/^\d{3}$/.test(p(ln,14,16)),sev:'WARN',msg:`Deve ser 3 dígitos, encontrado "${p(ln,14,16)}"`}],'3 dígitos numéricos');
+  CF(ctx,'08.1 Filler (17)',17,17,ln,[{test:isBl(p(ln,17,17)),sev:'WARN',msg:`Deve ser branco, encontrado "${p(ln,17,17)}"`}],'1 branco',' ');
+  CF(ctx,'09.1 Tipo de Inscrição (18)',18,18,ln,[{test:['1','2'].includes(p(ln,18,18)),sev:'WARN',msg:`Deve ser "1"(CPF) ou "2"(CNPJ), encontrado "${p(ln,18,18)}"`}],'"1"=CPF / "2"=CNPJ');
+  CF(ctx,'10.1 Número de Inscrição (19–32)',19,32,ln,[{test:/^\d{14}$/.test(p(ln,19,32)),sev:'ERROR',msg:`Deve ter 14 dígitos, encontrado "${p(ln,19,32)}"`}],'14 dígitos numéricos');
+  /* BB convênio no lote também */
+  const conv=p(ln,33,41);
+  CF(ctx,'11.1 BB1 Nº Convênio Lote (33–41)',33,41,ln,[{test:/^\d{9}$/.test(conv)&&parseInt(conv,10)>0,sev:'ERROR',msg:`Deve ser 9 dígitos não zerados, encontrado "${conv}"`}],'9 dígitos do convênio BB');
+  CF(ctx,'11.1 BB2 Código 0126 (42–45)',42,45,ln,[{test:p(ln,42,45)==='0126',sev:'ERROR',msg:`Deve ser "0126", encontrado "${p(ln,42,45)}"`}],'"0126"','0126');
+  CF(ctx,'11.1 BB3 Reservado Banco (46–50)',46,50,ln,[{test:isBl(p(ln,46,50)),sev:'WARN',msg:'Deve ser 5 brancos'}],'5 brancos');
+  CF(ctx,'12.1 Agência (53–57)',53,57,ln,[{test:/^\d{5}$/.test(p(ln,53,57)),sev:'ERROR',msg:`Deve ser 5 dígitos, encontrado "${p(ln,53,57)}"`}],'5 dígitos numéricos');
+  CF(ctx,'14.1 Conta Corrente (59–70)',59,70,ln,[{test:/^\d{12}$/.test(p(ln,59,70)),sev:'ERROR',msg:`Deve ter 12 dígitos, encontrado "${p(ln,59,70)}"`}],'12 dígitos numéricos');
+  CF(ctx,'16.1 DV Ag/Conta (72)',72,72,ln,[{test:p(ln,72,72)==='0',sev:'WARN',msg:`BB usa "0", encontrado "${p(ln,72,72)}"`}],'"0"','0');
+  CF(ctx,'17.1 Nome da Empresa (73–102)',73,102,ln,[{test:p(ln,73,102).trim().length>0,sev:'ERROR',msg:'Nome da empresa obrigatório'}],'Alfanumérico, obrigatório');
+  CF(ctx,'27.1 Ocorrências Retorno (231–240)',231,240,ln,[{test:isBl(p(ln,231,240))||p(ln,231,240)==='0000000000',sev:'WARN',msg:'Remessa deve ter zeros/brancos'}],'0000000000 na remessa','0000000000');
+  return{ts,fo};
+}
+
+/* TRAILER DO LOTE (Tipo 5) */
+function vTL(ctx,ln,regs,soma){
+  CF(ctx,'01.5 Código do Banco',1,3,ln,[{test:p(ln,1,3)===BANCO,sev:'ERROR',msg:`Deve ser "${BANCO}", encontrado "${p(ln,1,3)}"`}],'"001"',BANCO);
+  CF(ctx,'03.5 Tipo de Registro (8)',8,8,ln,[{test:p(ln,8,8)==='5',sev:'ERROR',msg:`Deve ser "5", encontrado "${p(ln,8,8)}"`}],'"5"','5');
+  CF(ctx,'04.5 Filler (9–17)',9,17,ln,[{test:isBl(p(ln,9,17)),sev:'WARN',msg:'Deve ser 9 brancos'}],'9 brancos','         ');
+  const qrStr=p(ln,18,23);const qr=parseInt(qrStr,10);const qe=regs+2;
+  if(qr!==qe){ctx.iss.push({line:ctx.ln,sev:'ERROR',seg:ctx.seg,msg:`[05.5 Qtd. Registros] Informado: ${qr}, calculado: ${qe}`});ctx.fr.push({ln:ctx.ln,seg:ctx.seg,campo:'05.5 Qtd. Registros do Lote (18–23)',pi:18,pf:23,esp:`${qe} (auto-calculado)`,enc:qrStr,st:'ERROR',det:`Header(1)+Detalhes(${regs})+Trailer(1)=${qe}`,fix:String(qe).padStart(6,'0')});}
+  else{ctx.iss.push({line:ctx.ln,sev:'OK',seg:ctx.seg,msg:`[05.5 Qtd. Registros] Correto: ${qr}`});ctx.fr.push({ln:ctx.ln,seg:ctx.seg,campo:'05.5 Qtd. Registros do Lote (18–23)',pi:18,pf:23,esp:`${qe}`,enc:qrStr,st:'OK',det:'',fix:null});}
+  const si=parseInt(p(ln,24,41),10)||0;const siStr=p(ln,24,41);
+  if(si!==soma&&soma>0){ctx.iss.push({line:ctx.ln,sev:'WARN',seg:ctx.seg,msg:`[06.5 Somatório] Informado: ${si}, calculado: ${soma}`});ctx.fr.push({ln:ctx.ln,seg:ctx.seg,campo:'06.5 Somatória dos Valores (24–41)',pi:24,pf:41,esp:`${soma} (auto-calculado, centavos)`,enc:siStr,st:'WARN',det:`Soma dos valores de detalhe: ${soma}`,fix:String(soma).padStart(18,'0')});}
+  CF(ctx,'07.5 Qtd. Moeda (42–59)',42,59,ln,[{test:p(ln,42,59)==='000000000000000000',sev:'WARN',msg:'Deve ser 18 zeros para pagamentos BRL'}],'000000000000000000','000000000000000000');
+  CF(ctx,'08.5 Aviso Débito (60–65)',60,65,ln,[{test:p(ln,60,65)==='000000'||isBl(p(ln,60,65)),sev:'WARN',msg:'Deve ser "000000"'}],'"000000"','000000');
+}
+
+/* TRAILER DO ARQUIVO (Tipo 9) */
+function vTA(ctx,ln,tL,tR){
+  CF(ctx,'01.9 Código do Banco',1,3,ln,[{test:p(ln,1,3)===BANCO,sev:'ERROR',msg:`Deve ser "${BANCO}", encontrado "${p(ln,1,3)}"`}],'"001"',BANCO);
+  CF(ctx,'02.9 Lote de Serviço (4–7)',4,7,ln,[{test:p(ln,4,7)==='9999',sev:'ERROR',msg:`Deve ser "9999", encontrado "${p(ln,4,7)}"`}],'"9999"','9999');
+  CF(ctx,'03.9 Tipo de Registro (8)',8,8,ln,[{test:p(ln,8,8)==='9',sev:'ERROR',msg:`Deve ser "9", encontrado "${p(ln,8,8)}"`}],'"9"','9');
+  const qlStr=p(ln,18,23);const ql=parseInt(qlStr,10);
+  if(ql!==tL){ctx.iss.push({line:ctx.ln,sev:'ERROR',seg:ctx.seg,msg:`[05.9 Qtd. Lotes] Informado: ${ql}, calculado: ${tL}`});ctx.fr.push({ln:ctx.ln,seg:ctx.seg,campo:'05.9 Qtd. Lotes do Arquivo (18–23)',pi:18,pf:23,esp:`${tL} (auto-calculado)`,enc:qlStr,st:'ERROR',det:`Lotes encontrados: ${tL}`,fix:String(tL).padStart(6,'0')});}
+  else{ctx.iss.push({line:ctx.ln,sev:'OK',seg:ctx.seg,msg:`[05.9 Qtd. Lotes] Correto: ${ql}`});ctx.fr.push({ln:ctx.ln,seg:ctx.seg,campo:'05.9 Qtd. Lotes (18–23)',pi:18,pf:23,esp:`${tL}`,enc:qlStr,st:'OK',det:'',fix:null});}
+  const qrStr=p(ln,24,29);const qr=parseInt(qrStr,10);
+  if(qr!==tR){ctx.iss.push({line:ctx.ln,sev:'ERROR',seg:ctx.seg,msg:`[06.9 Qtd. Registros] Informado: ${qr}, calculado: ${tR}`});ctx.fr.push({ln:ctx.ln,seg:ctx.seg,campo:'06.9 Qtd. Registros do Arquivo (24–29)',pi:24,pf:29,esp:`${tR} (auto-calculado)`,enc:qrStr,st:'ERROR',det:`Registros encontrados: ${tR}`,fix:String(tR).padStart(6,'0')});}
+  else{ctx.iss.push({line:ctx.ln,sev:'OK',seg:ctx.seg,msg:`[06.9 Qtd. Registros] Correto: ${qr}`});ctx.fr.push({ln:ctx.ln,seg:ctx.seg,campo:'06.9 Qtd. Registros (24–29)',pi:24,pf:29,esp:`${tR}`,enc:qrStr,st:'OK',det:'',fix:null});}
+  CF(ctx,'07.9 Qtd. Contas Conciliação (30–35)',30,35,ln,[{test:p(ln,30,35)==='000000',sev:'WARN',msg:`Deve ser "000000", encontrado "${p(ln,30,35)}"`}],'"000000"','000000');
+}
+
+/* SEGMENTO A */
+function vSA(ctx,ln,fo){
+  CF(ctx,'01.3A Código do Banco',1,3,ln,[{test:p(ln,1,3)===BANCO,sev:'ERROR',msg:`Deve ser "${BANCO}", encontrado "${p(ln,1,3)}"`}],'"001"',BANCO);
+  CF(ctx,'05.3A Segmento (14)',14,14,ln,[{test:p(ln,14,14)==='A',sev:'ERROR',msg:`Deve ser "A", encontrado "${p(ln,14,14)}"`}],'"A"','A');
+  CF(ctx,'06.3A Tipo de Movimento (15)',15,15,ln,[{test:['0','9'].includes(p(ln,15,15)),sev:'ERROR',msg:`Deve ser "0"(Inclusão) ou "9"(Exclusão), encontrado "${p(ln,15,15)}"`}],'"0"=Inclusão / "9"=Exclusão','0');
+  CF(ctx,'07.3A Código de Instrução (16–17)',16,17,ln,[{test:['00','99'].includes(p(ln,16,17)),sev:'WARN',msg:`Deve ser "00"(Inclusão) ou "99"(Exclusão), encontrado "${p(ln,16,17)}"`}],'"00"=Inclusão / "99"=Exclusão','00');
+  const cm=p(ln,18,20);
+  const cmValidos=['000','018','009'];
+  CF(ctx,'08.3A Câmara de Compensação (18–20)',18,20,ln,[{test:cmValidos.includes(cm),sev:'WARN',msg:`Câmara "${cm}" incomum. 000=CCtaBB/OP · 018=TED(STR/CIP) · 009=PIX(SPI)`}],'000=Conta BB · 018=TED · 009=PIX');
+  /* BB-specific: validar câmara vs forma */
+  if((fo==='01'||fo==='05'||fo==='10')&&cm!=='000')ctx.iss.push({line:ctx.ln,sev:'WARN',seg:ctx.seg,msg:`[BB] Crédito em conta/OP/Poupança (Forma ${fo}) usa Câmara 000 (Conta BB). Encontrado: "${cm}"`});
+  if(fo==='45'&&cm!=='009')ctx.iss.push({line:ctx.ln,sev:'WARN',seg:ctx.seg,msg:`[BB] PIX (Forma 45) usa Câmara 009 (SPI). Encontrado: "${cm}"`});
+  CF(ctx,'09.3A Banco Favorecido (21–23)',21,23,ln,[{test:/^\d{3}$/.test(p(ln,21,23)),sev:'ERROR',msg:`Deve ter 3 dígitos, encontrado "${p(ln,21,23)}"`}],'3 dígitos (código BACEN)');
+  CF(ctx,'10.3A Agência Favorecido (24–28)',24,28,ln,[{test:/^\d{5}$/.test(p(ln,24,28))||isBl(p(ln,24,28)),sev:'WARN',msg:`Deve ter 5 dígitos (ou brancos para PIX por chave), encontrado "${p(ln,24,28)}"`}],'5 dígitos numéricos (brancos para PIX chave)');
+  CF(ctx,'12.3A Conta do Favorecido (30–41)',30,41,ln,[{test:/^\d{12}$/.test(p(ln,30,41))||isBl(p(ln,30,41)),sev:'ERROR',msg:`Deve ter 12 dígitos (ou brancos para PIX chave), encontrado "${p(ln,30,41)}"`}],'12 dígitos numéricos');
+  CF(ctx,'15.3A Nome do Favorecido (44–73)',44,73,ln,[{test:p(ln,44,73).trim().length>0,sev:'ERROR',msg:'Nome do favorecido obrigatório'}],'Alfanumérico, obrigatório');
+  const dp=p(ln,94,101);
+  CF(ctx,'17.3A Data do Pagamento (94–101)',94,101,ln,[
+    {test:/^\d{8}$/.test(dp),sev:'ERROR',msg:`Deve ser DDMMAAAA, encontrado "${dp}"`},
+    {test:!(/^\d{8}$/.test(dp))||chkDt(dp).ok,sev:'ERROR',msg:/^\d{8}$/.test(dp)?chkDt(dp).msg||'':''}
+  ].filter(c=>c.msg!==''),'DDMMAAAA (ex: 15032025)');
+  CF(ctx,'18.3A Tipo da Moeda (102–104)',102,104,ln,[{test:p(ln,102,104)==='BRL',sev:'WARN',msg:`Deve ser "BRL", encontrado "${p(ln,102,104)}"`}],'"BRL"','BRL');
+  CF(ctx,'19.3A Quantidade de Moeda (105–119)',105,119,ln,[{test:p(ln,105,119)==='000000000000000',sev:'WARN',msg:'Deve ser 15 zeros para pagamentos BRL'}],'000000000000000 (15 zeros)','000000000000000');
+  const vp=p(ln,120,134);
+  CF(ctx,'20.3A Valor do Pagamento (120–134)',120,134,ln,[
+    {test:/^\d{15}$/.test(vp),sev:'ERROR',msg:`Deve ter 15 dígitos (13 inteiros + 2 decimais implícitos), encontrado "${vp}"`},
+    {test:parseInt(vp,10)>0,sev:'WARN',msg:'Valor zerado'}
+  ],'15 dígitos numéricos (centavos)');
+  CF(ctx,'22.3A Data Real (155–162)',155,162,ln,[{test:/^\d{8}$/.test(p(ln,155,162))||isBl(p(ln,155,162))||p(ln,155,162)==='00000000',sev:'WARN',msg:'Na remessa deve ser 00000000 (zeros) ou brancos'}],'00000000 na remessa','00000000');
+  CF(ctx,'29.3A Aviso ao Favorecido (230)',230,230,ln,[{test:p(ln,230,230)==='0',sev:'WARN',msg:`BB padrão é "0" (sem aviso), encontrado "${p(ln,230,230)}"`}],'"0" (BB padrão)','0');
+  CF(ctx,'30.3A Ocorrências (231–240)',231,240,ln,[{test:isBl(p(ln,231,240))||p(ln,231,240)==='0000000000',sev:'WARN',msg:'Remessa deve ter zeros/brancos'}],'0000000000 na remessa','0000000000');
+}
+
+/* SEGMENTO B — BB CNAB240 */
+function vSB(ctx,ln){
+  CF(ctx,'05.3B Segmento (14)',14,14,ln,[{test:p(ln,14,14)==='B',sev:'ERROR',msg:`Deve ser "B", encontrado "${p(ln,14,14)}"`}],'"B"','B');
+  const fi=p(ln,15,17);
+  const fiValidos=['001','002','003','004','005'];
+  const fiDesc={'001':'Chave Pix Telefone','002':'Chave Pix E-mail','003':'Chave Pix CPF/CNPJ','004':'Chave Aleatória','005':'Dados Bancários'};
+  CF(ctx,'06.3B Forma de Iniciação PIX (15–17)',15,17,ln,[{test:fiValidos.includes(fi),sev:'ERROR',msg:`Código inválido: "${fi}". Válidos: 001=Telefone 002=E-mail 003=CPF/CNPJ 004=Aleatória 005=Dados Bancários`}],'001=Telefone · 002=Email · 003=CPF/CNPJ · 004=Aleatória · 005=Dados Bancários');
+  const ti=p(ln,18,18);
+  CF(ctx,'07.3B Tipo Inscrição Favorecido (18)',18,18,ln,[{test:['1','2'].includes(ti),sev:'WARN',msg:`Deve ser "1"(CPF) ou "2"(CNPJ), encontrado "${ti}"`}],'"1"=CPF / "2"=CNPJ');
+  const ni=p(ln,19,32);
+  if(ti==='1'&&!chkCPF(ni.slice(-11)))ctx.iss.push({line:ctx.ln,sev:'WARN',seg:ctx.seg,msg:`[08.3B CPF] CPF "${ni.slice(-11)}" com DV inválido`});
+  if(ti==='2'&&!chkCNPJ(ni))ctx.iss.push({line:ctx.ln,sev:'WARN',seg:ctx.seg,msg:`[08.3B CNPJ] CNPJ "${ni}" com DV inválido`});
+  /* chave nas posições 128-226 (Informação 12) */
+  if(fi==='001'){
+    const ch=p(ln,128,226).trim();
+    CF(ctx,'11.3B Chave PIX Telefone (128–226)',128,226,ln,[{test:ch.length>0,sev:'ERROR',msg:'Chave telefone deve ser informada nas posições 128-226'},{test:!ch||/^\+\d{13}$/.test(ch),sev:'WARN',msg:`Formato esperado: +55DDDXXXXXXXXX (${ch.length} chars encontrados): "${ch}"`}],'Formato: +55DDDXXXXXXXXX (ex: +5511987654321)');
+  }
+  if(fi==='002'){
+    const ch=p(ln,128,226).trim();
+    CF(ctx,'11.3B Chave PIX E-mail (128–226)',128,226,ln,[{test:ch.length>0,sev:'ERROR',msg:'Chave e-mail deve ser informada'},{test:!ch||/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ch),sev:'WARN',msg:`E-mail inválido: "${ch}"`}],'Endereço de e-mail');
+  }
+  if(fi==='003'){
+    const cpfcnpj=ni.trim();
+    CF(ctx,'11.3B Chave PIX CPF/CNPJ (pos 19–32)',19,32,ln,[{test:/^\d{14}$/.test(cpfcnpj)&&parseInt(cpfcnpj,10)>0,sev:'ERROR',msg:`Para tipo 003, CPF/CNPJ nas posições 19-32. Encontrado: "${cpfcnpj}"`}],'CPF/CNPJ nas posições 19-32');
+  }
+  if(fi==='004'){
+    const ch=p(ln,128,226).trim();
+    CF(ctx,'11.3B Chave PIX Aleatória (128–226)',128,226,ln,[{test:ch.length>0,sev:'ERROR',msg:'Chave aleatória deve ser informada nas posições 128-226'},{test:!ch||/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(ch),sev:'WARN',msg:`UUID esperado (XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX). Encontrado: "${ch}"`}],'UUID: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX');
+  }
+  if(fi==='005'){
+    /* Dados bancários BB: tipo conta + ag + conta + dv nas pos 128-226 */
+    const tipoConta=p(ln,128,129).trim();
+    CF(ctx,'11.3B PIX Dados Bancários - Tipo Conta (128–129)',128,129,ln,[{test:['01','02'].includes(tipoConta),sev:'WARN',msg:`Tipo Conta: "01"=Corrente "02"=Pagamento. Encontrado: "${tipoConta}"`}],'01=Corrente · 02=Pagamento');
+  }
+  /* ISPB do banco destinatário pos 233-240 */
+  const ispb=p(ln,233,240);
+  CF(ctx,'13.3B Código ISPB (233–240)',233,240,ln,[{test:/^\d{8}$/.test(ispb)||isBl(ispb)||isZero(ispb),sev:'WARN',msg:`ISPB deve ter 8 dígitos (preencher se banco destinatário não possuir código COMPE), encontrado "${ispb}"`}],'8 dígitos (ISPB do PSP) ou zeros se n/a');
+}
+
+/* SEGMENTO J — Boleto */
+function vSJ(ctx,ln){
+  CF(ctx,'05.3J Segmento (14)',14,14,ln,[{test:p(ln,14,14)==='J',sev:'ERROR',msg:`Deve ser "J", encontrado "${p(ln,14,14)}"`}],'"J"','J');
+  CF(ctx,'06.3J Tipo de Movimento (15)',15,15,ln,[{test:['0','9'].includes(p(ln,15,15)),sev:'ERROR',msg:`Deve ser "0" ou "9", encontrado "${p(ln,15,15)}"`}],'"0"=Inclusão / "9"=Exclusão','0');
+  CF(ctx,'07.3J Código Instrução (16–17)',16,17,ln,[{test:['00','99'].includes(p(ln,16,17)),sev:'WARN',msg:`Deve ser "00" ou "99", encontrado "${p(ln,16,17)}"`}],'"00"=Inclusão / "99"=Exclusão','00');
+  const cb=p(ln,18,61);
+  CF(ctx,'08.3J Código de Barras (18–61)',18,61,ln,[
+    {test:/^\d{44}$/.test(cb),sev:'ERROR',msg:`Deve ter 44 dígitos numéricos, encontrado ${cb.trim().length} chars`}
+  ],'44 dígitos numéricos');
+  CF(ctx,'09.3J Nome do Beneficiário (62–91)',62,91,ln,[{test:p(ln,62,91).trim().length>0,sev:'ERROR',msg:'Nome do beneficiário obrigatório'}],'Alfanumérico, obrigatório');
+  const dv=p(ln,92,99);
+  CF(ctx,'10.3J Data Vencimento (92–99)',92,99,ln,[{test:/^\d{8}$/.test(dv)||dv==='00000000',sev:'WARN',msg:`DDMMAAAA ou zeros, encontrado: "${dv}"`}],'DDMMAAAA ou 00000000');
+  CF(ctx,'11.3J Valor Nominal (100–114)',100,114,ln,[{test:/^\d{15}$/.test(p(ln,100,114)),sev:'ERROR',msg:`Deve ter 15 dígitos, encontrado "${p(ln,100,114)}"`}],'15 dígitos (zeros se não houver)');
+  CF(ctx,'12.3J Valor Desconto+Abatimento (115–129)',115,129,ln,[{test:/^\d{15}$/.test(p(ln,115,129)),sev:'ERROR',msg:`Deve ter 15 dígitos, encontrado "${p(ln,115,129)}"`}],'15 dígitos (zeros se não houver)');
+  CF(ctx,'13.3J Valor Mora+Multa (130–144)',130,144,ln,[{test:/^\d{15}$/.test(p(ln,130,144)),sev:'ERROR',msg:`Deve ter 15 dígitos, encontrado "${p(ln,130,144)}"`}],'15 dígitos (zeros se não houver)');
+  const dp=p(ln,145,152);
+  CF(ctx,'14.3J Data do Pagamento (145–152)',145,152,ln,[
+    {test:/^\d{8}$/.test(dp),sev:'ERROR',msg:`Deve ser DDMMAAAA, encontrado "${dp}"`},
+    {test:!(/^\d{8}$/.test(dp))||chkDt(dp).ok,sev:'ERROR',msg:/^\d{8}$/.test(dp)?chkDt(dp).msg||'':''}
+  ].filter(c=>c.msg!==''),'DDMMAAAA');
+  const vpj=p(ln,153,167);
+  CF(ctx,'15.3J Valor do Pagamento (153–167)',153,167,ln,[
+    {test:/^\d{15}$/.test(vpj),sev:'ERROR',msg:`Deve ter 15 dígitos, encontrado "${vpj}"`},
+    {test:parseInt(vpj,10)>0,sev:'WARN',msg:'Valor zerado'}
+  ],'15 dígitos (centavos)');
+  CF(ctx,'19.3J Código de Moeda (223–224)',223,224,ln,[{test:p(ln,223,224)==='09',sev:'WARN',msg:`BB usa "09", encontrado "${p(ln,223,224)}"`}],'"09"','09');
+  CF(ctx,'21.3J Ocorrências (231–240)',231,240,ln,[{test:isBl(p(ln,231,240))||p(ln,231,240)==='0000000000',sev:'WARN',msg:'Remessa deve ter zeros/brancos'}],'0000000000 na remessa','0000000000');
+}
+
+/* SEGMENTO J52 — Pagador/Beneficiário */
+function vSJ52(ctx,ln){
+  CF(ctx,'05.4.J52 Segmento (14)',14,14,ln,[{test:p(ln,14,14)==='J',sev:'ERROR',msg:`Deve ser "J", encontrado "${p(ln,14,14)}"`}],'"J"','J');
+  CF(ctx,'08.4.J52 Identificação Reg. Opcional (18–19)',18,19,ln,[{test:p(ln,18,19)==='52',sev:'ERROR',msg:`Deve ser "52", encontrado "${p(ln,18,19)}"`}],'"52"','52');
+  const ti1=p(ln,20,20);
+  CF(ctx,'09.4.J52 Tipo Inscrição Pagador (20)',20,20,ln,[{test:['1','2'].includes(ti1),sev:'ERROR',msg:`Deve ser "1"(CPF) ou "2"(CNPJ), encontrado "${ti1}"`}],'"1"=CPF / "2"=CNPJ');
+  CF(ctx,'10.4.J52 Número Inscrição Pagador (21–35)',21,35,ln,[{test:/^\d{15}$/.test(p(ln,21,35)),sev:'ERROR',msg:`Deve ter 15 dígitos, encontrado "${p(ln,21,35)}"`}],'15 dígitos');
+  CF(ctx,'11.4.J52 Nome Pagador (36–75)',36,75,ln,[{test:p(ln,36,75).trim().length>0,sev:'ERROR',msg:'Nome do pagador obrigatório'}],'Alfanumérico, obrigatório');
+  const ti2=p(ln,76,76);
+  CF(ctx,'12.4.J52 Tipo Inscrição Beneficiário (76)',76,76,ln,[{test:['1','2'].includes(ti2),sev:'ERROR',msg:`Deve ser "1"(CPF) ou "2"(CNPJ), encontrado "${ti2}"`}],'"1"=CPF / "2"=CNPJ');
+  CF(ctx,'13.4.J52 Número Inscrição Beneficiário (77–91)',77,91,ln,[{test:/^\d{15}$/.test(p(ln,77,91)),sev:'ERROR',msg:`Deve ter 15 dígitos, encontrado "${p(ln,77,91)}"`}],'15 dígitos');
+  CF(ctx,'14.4.J52 Nome Beneficiário (92–131)',92,131,ln,[{test:p(ln,92,131).trim().length>0,sev:'ERROR',msg:'Nome do beneficiário obrigatório'}],'Alfanumérico, obrigatório');
+}
+
+/* SEGMENTO J52 PIX QR CODE */
+function vSJ52pix(ctx,ln){
+  CF(ctx,'08.4.J52-PIX Identificação (18–19)',18,19,ln,[{test:p(ln,18,19)==='52',sev:'ERROR',msg:`Deve ser "52", encontrado "${p(ln,18,19)}"`}],'"52"','52');
+  CF(ctx,'09.4.J52-PIX Tipo Inscrição Devedor (20)',20,20,ln,[{test:['1','2'].includes(p(ln,20,20)),sev:'WARN',msg:`Deve ser "1"(CPF) ou "2"(CNPJ), encontrado "${p(ln,20,20)}"`}],'"1"=CPF / "2"=CNPJ');
+  CF(ctx,'11.4.J52-PIX Nome Devedor (36–75)',36,75,ln,[{test:p(ln,36,75).trim().length>0,sev:'WARN',msg:'Nome do devedor não informado'}],'Alfanumérico');
+  CF(ctx,'12.4.J52-PIX Tipo Inscrição Favorecido (76)',76,76,ln,[{test:['1','2'].includes(p(ln,76,76)),sev:'WARN',msg:`Deve ser "1"(CPF) ou "2"(CNPJ), encontrado "${p(ln,76,76)}"`}],'"1"=CPF / "2"=CNPJ');
+  CF(ctx,'14.4.J52-PIX Nome Favorecido (92–131)',92,131,ln,[{test:p(ln,92,131).trim().length>0,sev:'WARN',msg:'Nome do favorecido não informado'}],'Alfanumérico');
+  const url=p(ln,132,210).trim();
+  CF(ctx,'15.4.J52-PIX URL/Chave QR (132–210)',132,210,ln,[
+    {test:url.length>0,sev:'ERROR',msg:'URL do QR Code ou chave de endereçamento é obrigatória (pos 132-210)'},
+    {test:!url||url.length<=79,sev:'WARN',msg:`URL/chave longa demais: ${url.length} chars (máx 79)`}
+  ],'URL do QR Code ou chave de endereçamento (obrigatório)');
+}
+
+/* SEGMENTO N — Tributos */
+function vSN(ctx,ln,fo){
+  CF(ctx,'05.3N Segmento (14)',14,14,ln,[{test:p(ln,14,14)==='N',sev:'ERROR',msg:`Deve ser "N", encontrado "${p(ln,14,14)}"`}],'"N"','N');
+  CF(ctx,'06.3N Tipo de Movimento (15)',15,15,ln,[{test:['0','9'].includes(p(ln,15,15)),sev:'ERROR',msg:`Deve ser "0" ou "9", encontrado "${p(ln,15,15)}"`}],'"0"=Inclusão / "9"=Exclusão','0');
+  CF(ctx,'07.3N Código Instrução (16–17)',16,17,ln,[{test:['00','99'].includes(p(ln,16,17)),sev:'WARN',msg:`Deve ser "00" ou "99", encontrado "${p(ln,16,17)}"`}],'"00"=Inclusão / "99"=Exclusão','00');
+  CF(ctx,'10.3N Nome do Contribuinte (58–87)',58,87,ln,[{test:p(ln,58,87).trim().length>0,sev:'ERROR',msg:'Nome do contribuinte obrigatório'}],'Alfanumérico, obrigatório');
+  const dp=p(ln,88,95);
+  CF(ctx,'11.3N Data do Pagamento (88–95)',88,95,ln,[
+    {test:/^\d{8}$/.test(dp),sev:'ERROR',msg:`Deve ser DDMMAAAA, encontrado "${dp}"`},
+    {test:!(/^\d{8}$/.test(dp))||chkDt(dp).ok,sev:'ERROR',msg:/^\d{8}$/.test(dp)?chkDt(dp).msg||'':''}
+  ].filter(c=>c.msg!==''),'DDMMAAAA');
+  const vt=p(ln,96,110);
+  CF(ctx,'12.3N Valor Total Pagamento (96–110)',96,110,ln,[
+    {test:/^\d{15}$/.test(vt),sev:'ERROR',msg:`Deve ter 15 dígitos, encontrado "${vt}"`},
+    {test:parseInt(vt,10)>0,sev:'WARN',msg:'Valor zerado'}
+  ],'15 dígitos (centavos)');
+  /* Validar campos variáveis conforme tipo tributo (pos 111-230) */
+  const codTrib=p(ln,133,134).trim();
+  if(fo==='16'||codTrib==='16'){/* DARF Normal */
+    CF(ctx,'01.N2 Código Receita DARF (111–116)',111,116,ln,[{test:p(ln,111,116).trim().length>0,sev:'ERROR',msg:'Código da receita obrigatório para DARF'}],'6 dígitos código receita');
+    CF(ctx,'05.N2 Período de Apuração (135–142)',135,142,ln,[{test:/^\d{8}$/.test(p(ln,135,142)),sev:'WARN',msg:`Deve ser DDMMAAAA, encontrado "${p(ln,135,142)}"`}],'DDMMAAAA');
+    CF(ctx,'07.N2 Valor Principal (160–174)',160,174,ln,[{test:/^\d{15}$/.test(p(ln,160,174)),sev:'WARN',msg:`Deve ter 15 dígitos, encontrado "${p(ln,160,174)}"`}],'15 dígitos');
+  }
+  if(fo==='17'||codTrib==='17'){/* GPS */
+    CF(ctx,'01.N1 Código Receita GPS (111–116)',111,116,ln,[{test:p(ln,111,116).trim().length>0,sev:'ERROR',msg:'Código da receita obrigatório para GPS'}],'6 dígitos código receita');
+    CF(ctx,'04.N1 Identificação Tributo GPS (133–134)',133,134,ln,[{test:p(ln,133,134)==='17',sev:'WARN',msg:`GPS deve ter "17", encontrado "${p(ln,133,134)}"`}],'"17"','17');
+    CF(ctx,'05.N1 Competência MMAAAA (135–140)',135,140,ln,[{test:/^\d{6}$/.test(p(ln,135,140)),sev:'WARN',msg:`Deve ser MMAAAA, encontrado "${p(ln,135,140)}"`}],'MMAAAA (6 dígitos)');
+  }
+  if(fo==='18'||codTrib==='18'){/* DARF Simples */
+    CF(ctx,'04.N3 Identificação Tributo (133–134)',133,134,ln,[{test:p(ln,133,134)==='18',sev:'WARN',msg:`DARF Simples deve ter "18", encontrado "${p(ln,133,134)}"`}],'"18"','18');
+  }
+  CF(ctx,'14.3N Ocorrências (231–240)',231,240,ln,[{test:isBl(p(ln,231,240))||p(ln,231,240)==='0000000000',sev:'WARN',msg:'Remessa deve ter zeros/brancos'}],'0000000000 na remessa','0000000000');
+}
+
+/* SEGMENTO O — Tributos com código de barras */
+function vSO(ctx,ln){
+  CF(ctx,'05.3O Segmento (14)',14,14,ln,[{test:p(ln,14,14)==='O',sev:'ERROR',msg:`Deve ser "O", encontrado "${p(ln,14,14)}"`}],'"O"','O');
+  CF(ctx,'06.3O Tipo de Movimento (15)',15,15,ln,[{test:['0','9'].includes(p(ln,15,15)),sev:'ERROR',msg:`Deve ser "0" ou "9", encontrado "${p(ln,15,15)}"`}],'"0"=Inclusão / "9"=Exclusão','0');
+  CF(ctx,'07.3O Código Instrução (16–17)',16,17,ln,[{test:['00','99'].includes(p(ln,16,17)),sev:'WARN',msg:`Deve ser "00" ou "99", encontrado "${p(ln,16,17)}"`}],'"00"=Inclusão / "99"=Exclusão','00');
+  CF(ctx,'08.3O Código de Barras (18–61)',18,61,ln,[{test:p(ln,18,61).trim().length>0,sev:'ERROR',msg:'Código de barras obrigatório'}],'44 posições, código de barras da concessionária/guia');
+  CF(ctx,'09.3O Nome Concessionária (62–91)',62,91,ln,[{test:p(ln,62,91).trim().length>0,sev:'ERROR',msg:'Nome da concessionária/órgão obrigatório'}],'Alfanumérico, obrigatório');
+  const dv=p(ln,92,99);
+  CF(ctx,'10.3O Data Nominal Vencimento (92–99)',92,99,ln,[{test:/^\d{8}$/.test(dv)||dv==='00000000',sev:'WARN',msg:`DDMMAAAA ou zeros, encontrado: "${dv}"`}],'DDMMAAAA ou 00000000');
+  const dp=p(ln,100,107);
+  CF(ctx,'11.3O Data do Pagamento (100–107)',100,107,ln,[
+    {test:/^\d{8}$/.test(dp),sev:'ERROR',msg:`Deve ser DDMMAAAA, encontrado "${dp}"`},
+    {test:!(/^\d{8}$/.test(dp))||chkDt(dp).ok,sev:'ERROR',msg:/^\d{8}$/.test(dp)?chkDt(dp).msg||'':''}
+  ].filter(c=>c.msg!==''),'DDMMAAAA');
+  const vo=p(ln,108,122);
+  CF(ctx,'12.3O Valor do Pagamento (108–122)',108,122,ln,[
+    {test:/^\d{15}$/.test(vo),sev:'ERROR',msg:`Deve ter 15 dígitos, encontrado "${vo}"`},
+    {test:parseInt(vo,10)>0,sev:'WARN',msg:'Valor zerado'}
+  ],'15 dígitos (centavos)');
+  CF(ctx,'16.3O Ocorrências (231–240)',231,240,ln,[{test:isBl(p(ln,231,240))||p(ln,231,240)==='0000000000',sev:'WARN',msg:'Remessa deve ter zeros/brancos'}],'0000000000 na remessa','0000000000');
+}
+
+/* ══════════════════════════════════════════════
+   MAIN VALIDATE
+══════════════════════════════════════════════ */
+function validate(lines){
+  const iss=[],fr=[];
+  allIssues_tmp=iss;
+  const recs=[];
+  let hdrFound=false,trlFound=false,totalLotes=0,totalRegs=0;
+  let lotsOpen=0,regsInLote=0,somaLote=0,seqReg=0,loteCur='0000';
+  let loteForma='00',loteTipo='00';
+
+  lines.forEach((line,idx)=>{
+    const ln=idx+1;
+    // pad line to 240 chars
+    const lineP=line.padEnd(240,' ').substring(0,240);
+    const rt=p(lineP,8,8);
+    const ctx={iss,fr,ln,seg:'?'};
+    totalRegs++;
+
+    if(rt==='0'){
+      if(hdrFound)iss.push({line:ln,sev:'ERROR',seg:'HEADER ARQ',msg:'Segundo header do arquivo detectado — deve haver apenas um.'});
+      hdrFound=true;
+      ctx.seg='HEADER ARQ';
+      vHA(ctx,lineP);
+      recs.push({ln,desc:'Header do Arquivo · Banco do Brasil (001)',ok:true});
+    } else if(rt==='1'){
+      lotsOpen++;totalLotes++;regsInLote=0;somaLote=0;seqReg=0;
+      loteCur=p(lineP,4,7);
+      ctx.seg=`HEADER LOTE #${loteCur}`;
+      const r=vHL(ctx,lineP);
+      loteForma=r.fo;loteTipo=r.ts;
+      const tipoDesc=loteTipo==='20'?'Fornecedor':loteTipo==='30'?'Salário/Outros':loteTipo==='98'?'Diversos':'Tipo '+loteTipo;
+      const formaDesc=loteForma==='01'?'Conta Corrente':loteForma==='05'?'TED Poupança':loteForma==='30'?'Boleto BB':loteForma==='31'?'Boleto Outros Bancos':loteForma==='45'?'PIX Chave':loteForma==='47'?'PIX Dados Bancários':loteForma==='16'?'DARF':loteForma==='17'?'GPS':loteForma==='18'?'DARF Simples':loteForma==='11'?'Barras':loteForma==='21'?'DARJ':loteForma==='22'?'GARE-ICMS':loteForma==='23'?'GARE-DR':loteForma==='24'?'GARE-ITCMD':'Forma '+loteForma;
+      recs.push({ln,desc:`Header Lote #${loteCur} · ${tipoDesc} · ${formaDesc}`,ind:1,ok:true});
+    } else if(rt==='5'){
+      lotsOpen--;
+      ctx.seg=`TRAILER LOTE #${p(lineP,4,7)}`;
+      vTL(ctx,lineP,regsInLote,somaLote);
+      recs.push({ln,desc:`Trailer Lote #${p(lineP,4,7)} · ${regsInLote} registros detalhe`,ind:1,ok:true});
+    } else if(rt==='9'){
+      trlFound=true;
+      if(ln!==lines.length)iss.push({line:ln,sev:'WARN',seg:'TRAILER ARQ',msg:'Trailer não é a última linha do arquivo.'});
+      if(p(lineP,4,7)!=='9999')iss.push({line:ln,sev:'ERROR',seg:'TRAILER ARQ',msg:`Lote do trailer deve ser "9999", encontrado "${p(lineP,4,7)}".`});
+      if(lotsOpen!==0)iss.push({line:ln,sev:'ERROR',seg:'TRAILER ARQ',msg:`${lotsOpen} lote(s) sem trailer correspondente.`});
+      ctx.seg='TRAILER ARQ';
+      vTA(ctx,lineP,totalLotes,totalRegs);
+      recs.push({ln,desc:`Trailer do Arquivo · Lotes: ${parseInt(p(lineP,18,23),10)} · Registros: ${parseInt(p(lineP,24,29),10)}`,ok:true});
+    } else if(rt==='3'){
+      regsInLote++;seqReg++;
+      const sc=p(lineP,14,14).toUpperCase();
+      const sr=parseInt(p(lineP,9,13),10);
+      if(sr!==seqReg)iss.push({line:ln,sev:'ERROR',seg:`SEG ${sc}`,msg:`Seq. no lote: ${sr} (esperado: ${seqReg}). Inicia em 00001 em cada lote.`});
+      ctx.seg=`SEG ${sc}`;
+
+      if(sc==='A'){
+        vSA(ctx,lineP,loteForma);
+        somaLote+=parseInt(p(lineP,120,134),10)||0;
+        const isPix=loteForma==='45';
+        recs.push({ln,desc:`Seg. A — ${isPix?'PIX':loteForma==='01'?'Conta BB':loteForma==='05'?'TED Poupança':'TED/Crédito'} · Lote: ${p(lineP,4,7)} · Seq: ${String(sr).padStart(5,'0')}`,ind:2,ok:true});
+      } else if(sc==='B'){
+        vSB(ctx,lineP);
+        recs.push({ln,desc:`Seg. B PIX · Lote: ${p(lineP,4,7)} · Seq: ${String(sr).padStart(5,'0')}`,ind:2,ok:true});
+      } else if(sc==='J'){
+        const id=p(lineP,18,19);
+        if(id==='52'){
+          const url=p(lineP,132,210).trim();
+          const isPixQR=url.length>5||(loteForma==='47'||loteForma==='45');
+          if(isPixQR){vSJ52pix(ctx,lineP);recs.push({ln,desc:`Seg. J52 PIX QR Code · Lote: ${p(lineP,4,7)} · Seq: ${String(sr).padStart(5,'0')}`,ind:2,ok:true});}
+          else{vSJ52(ctx,lineP);recs.push({ln,desc:`Seg. J52 Pagador/Beneficiário · Lote: ${p(lineP,4,7)} · Seq: ${String(sr).padStart(5,'0')}`,ind:2,ok:true});}
+        } else {
+          vSJ(ctx,lineP);
+          somaLote+=parseInt(p(lineP,153,167),10)||0;
+          recs.push({ln,desc:`Seg. J — Boleto · Lote: ${p(lineP,4,7)} · Seq: ${String(sr).padStart(5,'0')}`,ind:2,ok:true});
+        }
+      } else if(sc==='N'){
+        vSN(ctx,lineP,loteForma);
+        somaLote+=parseInt(p(lineP,96,110),10)||0;
+        const ct=p(lineP,133,134).trim();
+        const dn=ct==='16'?'DARF Normal':ct==='17'?'GPS':ct==='18'?'DARF Simples':ct==='21'?'DARJ':ct==='22'?'GARE-ICMS':ct==='23'?'GARE-DR':ct==='24'?'GARE-ITCMD':`Tributo(${ct})`;
+        recs.push({ln,desc:`Seg. N — ${dn} · Lote: ${p(lineP,4,7)} · Seq: ${String(sr).padStart(5,'0')}`,ind:2,ok:true});
+      } else if(sc==='O'){
+        vSO(ctx,lineP);
+        somaLote+=parseInt(p(lineP,108,122),10)||0;
+        recs.push({ln,desc:`Seg. O — Tributo c/ Barras · Lote: ${p(lineP,4,7)} · Seq: ${String(sr).padStart(5,'0')}`,ind:2,ok:true});
+      } else if(sc==='C'){
+        /* Segmento C - dados complementares, informativo */
+        recs.push({ln,desc:`Seg. C — Dados Complementares · Lote: ${p(lineP,4,7)} · Seq: ${String(sr).padStart(5,'0')}`,ind:2,ok:true});
+      } else if(sc==='W'){
+        recs.push({ln,desc:`Seg. W — FGTS / Complementar · Lote: ${p(lineP,4,7)} · Seq: ${String(sr).padStart(5,'0')}`,ind:2,ok:true});
+      } else if(sc==='Z'){
+        recs.push({ln,desc:`Seg. Z — Autenticação (Retorno) · Lote: ${p(lineP,4,7)} · Seq: ${String(sr).padStart(5,'0')}`,ind:2,ok:true});
+      } else {
+        iss.push({line:ln,sev:'WARN',seg:`SEG ${sc}`,msg:`Segmento desconhecido: "${sc}". BB suporta: A,B,C,J,J52,N,O,W,Z.`});
+        recs.push({ln,desc:`Seg. ${sc} — Desconhecido`,ind:2,ok:false});
+      }
+    } else {
+      iss.push({line:ln,sev:'ERROR',seg:'ESTRUTURA',msg:`Tipo de registro inválido: "${rt}" (válidos: 0,1,3,5,9).`});
+    }
+  });
+
+  if(!hdrFound)iss.push({line:0,sev:'ERROR',seg:'ARQUIVO',msg:'Header do arquivo (tipo 0) não encontrado — deve ser a primeira linha.'});
+  if(!trlFound)iss.push({line:0,sev:'ERROR',seg:'ARQUIVO',msg:'Trailer do arquivo (tipo 9) não encontrado — deve ser a última linha.'});
+  if(lotsOpen>0)iss.push({line:0,sev:'ERROR',seg:'ARQUIVO',msg:`${lotsOpen} lote(s) aberto(s) sem trailer correspondente.`});
+
+  /* Validar comprimento das linhas */
+  lines.forEach((line,idx)=>{
+    if(line.length!==240&&line.length!==0){
+      if(line.length<240)iss.push({line:idx+1,sev:'WARN',seg:'ESTRUTURA',msg:`Linha ${idx+1} tem ${line.length} bytes (esperado 240). Será completada com espaços.`});
+      if(line.length>240)iss.push({line:idx+1,sev:'ERROR',seg:'ESTRUTURA',msg:`Linha ${idx+1} tem ${line.length} bytes (máximo 240).`});
+    }
+  });
+
+  return{iss,fr,recs};
+}
+
+/* ══════════════════════════════════════════════
+   RENDER
+══════════════════════════════════════════════ */
+function renderRes(file,lines,res){
+  allIssues=res.iss;allFR=res.fr;
+  const errs=allIssues.filter(i=>i.sev==='ERROR').length;
+  const warns=allIssues.filter(i=>i.sev==='WARN').length;
+  const oks=allIssues.filter(i=>i.sev==='OK').length;
+  const total=lines.length;
+  $('ds').className='dot'+(errs>0?' er':'');
+  $('fn').textContent=file.name;$('fm').textContent=`${total} linhas · ${(file.size/1024).toFixed(1)} KB`;
+  const vb=$('vb');
+  if(errs>0){vb.className='vd ver';$('vi').textContent='✗';$('vtt').textContent=`${errs} erro(s) encontrado(s)`;$('vts').textContent='Arquivo com erros que causarão rejeição no BB. Corrija antes de transmitir.';}
+  else if(warns>0){vb.className='vd vwa';$('vi').textContent='⚠';$('vtt').textContent=`Arquivo válido com ${warns} aviso(s)`;$('vts').textContent='Estrutura OK — verifique os campos sinalizados antes de transmitir ao BB.';}
+  else{vb.className='vd vok';$('vi').textContent='✓';$('vtt').textContent='Arquivo válido — sem erros';$('vts').textContent='Estrutura CNAB240 Banco do Brasil em conformidade com o manual (nov/2020).';}
+  $('sg').innerHTML=[
+    {c:'er',l:'Erros',v:errs,s:'críticos / estruturais'},
+    {c:'wa',l:'Avisos',v:warns,s:'campos a verificar'},
+    {c:'ok',l:'OK',v:oks,s:'verificações passadas'},
+    {c:'in',l:'Linhas',v:total,s:'registros no arquivo'}
+  ].map(x=>`<div class="sc ${x.c}"><div class="sl">${x.l}</div><div class="sv">${x.v}</div><div class="ss">${x.s}</div></div>`).join('');
+  $('ecb').textContent=allIssues.length;
+  renderOcc(allIssues);
+  $('rt').innerHTML=res.recs.map(r=>`<div class="ri${r.ind?' i'+r.ind:''}"><div class="rd ${r.ok?'ok':'er'}"></div><span style="flex:1;color:var(--txm)">${r.desc}</span><span class="rs ${r.ok?'rso':'rse'}">${r.ok?'OK':'ERR'}</span></div>`).join('');
+}
+
+function renderOcc(issues){
+  const el=$('el');
+  const fl=curF==='ALL'?issues:issues.filter(i=>i.sev===curF);
+  if(!fl.length){el.innerHTML=`<div class="empty"><span class="bi">✓</span><strong>Nenhuma ocorrência nesta categoria</strong></div>`;return;}
+  el.innerHTML=fl.map(i=>`<div class="ei"><span class="eln">Ln ${i.line||'—'}</span><span class="esv s${i.sev}">${i.sev}</span><span class="esg">${i.seg||''}</span><span class="emg">${esc(i.msg)}</span></div>`).join('');
+}
+
+/* FIELD PANEL */
+const TMAX=20;
+function renderFP(rows){
+  const el=$('fp');
+  const compact=$('chkOk')?.checked!==false;
+  let fl=curFF==='ALL'?rows:rows.filter(r=>r.st===curFF);
+  if(!fl.length){el.innerHTML=`<div class="empty"><span class="bi">—</span><strong>Nenhum campo nesta categoria</strong></div>`;return;}
+  const toShow=fl.slice(0,fpSh);
+  const html=toShow.map(r=>(r.st==='OK'&&compact)?renderOkRow(r):renderCompCard(r)).join('');
+  const rem=fl.length-fpSh;
+  const more=rem>0?`<div class="smore"><p style="font-size:10px;margin-bottom:8px">Mostrando ${fpSh} de ${fl.length} campos</p><button onclick="fpSh=Math.min(fpSh+80,allFR.length);renderFP(allFR)">Carregar mais ${Math.min(rem,80)} campos ↓</button></div>`:'';
+  el.innerHTML=`<div class="fpw">${html}</div>${more}`;
+}
+
+function buildTape(found,fix,posIni){
+  const fw=found.length;
+  const useTape=fw<=TMAX&&(fix===null||fix.length<=TMAX+2);
+  if(!useTape||fix===null){
+    const fd=esc(found).replace(/ /g,'·')||'(vazio)';
+    const fxd=fix?esc(fix).replace(/ /g,'·'):null;
+    return`<div class="tcw">
+      <div class="tcc"><div class="tclbl la">📄 COMO ESTÁ NO ARQUIVO  pos ${posIni}–${posIni+fw-1}</div><div class="tcv ${found.trim().length===0?'tvem':'tvat'}">${found.trim().length===0?'(campo vazio — apenas espaços)':fd}</div></div>
+      <div class="tcarr">→</div>
+      <div class="tcc"><div class="tclbl lm">✓ COMO DEVE FICAR (manual BB)</div><div class="tcv ${fxd?'tvfi':'tvds'}">${fxd||'(ver regra no rodapé do cartão)'}</div></div>
+    </div>`;
+  }
+  let fn=found,fx=fix||found,trunc=false;
+  if(fw>TMAX){fn=found.slice(0,TMAX-5)+'···'+found.slice(fw-3);fx=fix?(fix.length>TMAX?fix.slice(0,TMAX-5)+'···'+fix.slice(fix.length-3):fx.padEnd(fn.length,' ')):fn;trunc=true;}
+  while(fx.length<fn.length)fx+=' ';
+  const diffs=[];for(let i=0;i<fn.length;i++){if(fn[i]==='·')continue;if(fn[i]!==fx[i])diffs.push(i);}
+  const mkPos=()=>{let s='';for(let i=0;i<fn.length;i++){if(fn.slice(i,i+3)==='···'){s+=`<div class="tpc">···</div>`;i+=2;}else s+=`<div class="tpc">${posIni+i}</div>`;}return s;};
+  const mkRow=(str,isAkt)=>{let s='';for(let i=0;i<str.length;i++){if(str.slice(i,i+3)==='···'){s+=`<div class="tc ttr">⋯</div>`;i+=2;continue;}const ch=str[i];const isSp=(ch===' ');let cls='';if(isAkt)cls=diffs.includes(i)?'td':'ts';else cls=diffs.includes(i)?'tfd':'tfs';s+=`<div class="tc ${cls}${isSp?' tsp':''}">${isSp?'':esc(ch)}</div>`;}return s;};
+  const hasDiff=diffs.length>0;
+  const legend=hasDiff?`<div class="tleg"><span><span class="tlegdot" style="background:var(--erb);border:1px solid var(--er)"></span>byte errado (arquivo)</span><span><span class="tlegdot" style="background:var(--okm);border:1px solid var(--ok)"></span>byte correto (manual)</span><span><span class="tlegdot" style="background:var(--cd2);border:1px solid var(--br)"></span>byte OK</span>${trunc?'<span>⋯ campo truncado para exibição</span>':''}</div>`:`<div class="tleg">${trunc?'⋯ campo truncado · ':''}Todos os bytes estão corretos ✓</div>`;
+  return`<div class="tsec"><div class="trow"><span class="tlbl lp">pos</span><div class="tcells">${mkPos()}</div></div><div class="trow"><span class="tlbl la">📄 atual</span><div class="tcells">${mkRow(fn,true)}</div></div><div class="tgap"></div><div class="trow"><span class="tlbl lm">✓ manual</span><div class="tcells">${mkRow(fx,false)}</div></div>${legend}</div>`;
+}
+
+function renderOkRow(r){
+  const v=r.enc;
+  const disp=v.trim().length>0?esc(v.length>30?v.slice(0,27)+'…':v).replace(/ /g,'·'):'(brancos)';
+  return`<div class="okr"><div class="okdot"></div><span class="oln">Ln ${r.ln}</span><span class="osg">${r.seg}</span><span class="onm">${r.campo}</span><span class="ops">pos ${r.pi}–${r.pf}</span><div class="ovw"><span class="ovl" title="${esc(v)}">${disp}</span><span class="ock">✓</span></div></div>`;
+}
+
+function renderCompCard(r){
+  const svCls=r.st==='ERROR'?'er':'wa';
+  const svLbl=r.st==='ERROR'?'ERRO':'AVISO';
+  const rIcon=r.st==='ERROR'?'✗':'⚠';
+  const fw=r.pf-r.pi+1;
+  const tape=buildTape(r.enc,r.fix,r.pi);
+  return`<div class="fcc fc${svCls}"><div class="fch"><span class="fcsvtag ${svCls}">${svLbl}</span><span class="fcnm">${r.campo}</span><span class="fcps">pos ${r.pi}–${r.pf} · ${fw} byte${fw!==1?'s':''}</span><span class="fcmt">${r.seg} · Ln ${r.ln}</span></div><div class="fcbody">${tape}</div><div class="fcrule"><span class="fcri">${rIcon}</span><span class="fcrt"><strong>Regra:</strong> ${esc(r.det||r.esp)}</span></div></div>`;
+}
+
+function cpR(){
+  const txt=allIssues.map(i=>`[${i.sev}] Ln ${i.line||0} | ${i.seg} | ${i.msg}`).join('\n');
+  navigator.clipboard.writeText(txt).then(()=>{const b=document.querySelector('.bcp');b.textContent='✓ Copiado';setTimeout(()=>b.textContent='⎘ Copiar relatório',2000);});
+}
+</script>
 </body>
 </html>
