@@ -38,7 +38,7 @@ window.CNAB_DOCS = {
       "nome": "Santander",
       "pasta": "033-santander",
       "validador": "Validador_CNAB240_Santander.html",
-      "baseDoValidador": "YLEC_2403 V.11.6 (07/2024)",
+      "baseDoValidador": "YLEC_2403 V.11.7 (06/2026)",
       "documentos": [
         {
           "titulo": "Pagamento a Fornecedores – Manual de Troca de Arquivos – Layout CNAB 240 (YLEC_2403)",
@@ -48,7 +48,7 @@ window.CNAB_DOCS = {
           "url": "https://cms.santander.com.br/sites/WPS/documentos/arq-layout-pagamento-fornecedores-set24/26-05-25_132828_pagamento-fornecedores-layout-cnab-240.pdf",
           "bytes": 1323406,
           "sha256": "4b4ddbfaade1481a6c70bfb06f56b50d283302cbc07db9e1ac8d3453e5873d0d",
-          "observacao": "A V11.6, base do validador, foi retirada do site do banco."
+          "observacao": ""
         }
       ]
     },

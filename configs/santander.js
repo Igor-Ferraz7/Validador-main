@@ -39,7 +39,7 @@
         label: 'CPF / CNPJ do titular',
         normalizer: 'cpfcnpj',
         rule: { kind: 'cpfcnpj' },
-        obs: '11 dígitos (CPF) ou 14 dígitos (CNPJ), com DV válido. Aceita máscara.'
+        obs: 'CPF (11 dígitos) ou CNPJ (14 caracteres; pode ter letras, como o CNPJ alfanumérico), com DV válido. Aceita máscara.'
       },
       {
         token: 'TipoInscricao_InsertIA',

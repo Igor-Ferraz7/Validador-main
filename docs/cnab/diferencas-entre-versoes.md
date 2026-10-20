@@ -18,7 +18,7 @@ versão mais recente publicada, e o que isso significa para o sistema.
 
 | Banco | Validador feito sobre | Versão oficial atual | O que mudou | Impacto no sistema |
 |---|---|---|---|---|
-| **Santander** (033) | V11.6 (jul/2024) | **V11.7** (jun/2026) | CNPJ com letras; fim do GARE-SP | 🔴 **Alto.** Validador e Preenchedor recusam CNPJ com letras; GARE ainda é aceito |
+| **Santander** (033) | ~~V11.6~~ → **V11.7** (jun/2026) | **V11.7** (jun/2026) | CNPJ com letras; fim do GARE-SP | ✅ **Corrigido** em 20/10/2026 (validador e Preenchedor) |
 | **Banco do Brasil** (001) | nov/2020 | **jun/2026** | FGTS Digital via QR Code; formas de TED 41 e 43 | 🟠 **Médio.** Casos novos que o validador não reconhece |
 | **Sicredi** (748) | v1.2 (mar/2024) | **V1.4** (abr/2024) | Ajustes na composição do arquivo e no Pix QR Code | 🟡 **Baixo.** Conferir os dois pontos |
 | **Sicoob** (756) | v2.11 (dez/2024) | **v3.3** (mai/2025) | Códigos de retorno da Folha; guia de Folha separado | 🟢 **Baixo.** Só a documentação de Folha mudou de lugar |
@@ -128,7 +128,7 @@ alfanuméricos. No Header de Arquivo, o campo "Número de Inscrição da Empresa
 
 ```
 Antes:   12345678000195            (14 dígitos)
-Agora:   12345678000195  ou  12ABC34501DE??   (?? = DV numérico)
+Agora:   12345678000195  ou  12ABC34501DE35   (os 2 últimos são o DV, sempre numérico)
 ```
 
 **Onde vale.** A Nota G042 é citada em 14 páginas: headers de arquivo e de
@@ -153,7 +153,11 @@ de arrecadação estadual de São Paulo para ICMS, Dívida Ativa (DR) e ITCMD
 e valida os campos do GARE. Um arquivo com GARE **passa no validador e é
 recusado pelo banco**.
 
-**Detalhes técnicos** (linhas do código, sugestões de correção):
+> ✅ **Corrigido em 20/10/2026.** O validador e o Preenchedor aceitam CNPJ com
+> letras (com o novo cálculo de DV), e o validador acusa erro para GARE-SP. O
+> validador agora segue a V11.7.
+
+**Detalhes técnicos** (o que foi encontrado e onde):
 [relatório de auditoria do Santander](relatorios/2026-10-20-033-santander.md).
 
 ---
@@ -287,10 +291,8 @@ da v086 ou mais recente com o Itaú.
 
 Em ordem de urgência:
 
-1. **Santander: CNPJ com letras** no validador e no Preenchedor. Já está em
-   vigor e hoje bloqueia arquivos corretos.
-2. **Santander: remover o GARE-SP**, que hoje passa no validador e falha no
-   banco.
+1. ~~**Santander: CNPJ com letras** no validador e no Preenchedor.~~ ✅ feito
+2. ~~**Santander: remover o GARE-SP.**~~ ✅ feito
 3. **Banco do Brasil:** auditoria completa, começando por FGTS Digital e formas
    de TED 41/43.
 4. **Sicredi:** conferir a composição do arquivo e o Pix QR Code contra a V1.4.

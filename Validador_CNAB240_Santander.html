@@ -180,7 +180,7 @@ header{position:relative;z-index:10;display:flex;align-items:center;justify-cont
       <p>Pagamento a Fornecedores · Banco Santander</p>
     </div>
   </div>
-  <span class="htag">Banco 033 · YLEC_2403 V.11.6 · PIX · QR Code · OCT · TED · Boletos</span>
+  <span class="htag">Banco 033 · YLEC_2403 V.11.7 · PIX · QR Code · OCT · TED · Boletos</span>
 </header>
 
 <div class="wrap">
@@ -230,7 +230,7 @@ header{position:relative;z-index:10;display:flex;align-items:center;justify-cont
       <div class="ibox">
         <strong>Como usar a Inspeção de Campos — Santander CNAB240:</strong><br>
         Cada campo exibe a fita <span style="color:var(--er);font-weight:700">📄 atual</span> com os bytes do arquivo
-        e a fita <span style="color:var(--ok);font-weight:700">✓ manual</span> conforme manual YLEC_2403 V.11.6 Santander.
+        e a fita <span style="color:var(--ok);font-weight:700">✓ manual</span> conforme manual YLEC_2403 V.11.7 Santander.
         Células <span style="display:inline-block;width:10px;height:10px;background:var(--erb);border:1px solid var(--er);border-radius:2px;vertical-align:middle"></span> são bytes errados;
         células <span style="display:inline-block;width:10px;height:10px;background:var(--okm);border:1px solid var(--ok);border-radius:2px;vertical-align:middle"></span> são a correção.<br>
         <strong>Regras Santander:</strong> Código banco "033" · Layout versão "060" · J52 obrigatório com CNPJ/CPF do beneficiário ·
@@ -294,7 +294,25 @@ function chkDt(s){
   return{ok:true};
 }
 function chkCPF(s){const n=s.replace(/\D/g,'');if(n.length!==11||/^(\d)\1{10}$/.test(n))return false;let a=0;for(let i=0;i<9;i++)a+=+n[i]*(10-i);let r=(a*10)%11;if(r>=10)r=0;if(r!==+n[9])return false;let b=0;for(let i=0;i<10;i++)b+=+n[i]*(11-i);let s2=(b*10)%11;if(s2>=10)s2=0;return s2===+n[10];}
-function chkCNPJ(s){const n=s.replace(/\D/g,'');if(n.length!==14||/^(\d)\1{13}$/.test(n))return false;const c=(str,l)=>{let sm=0,pp=l-7;for(let i=l;i>=1;i--){sm+=+str[l-i]*pp--;if(pp<2)pp=9;}return sm%11<2?0:11-sm%11;};return c(n,12)===+n[12]&&c(n,13)===+n[13];}
+/* CNPJ alfanumérico (V11.7, Nota G042): 12 caracteres [0-9A-Z] + 2 dígitos
+   verificadores. No cálculo do DV cada caractere vale o código ASCII − 48
+   (regra da Receita Federal); para CNPJ só numérico o resultado é o mesmo. */
+function chkCNPJ(s){const n=s.replace(/[^0-9A-Za-z]/g,'');if(!/^[0-9A-Z]{12}\d{2}$/.test(n)||/^(.)\1{13}$/.test(n))return false;const c=l=>{let sm=0,pp=l-7;for(let i=0;i<l;i++){sm+=(n.charCodeAt(i)-48)*pp--;if(pp<2)pp=9;}return sm%11<2?0:11-sm%11;};return c(12)===+n[12]&&c(13)===+n[13];}
+/* Campo de CPF/CNPJ alinhado à direita com zeros (Nota G042): CPF só dígitos;
+   CNPJ numérico ou alfanumérico. ti = tipo de inscrição ("1" CPF, "2" CNPJ).
+   Devolve a mensagem de erro, ou '' se o formato está certo. */
+function fmtInscr(v,ti){
+  if(ti==='1')return /^\d+$/.test(v)?'':'CPF deve ter só dígitos, com zeros à esquerda';
+  const cnpj=new RegExp(`^0{${v.length-14}}[0-9A-Z]{12}\\d{2}$`);
+  if(ti==='2')return cnpj.test(v)?'':'CNPJ deve ter 12 caracteres (A–Z maiúsculas ou 0–9) + 2 dígitos verificadores, com zeros à esquerda';
+  return /^\d+$/.test(v)||cnpj.test(v)?'':'Deve conter CPF (só dígitos) ou CNPJ (numérico ou alfanumérico), com zeros à esquerda';
+}
+/* DV do CPF/CNPJ de um campo já no formato certo; '' se ok ou não aplicável. */
+function dvInscr(v,ti){
+  if(ti==='1'&&/^\d+$/.test(v))return chkCPF(v.slice(-11))?'':`CPF "${v.slice(-11)}" com DV inválido`;
+  if(ti==='2'&&!fmtInscr(v,'2'))return chkCNPJ(v.slice(-14))?'':`CNPJ "${v.slice(-14)}" com DV inválido`;
+  return '';
+}
 
 /* CF = checkField */
 function CF(ctx,campo,ini,fim,ln,checks,esp,fix=null){
@@ -310,7 +328,7 @@ function CF(ctx,campo,ini,fim,ln,checks,esp,fix=null){
 }
 
 /* ═══════════════════════════════════════════════════════════
-   VALIDATORS — SANTANDER CNAB240 YLEC_2403 V.11.6
+   VALIDATORS — SANTANDER CNAB240 YLEC_2403 V.11.7
    ═══════════════════════════════════════════════════════════ */
 
 /* ── Header de Arquivo (Tipo 0) ────────────────────────────── */
@@ -323,16 +341,15 @@ function vHA(ctx,ln){
   CF(ctx,'05.0 Tipo de Inscrição da Empresa (18)',18,18,ln,[{test:['1','2'].includes(ti),sev:'ERROR',msg:`Deve ser "1"(CPF) ou "2"(CNPJ), encontrado "${ti}"`}],'"1"=CPF / "2"=CNPJ');
   const ni=p(ln,19,32);
   CF(ctx,'06.0 Número de Inscrição da Empresa (19–32)',19,32,ln,[
-    {test:/^\d{14}$/.test(ni),sev:'ERROR',msg:`Deve ter 14 dígitos, encontrado "${ni}"`},
-    {test:!(ti==='1'&&/^\d{14}$/.test(ni)&&!chkCPF(ni.slice(-11))),sev:'WARN',msg:`CPF "${ni.slice(-11)}" com DV inválido`},
-    {test:!(ti==='2'&&/^\d{14}$/.test(ni)&&!chkCNPJ(ni)),sev:'WARN',msg:`CNPJ "${ni}" com DV inválido`}
-  ],'14 dígitos numéricos (CPF com zeros à esq. ou CNPJ)');
+    {test:!fmtInscr(ni,ti),sev:'ERROR',msg:`${fmtInscr(ni,ti)}. Encontrado "${ni}"`},
+    {test:!dvInscr(ni,ti),sev:'WARN',msg:dvInscr(ni,ti)}
+  ],'14 posições: CPF (dígitos) ou CNPJ numérico/alfanumérico, zeros à esquerda (G042)');
   CF(ctx,'07.0 Código do Convênio no Banco (33–52)',33,52,ln,[{test:p(ln,33,52).trim().length>0,sev:'WARN',msg:'Código do convênio Santander não informado (pos 33-52). Formato: BBBBAAAACCCCCCCCCCCC'}],'033+Agência+Convênio (20 chars). Ex: 0330001000000001234567');
   CF(ctx,'08.0 Agência Mantenedora da Conta (53–57)',53,57,ln,[{test:/^\d{5}$/.test(p(ln,53,57)),sev:'ERROR',msg:`Deve ser 5 dígitos, encontrado "${p(ln,53,57)}"`}],'5 dígitos numéricos');
   CF(ctx,'09.0 DV da Agência (58)',58,58,ln,[{test:p(ln,58,58).trim().length<=1,sev:'WARN',msg:'DV da agência: 1 char ou branco (opcional)'}],'1 char ou branco (opcional)');
   CF(ctx,'10.0 Conta Corrente (59–70)',59,70,ln,[{test:/^\d{12}$/.test(p(ln,59,70)),sev:'ERROR',msg:`Deve ter 12 dígitos, encontrado "${p(ln,59,70)}"`}],'12 dígitos numéricos (zeros à esquerda)');
   CF(ctx,'11.0 DV da Conta (71)',71,71,ln,[{test:p(ln,71,71).trim().length>0,sev:'WARN',msg:'DV da conta deve ser informado'}],'1 caractere (dígito verificador)');
-  CF(ctx,'12.0 DV Agência/Conta (72)',72,72,ln,[{test:p(ln,72,72)===' '||p(ln,72,72)==='0',sev:'WARN',msg:`Deve ser branco (Santander), encontrado "${p(ln,72,72)}"`}],'Branco (Santander)',' ');
+  CF(ctx,'12.0 DV Agência/Conta (72)',72,72,ln,[{test:p(ln,72,72)===' ',sev:'WARN',msg:`Deve ser branco (Santander), encontrado "${p(ln,72,72)}"`}],'Branco (Santander)',' ');
   CF(ctx,'13.0 Nome da Empresa (73–102)',73,102,ln,[{test:p(ln,73,102).trim().length>0,sev:'ERROR',msg:'Nome da empresa não pode ser vazio'}],'Alfanumérico, obrigatório, alinhado à esquerda');
   CF(ctx,'14.0 Nome do Banco (103–132)',103,132,ln,[{test:p(ln,103,132).toUpperCase().includes('SANTANDER'),sev:'WARN',msg:`Deve conter "SANTANDER", encontrado "${p(ln,103,132).trim()}"`}],'"BANCO SANTANDER" (30 posições)','BANCO SANTANDER               ');
   CF(ctx,'15.0 Filler (133–142)',133,142,ln,[{test:isBl(p(ln,133,142)),sev:'WARN',msg:'Deve ser branco (10 brancos)'}],'10 brancos','          ');
@@ -345,9 +362,10 @@ function vHA(ctx,ln){
   ].filter(c=>c.msg!==''),'DDMMAAAA (ex: 15032025)');
   CF(ctx,'18.0 Hora de Geração (152–157)',152,157,ln,[{test:/^\d{6}$/.test(p(ln,152,157))||isBl(p(ln,152,157)),sev:'WARN',msg:`Deve ser HHMMSS, encontrado "${p(ln,152,157)}"`}],'HHMMSS (ex: 143022)');
   CF(ctx,'19.0 NSA — Número Sequencial do Arquivo (158–163)',158,163,ln,[{test:/^\d{6}$/.test(p(ln,158,163)),sev:'WARN',msg:`Deve ser 6 dígitos, encontrado "${p(ln,158,163)}"`}],'6 dígitos, incremental. ATENÇÃO: 1-10 = modo teste se contratado!');
-  CF(ctx,'20.0 Versão do Layout (164–166)',164,166,ln,[{test:p(ln,164,166)==='060',sev:'WARN',msg:`Santander usa versão "060", encontrado "${p(ln,164,166)}"`}],'"060" (Santander V.11.6)','060');
+  CF(ctx,'20.0 Versão do Layout (164–166)',164,166,ln,[{test:p(ln,164,166)==='060',sev:'WARN',msg:`Santander usa versão "060", encontrado "${p(ln,164,166)}"`}],'"060" (Santander V.11.7)','060');
   CF(ctx,'21.0 Densidade de Gravação (167–171)',167,171,ln,[{test:/^\d{5}$/.test(p(ln,167,171))||isBl(p(ln,167,171)),sev:'WARN',msg:`Deve ser 5 dígitos ou brancos, encontrado "${p(ln,167,171)}"`}],'5 dígitos ou brancos (opcional)');
   CF(ctx,'22.0 Uso Reservado Banco (172–191)',172,191,ln,[{test:isBl(p(ln,172,191)),sev:'WARN',msg:'Deve ser brancos'}],'20 brancos','                    ');
+  CF(ctx,'23.0 Uso Reservado Empresa (192–211)',192,211,ln,[],'Opcional, de uso livre da empresa (20 posições)');
   CF(ctx,'24.0 Filler (212–230)',212,230,ln,[{test:isBl(p(ln,212,230)),sev:'WARN',msg:'Deve ser brancos'}],'19 brancos');
   CF(ctx,'25.0 Ocorrências p/ Retorno (231–240)',231,240,ln,[{test:isBl(p(ln,231,240))||/^0+$/.test(p(ln,231,240)),sev:'WARN',msg:'Deve ser brancos na remessa'}],'10 brancos na remessa','          ');
 }
@@ -361,8 +379,12 @@ function vHL(ctx,ln){
   const tsValidos=['03','10','14','20','22','23','29','50','60','70','75','80','90','98'];
   CF(ctx,'05.1 Tipo de Serviço (10–11)',10,11,ln,[{test:tsValidos.includes(ts),sev:'WARN',msg:`Tipo "${ts}" incomum. Válidos: 03=Boleto/PIX QR · 20=Fornecedor · 22=Tributos · 23=Interoperabilidade · 98=Diversos`}],'03=Boleto/PIX QR · 20=Fornecedor · 22=Tributos · 23=Interoperab. · 98=Diversos');
   const fo=p(ln,12,13);
-  const foValidos=['01','03','05','10','11','16','17','20','22','23','24','25','26','27','30','31','35','45','47'];
-  CF(ctx,'06.1 Forma de Lançamento (12–13)',12,13,ln,[{test:foValidos.includes(fo),sev:'WARN',msg:`Forma "${fo}" desconhecida. Santander: 01=CC 03=TED 05=Poupança 10=OP 11=TribCB 16=DARF 17=GPS 20=Caixa 22=GARE_ICMS 23=GARE_DR 24=GARE_ITCMD 25=IPVA 26=Licenc. 27=DPVAT 30=BoletoSantander 31=OutrosBancos 35=OCT 45=PIX 47=PIX_QR`}],'01=CC · 03=TED · 05=Poupança · 10=OP · 11=TribCB · 30/31=Boleto · 35=OCT · 45=PIX · 47=PIX_QR');
+  const foValidos=['01','03','05','10','11','16','17','20','25','26','27','30','31','35','45','47'];
+  const foExcluidas={'22':'GARE-SP ICMS','23':'GARE-SP DR','24':'GARE-SP ITCMD'}; // serviço excluído na V11.7
+  CF(ctx,'06.1 Forma de Lançamento (12–13)',12,13,ln,[
+    {test:!foExcluidas[fo],sev:'ERROR',msg:`Forma "${fo}" (${foExcluidas[fo]}) foi excluída na V11.7: o Santander não aceita mais pagamento de GARE-SP`},
+    {test:!!foExcluidas[fo]||foValidos.includes(fo),sev:'WARN',msg:`Forma "${fo}" desconhecida. Santander: 01=CC 03=TED 05=Poupança 10=OP 11=TribCB 16=DARF 17=GPS 20=Caixa 25=IPVA 26=Licenc. 27=DPVAT 30=BoletoSantander 31=OutrosBancos 35=OCT 45=PIX 47=PIX_QR`}
+  ],'01=CC · 03=TED · 05=Poupança · 10=OP · 11=TribCB · 30/31=Boleto · 35=OCT · 45=PIX · 47=PIX_QR');
   const ve=p(ln,14,16);
   // Versão do lote: Seg A = 031, DDA = 020, demais = 030
   const veEsp=ts==='03'&&p(ln,9,9)==='I'?'020':fo==='45'||fo==='47'||fo==='01'||fo==='03'||fo==='05'?'031':'030';
@@ -372,7 +394,11 @@ function vHL(ctx,ln){
   ].filter(c=>c.msg!==''),'031=Seg.A/PIX · 030=Demais Segs · 020=DDA',veEsp);
   CF(ctx,'08.1 Filler (17)',17,17,ln,[{test:p(ln,17,17)===' '||p(ln,17,17)==='0',sev:'WARN',msg:`Deve ser branco, encontrado "${p(ln,17,17)}"`}],'1 branco',' ');
   CF(ctx,'09.1 Tipo de Inscrição da Empresa (18)',18,18,ln,[{test:['1','2'].includes(p(ln,18,18)),sev:'WARN',msg:`Deve ser "1"(CPF) ou "2"(CNPJ), encontrado "${p(ln,18,18)}"`}],'"1"=CPF / "2"=CNPJ');
-  CF(ctx,'10.1 Número de Inscrição da Empresa (19–32)',19,32,ln,[{test:/^\d{14}$/.test(p(ln,19,32)),sev:'ERROR',msg:`Deve ter 14 dígitos, encontrado "${p(ln,19,32)}"`}],'14 dígitos numéricos');
+  const tiE=p(ln,18,18),niE=p(ln,19,32);
+  CF(ctx,'10.1 Número de Inscrição da Empresa (19–32)',19,32,ln,[
+    {test:!fmtInscr(niE,tiE),sev:'ERROR',msg:`${fmtInscr(niE,tiE)}. Encontrado "${niE}"`},
+    {test:!dvInscr(niE,tiE),sev:'WARN',msg:dvInscr(niE,tiE)}
+  ],'14 posições: CPF (dígitos) ou CNPJ numérico/alfanumérico, zeros à esquerda (G042)');
   CF(ctx,'11.1 Código do Convênio (33–52)',33,52,ln,[{test:p(ln,33,52).trim().length>0,sev:'WARN',msg:'Código do convênio não informado (pos.33-52)'}],'Código convênio Santander: BBBBAAAACCCCCCCCCCCC');
   CF(ctx,'12.1 Agência Mantenedora (53–57)',53,57,ln,[{test:/^\d{5}$/.test(p(ln,53,57)),sev:'ERROR',msg:`Deve ser 5 dígitos, encontrado "${p(ln,53,57)}"`}],'5 dígitos numéricos');
   CF(ctx,'13.1 Conta Corrente (59–70)',59,70,ln,[{test:/^\d{12}$/.test(p(ln,59,70)),sev:'ERROR',msg:`Deve ter 12 dígitos, encontrado "${p(ln,59,70)}"`}],'12 dígitos numéricos');
@@ -437,9 +463,8 @@ function vSBnormal(ctx,ln){
   const ti=p(ln,18,18);
   CF(ctx,'07.3B Tipo Inscrição Favorecido (18)',18,18,ln,[{test:['0','1','2'].includes(ti),sev:'WARN',msg:`Deve ser "0"=Isento "1"=CPF "2"=CNPJ, encontrado "${ti}"`}],'"0"=Isento / "1"=CPF / "2"=CNPJ');
   const ni=p(ln,19,32);
-  CF(ctx,'08.3B CPF/CNPJ do Favorecido (19–32)',19,32,ln,[{test:/^\d{14}$/.test(ni),sev:'WARN',msg:`Deve ter 14 dígitos, encontrado "${ni}"`}],'14 dígitos numéricos');
-  if(ti==='1'&&/^\d{14}$/.test(ni)&&!chkCPF(ni.slice(-11)))ctx.iss.push({line:ctx.ln,sev:'WARN',seg:ctx.seg,msg:`[08.3B] CPF "${ni.slice(-11)}" com DV inválido`});
-  if(ti==='2'&&/^\d{14}$/.test(ni)&&!chkCNPJ(ni))ctx.iss.push({line:ctx.ln,sev:'WARN',seg:ctx.seg,msg:`[08.3B] CNPJ "${ni}" com DV inválido`});
+  CF(ctx,'08.3B CPF/CNPJ do Favorecido (19–32)',19,32,ln,[{test:!fmtInscr(ni,ti),sev:'WARN',msg:`${fmtInscr(ni,ti)}. Encontrado "${ni}"`}],'14 posições: CPF (dígitos) ou CNPJ numérico/alfanumérico, zeros à esquerda (G042)');
+  {const dv=dvInscr(ni,ti);if(dv)ctx.iss.push({line:ctx.ln,sev:'WARN',seg:ctx.seg,msg:`[08.3B] ${dv}`});}
   CF(ctx,'17.3B Data de Vencimento (128–135)',128,135,ln,[{test:/^\d{8}$/.test(p(ln,128,135))||p(ln,128,135)==='00000000',sev:'WARN',msg:`DDMMAAAA ou zeros. Encontrado "${p(ln,128,135)}"`}],'DDMMAAAA ou 00000000','00000000');
   CF(ctx,'24.3B Aviso ao Favorecido (230)',230,230,ln,[{test:p(ln,230,230)==='0'||isBl(p(ln,230,230)),sev:'WARN',msg:`Deve ser "0" (Santander), encontrado "${p(ln,230,230)}"`}],'"0" (sem aviso)','0');
 }
@@ -452,7 +477,8 @@ function vSBpix(ctx,ln){
   CF(ctx,'07.3B-PIX Uso Reservado Banco (17)',17,17,ln,[{test:isBl(p(ln,17,17)),sev:'WARN',msg:`Deve ser branco, encontrado "${p(ln,17,17)}"`}],'1 branco',' ');
   CF(ctx,'08.3B-PIX Tipo Inscrição Favorecido (18)',18,18,ln,[{test:['0','1','2'].includes(p(ln,18,18)),sev:'WARN',msg:`Deve ser "0","1" ou "2", encontrado "${p(ln,18,18)}"`}],'"0"=Não Inf / "1"=CPF / "2"=CNPJ');
   const ni=p(ln,19,32);
-  CF(ctx,'09.3B-PIX CPF/CNPJ Favorecido (19–32)',19,32,ln,[{test:/^\d{14}$/.test(ni),sev:'WARN',msg:`Deve ter 14 dígitos, encontrado "${ni}"`}],'14 dígitos numéricos');
+  const tiF=p(ln,18,18);
+  CF(ctx,'09.3B-PIX CPF/CNPJ Favorecido (19–32)',19,32,ln,[{test:!fmtInscr(ni,tiF),sev:'WARN',msg:`${fmtInscr(ni,tiF)}. Encontrado "${ni}"`}],'14 posições: CPF (dígitos) ou CNPJ numérico/alfanumérico, zeros à esquerda (G042)');
   // G033 - TXID QR Code estático (opcional)
   CF(ctx,'10.3B-PIX Informação 10 — G033/TXID (33–67)',33,67,ln,[{test:p(ln,33,67).trim().length<=25||isBl(p(ln,33,67)),sev:'WARN',msg:'G033: para QR Code Estático, preencher com até 25 dígitos TXID (opcional). Se não usar, deixar branco.'}],'Opcional: TXID QR Code Estático (até 25 dígitos)');
   // Chave específica por tipo
@@ -472,7 +498,7 @@ function vSBpix(ctx,ln){
   }
   if(tk==='03'){
     const cpf=p(ln,19,32);
-    CF(ctx,'Chave PIX CPF/CNPJ — posições 19-32 (G035)',19,32,ln,[{test:/^\d{14}$/.test(cpf)&&parseInt(cpf,10)>0,sev:'ERROR',msg:`Para tipo 03, posições 19-32 devem conter CPF(11)+zeros)/CNPJ. Encontrado: "${cpf}"`}],'CPF/CNPJ nas posições 19-32');
+    CF(ctx,'Chave PIX CPF/CNPJ — posições 19-32 (G035)',19,32,ln,[{test:!fmtInscr(cpf,tiF)&&!/^0+$/.test(cpf),sev:'ERROR',msg:`Para tipo 03, posições 19-32 devem conter o CPF ou o CNPJ (numérico ou alfanumérico) do favorecido. Encontrado: "${cpf}"`}],'CPF/CNPJ nas posições 19-32 (G035/G042)');
   }
   if(tk==='04'){
     const ch=p(ln,128,226).trim();
@@ -529,16 +555,17 @@ function vSJ52(ctx,ln){
   CF(ctx,'08.J52 Identificação Registro (18–19)',18,19,ln,[{test:p(ln,18,19)==='52',sev:'ERROR',msg:`DEVE ser "52" — segmento J52 Santander. Encontrado: "${p(ln,18,19)}"`}],'"52" — obrigatório para identificar J52','52');
   // Pagador
   CF(ctx,'09.J52 Tipo Inscrição Pagador (20)',20,20,ln,[{test:['1','2'].includes(p(ln,20,20)),sev:'WARN',msg:`Deve ser "1"(CPF) ou "2"(CNPJ). Encontrado: "${p(ln,20,20)}"`}],'"1"=CPF / "2"=CNPJ');
-  CF(ctx,'10.J52 CPF/CNPJ do Pagador (21–35)',21,35,ln,[{test:/^\d{15}$/.test(p(ln,21,35)),sev:'WARN',msg:`Deve ter 15 dígitos (com zeros iniciais). Encontrado: "${p(ln,21,35)}"`}],'15 dígitos com zeros iniciais (G027)');
+  const tip=p(ln,20,20),nip=p(ln,21,35);
+  CF(ctx,'10.J52 CPF/CNPJ do Pagador (21–35)',21,35,ln,[{test:!fmtInscr(nip,tip),sev:'WARN',msg:`${fmtInscr(nip,tip)}. Encontrado: "${nip}"`}],'15 posições, zeros à esquerda: CPF (dígitos) ou CNPJ numérico/alfanumérico (G027/G042)');
   CF(ctx,'11.J52 Nome do Pagador (36–75)',36,75,ln,[{test:p(ln,36,75).trim().length>0,sev:'WARN',msg:'Nome do pagador obrigatório (G027)'}],'Alfanumérico, obrigatório, 40 chars');
   // Beneficiário — OBRIGATÓRIO conforme Nova Plataforma de Cobrança
   const tib=p(ln,76,76);
   CF(ctx,'12.J52 Tipo Inscrição Beneficiário (76) ⚠ OBRIGATÓRIO',76,76,ln,[{test:['1','2'].includes(tib),sev:'ERROR',msg:`OBRIGATÓRIO: Deve ser "1"(CPF) ou "2"(CNPJ). Encontrado: "${tib}". Sem isso o Santander retorna código ZI!`}],'"1"=CPF / "2"=CNPJ — OBRIGATÓRIO (Nova Plataforma de Cobrança)');
   const cnpjb=p(ln,77,91);
   CF(ctx,'13.J52 CPF/CNPJ do Beneficiário (77–91) ⚠ OBRIGATÓRIO',77,91,ln,[
-    {test:/^\d{15}$/.test(cnpjb),sev:'ERROR',msg:`OBRIGATÓRIO: 15 dígitos. Encontrado: "${cnpjb}". Sem isso o Santander retorna código AT!`},
-    {test:!(/^\d{15}$/.test(cnpjb))||parseInt(cnpjb,10)>0,sev:'ERROR',msg:'CNPJ/CPF zerado — beneficiário obrigatório para QUALQUER valor de boleto (Santander)'}
-  ],'15 dígitos — OBRIGATÓRIO para qualquer valor (Nova Plataforma). Retorno ZI/AT se ausente/divergente.');
+    {test:!fmtInscr(cnpjb,tib),sev:'ERROR',msg:`OBRIGATÓRIO: ${fmtInscr(cnpjb,tib)}. Encontrado: "${cnpjb}". Sem isso o Santander retorna código AT!`},
+    {test:!/^0+$/.test(cnpjb),sev:'ERROR',msg:'CNPJ/CPF zerado — beneficiário obrigatório para QUALQUER valor de boleto (Santander)'}
+  ],'15 posições — OBRIGATÓRIO para qualquer valor (Nova Plataforma): CPF ou CNPJ numérico/alfanumérico (G042). Retorno ZI/AT se ausente/divergente.');
   CF(ctx,'14.J52 Nome do Beneficiário (92–131)',92,131,ln,[{test:p(ln,92,131).trim().length>0,sev:'WARN',msg:'Nome do beneficiário deve ser informado (G028)'}],'Alfanumérico, 40 chars');
   // Sacador (cedente original) — opcional
   CF(ctx,'17.J52 Filler (188–240)',188,240,ln,[{test:isBl(p(ln,188,240)),sev:'WARN',msg:'Filler deve ser brancos'}],'53 brancos');
@@ -552,13 +579,13 @@ function vSJ52pix(ctx,ln){
   // Devedor (Pagador)
   CF(ctx,'09.J52-PIX Tipo Inscrição Devedor (20)',20,20,ln,[{test:['1','2'].includes(p(ln,20,20)),sev:'WARN',msg:`"1"=CPF ou "2"=CNPJ. Encontrado: "${p(ln,20,20)}"`}],'"1"=CPF / "2"=CNPJ (G027)');
   const cpf=p(ln,21,35);
-  CF(ctx,'10.J52-PIX CPF/CNPJ Devedor/Pagador (21–35)',21,35,ln,[{test:/^\d{15}$/.test(cpf)&&parseInt(cpf,10)>0,sev:'ERROR',msg:`CPF/CNPJ devedor obrigatório — VALIDADO pelo Santander no QR Code. Encontrado: "${cpf}"`}],'15 dígitos — validado contra dados do QR Code (G027)');
+  CF(ctx,'10.J52-PIX CPF/CNPJ Devedor/Pagador (21–35)',21,35,ln,[{test:!fmtInscr(cpf,p(ln,20,20))&&!/^0+$/.test(cpf),sev:'ERROR',msg:`CPF/CNPJ devedor obrigatório — VALIDADO pelo Santander no QR Code. Encontrado: "${cpf}"`}],'15 dígitos — validado contra dados do QR Code (G027)');
   CF(ctx,'11.J52-PIX Nome do Devedor/Pagador (36–75)',36,75,ln,[{test:p(ln,36,75).trim().length>0,sev:'ERROR',msg:'Nome do devedor/pagador obrigatório (G027)'}],'Alfanumérico, obrigatório, 40 chars');
   // Recebedor
   const tir=p(ln,76,76);
   CF(ctx,'12.J52-PIX Tipo Inscrição Recebedor (76)',76,76,ln,[{test:['0','1','2'].includes(tir),sev:'WARN',msg:`"0"=não valida, "1"=CPF, "2"=CNPJ. Encontrado: "${tir}"`}],'"0"=Sem validação / "1"=CPF / "2"=CNPJ (G040)');
   const cnpjr=p(ln,77,91);
-  CF(ctx,'13.J52-PIX CPF/CNPJ Recebedor (77–91)',77,91,ln,[{test:/^\d{15}$/.test(cnpjr),sev:'WARN',msg:`Deve ter 15 dígitos. "0"=zeros para não validar titularidade. Encontrado: "${cnpjr}"`}],'15 dígitos (G040). Se Tipo=0, preencher com zeros; se Tipo≠0, será validado');
+  CF(ctx,'13.J52-PIX CPF/CNPJ Recebedor (77–91)',77,91,ln,[{test:tir==='0'?/^0+$/.test(cnpjr):!fmtInscr(cnpjr,tir),sev:'WARN',msg:tir==='0'?`Tipo "0" (sem validação de titularidade): preencher com zeros. Encontrado: "${cnpjr}"`:`${fmtInscr(cnpjr,tir)}. Encontrado: "${cnpjr}"`}],'15 posições (G040/G042). Se Tipo=0, zeros; se Tipo≠0, CPF ou CNPJ numérico/alfanumérico');
   CF(ctx,'14.J52-PIX Nome Recebedor (92–131)',92,131,ln,[{test:p(ln,92,131).trim().length>0,sev:'ERROR',msg:'Nome do recebedor/beneficiário obrigatório (G037)'}],'Alfanumérico, obrigatório, 40 chars');
   // URL/Chave PIX (Payload Location) — G041
   const url=p(ln,132,210).trim();
@@ -606,7 +633,7 @@ function vSN(ctx,ln){
     {test:parseInt(vp,10)>0,sev:'WARN',msg:'Valor zerado'}
   ],'15 dígitos 9(13)V2 (G022)');
   const ct=p(ln,133,134).trim();
-  const tiposTrib={'16':'DARF Normal','17':'GPS','22':'GARE SP ICMS','23':'GARE SP DR','24':'GARE SP ITCMD','25':'IPVA','26':'Licenciamento','27':'DPVAT'};
+  const tiposTrib={'16':'DARF Normal','17':'GPS','25':'IPVA','26':'Licenciamento','27':'DPVAT'};
   if(ct&&tiposTrib[ct])ctx.iss.push({line:ctx.ln,sev:'OK',seg:ctx.seg,msg:`[12.3N] Tipo de tributo identificado: "${ct}" = ${tiposTrib[ct]}`});
   else if(ct)ctx.iss.push({line:ctx.ln,sev:'WARN',seg:ctx.seg,msg:`[12.3N] Código de identificação tributo "${ct}" não mapeado (pos 133-134)`});
   // Validações específicas por tributo
@@ -621,10 +648,8 @@ function vSN(ctx,ln){
     CF(ctx,'N2.DARF Número de Referência (143–159)',143,159,ln,[{test:/^\d{17}$/.test(p(ln,143,159)),sev:'ERROR',msg:`17 dígitos obrigatórios. Encontrado: "${p(ln,143,159)}"`}],'17 dígitos numéricos (obrigatório)');
     CF(ctx,'N2.DARF Valor Principal (160–174)',160,174,ln,[{test:/^\d{15}$/.test(p(ln,160,174)),sev:'ERROR',msg:`15 dígitos. Encontrado: "${p(ln,160,174)}"`}],'15 dígitos (centavos)');
     CF(ctx,'N2.DARF Data de Vencimento (205–212)',205,212,ln,[{test:/^\d{8}$/.test(p(ln,205,212))||p(ln,205,212)==='00000000',sev:'WARN',msg:`DDMMAAAA ou zeros. Encontrado: "${p(ln,205,212)}"`}],'DDMMAAAA ou 00000000');
-  } else if(['22','23','24'].includes(ct)){// GARE SP
-    CF(ctx,'N4.GARE Código da Receita (111–116)',111,116,ln,[{test:/^\d{6}$/.test(p(ln,111,116)),sev:'ERROR',msg:`6 dígitos. Encontrado: "${p(ln,111,116)}"`}],'6 dígitos (N001)');
-    CF(ctx,'N4.GARE Data de Vencimento (135–142)',135,142,ln,[{test:/^\d{8}$/.test(p(ln,135,142))||p(ln,135,142)==='00000000',sev:'WARN',msg:`DDMMAAAA. Encontrado: "${p(ln,135,142)}"`}],'DDMMAAAA');
-    CF(ctx,'N4.GARE Valor da Receita (187–201)',187,201,ln,[{test:/^\d{13}$/.test(p(ln,187,199))||p(ln,187,201).trim().length>0,sev:'WARN',msg:'Valor da receita obrigatório (N001)'}],'9(13)V2 — Obrigatório');
+  } else if(['22','23','24'].includes(ct)){// GARE-SP: serviço excluído na V11.7
+    ctx.iss.push({line:ctx.ln,sev:'ERROR',seg:ctx.seg,msg:`[12.3N] Tributo "${ct}" (GARE-SP) foi excluído na V11.7: o Santander não aceita mais esse pagamento`});
   } else if(ct==='25'||ct==='26'||ct==='27'){// IPVA/Licenciamento/DPVAT
     CF(ctx,'N5/N6/N7 Código Receita (111–116)',111,116,ln,[{test:isBl(p(ln,111,116))||/^\d{6}$/.test(p(ln,111,116)),sev:'WARN',msg:'Para IPVA/DPVAT/Licenciamento preencher com zeros (N001)'}],'Zeros para IPVA/DPVAT/Licenciamento','000000');
     CF(ctx,'N5/N6/N7 Ano Base/Exercício (135–138)',135,138,ln,[{test:/^\d{4}$/.test(p(ln,135,138)),sev:'ERROR',msg:`AAAA obrigatório. Encontrado: "${p(ln,135,138)}"`}],'AAAA — ano base');
@@ -785,7 +810,7 @@ function validate(lines){
       const r=vHL(ctx,line);loteTipoS=r.ts;loteForma=r.fo;
       const descForma={
         '01':'CC','03':'TED','05':'Poupança','10':'OP/Recibo','11':'Tributos+CB','16':'DARF','17':'GPS',
-        '20':'Caixa','22':'GARE ICMS','23':'GARE DR','24':'GARE ITCMD','25':'IPVA','26':'Licenciamento',
+        '20':'Caixa','22':'GARE ICMS (excluído V11.7)','23':'GARE DR (excluído V11.7)','24':'GARE ITCMD (excluído V11.7)','25':'IPVA','26':'Licenciamento',
         '27':'DPVAT','30':'Boleto Santander','31':'Boleto Outros Bancos','35':'OCT','45':'PIX','47':'PIX QR'
       }[loteForma]||loteForma;
       recs.push({ln,desc:`Header Lote #${p(line,4,7)} · Tipo Serviço: ${loteTipoS} · Forma: ${loteForma} (${descForma})`,ind:1,ok:tsValidos(loteTipoS)});
@@ -867,7 +892,7 @@ function validate(lines){
         vSN(ctx,line);
         somaLote+=parseInt(p(line,96,110),10)||0;
         const ct=p(line,133,134).trim();
-        const dn={'16':'DARF Normal','17':'GPS','22':'GARE SP ICMS','23':'GARE SP DR','24':'GARE SP ITCMD','25':'IPVA','26':'Licenciamento','27':'DPVAT'}[ct]||`Tributo(${ct})`;
+        const dn={'16':'DARF Normal','17':'GPS','22':'GARE SP ICMS (excluído V11.7)','23':'GARE SP DR (excluído V11.7)','24':'GARE SP ITCMD (excluído V11.7)','25':'IPVA','26':'Licenciamento','27':'DPVAT'}[ct]||`Tributo(${ct})`;
         recs.push({ln,desc:`Seg. N — ${dn} · ${p(line,58,87).trim()} · Lote: ${p(line,4,7)} · Seq: ${String(sr).padStart(5,'0')}`,ind:2,ok:true});
 
       } else if(sc==='O'){
@@ -942,7 +967,7 @@ function renderRes(file,lines,res){
   } else {
     vb.className='vd vok';$('vi').textContent='✓';
     $('vtt').textContent='Arquivo válido — sem erros';
-    $('vts').textContent='Estrutura CNAB240 Santander YLEC_2403 V.11.6 em conformidade total.';
+    $('vts').textContent='Estrutura CNAB240 Santander YLEC_2403 V.11.7 em conformidade total.';
   }
   $('sg').innerHTML=[
     {c:'er',l:'Erros',v:errs,s:'críticos / estruturais'},
@@ -1040,7 +1065,7 @@ function renderCompCard(r){
       <span class="fcmt">${r.seg} · Ln ${r.ln}</span>
     </div>
     <div class="fcbody">${tape}</div>
-    <div class="fcrule"><span class="fcri">${rIcon}</span><span class="fcrt"><strong>Regra (YLEC_2403 V.11.6):</strong> ${esc(r.det||r.esp)}</span></div>
+    <div class="fcrule"><span class="fcri">${rIcon}</span><span class="fcrt"><strong>Regra (YLEC_2403 V.11.7):</strong> ${esc(r.det||r.esp)}</span></div>
   </div>`;
 }
 

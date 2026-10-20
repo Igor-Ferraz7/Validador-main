@@ -190,7 +190,8 @@ function stripDiacritics(s){
 var NORMALIZERS = {
   trim: function(s){ return s.trim(); },
   digits: function(s){ return s.replace(/\D+/g,''); },
-  cpfcnpj: function(s){ return s.replace(/\D+/g,''); },
+  // CNPJ pode ter letras (CNPJ alfanumérico); tira só a máscara e põe em maiúsculas.
+  cpfcnpj: function(s){ return s.toUpperCase().replace(/[^0-9A-Z]+/g,''); },
   companyName: function(s){
     var t = s.trim();
     t = stripDiacritics(t);
@@ -235,12 +236,15 @@ function validCPF(cpf){
   d2 = 11 - (s%11); if(d2>=10) d2=0;
   return d2 === parseInt(cpf.charAt(10),10);
 }
+// CNPJ numérico ou alfanumérico: 12 caracteres [0-9A-Z] + 2 dígitos
+// verificadores. No DV cada caractere vale o código ASCII − 48 (regra da
+// Receita Federal); para CNPJ só numérico o resultado é o mesmo de antes.
 function validCNPJ(cnpj){
-  if(!/^\d{14}$/.test(cnpj)) return false;
-  if(/^(\d)\1{13}$/.test(cnpj)) return false;
+  if(!/^[0-9A-Z]{12}\d{2}$/.test(cnpj)) return false;
+  if(/^(.)\1{13}$/.test(cnpj)) return false;
   function calc(len){
     var s=0,pos=len-7,i;
-    for(i=0;i<len;i++){ s += parseInt(cnpj.charAt(i),10)*pos--; if(pos<2) pos=9; }
+    for(i=0;i<len;i++){ s += (cnpj.charCodeAt(i)-48)*pos--; if(pos<2) pos=9; }
     var r = s%11; return r<2 ? 0 : 11-r;
   }
   if(calc(12) !== parseInt(cnpj.charAt(12),10)) return false;
@@ -511,9 +515,16 @@ function validateRow(row){
   }
 
   if(rule.kind === 'cpfcnpj'){
-    if(v.length === 11) return validCPF(v) ? {valid:true,level:'ok',msg:'CPF válido.'} : {valid:false,level:'er',msg:'CPF inválido (dígito verificador não confere).'};
-    if(v.length === 14) return validCNPJ(v) ? {valid:true,level:'ok',msg:'CNPJ válido.'} : {valid:false,level:'er',msg:'CNPJ inválido (dígito verificador não confere).'};
-    return { valid:false, level:'er', msg:'Deve ter 11 (CPF) ou 14 (CNPJ) dígitos; atual: ' + v.length + '.' };
+    if(v.length === 11){
+      if(!/^\d{11}$/.test(v)) return { valid:false, level:'er', msg:'CPF tem só dígitos (letras só existem no CNPJ).' };
+      return validCPF(v) ? {valid:true,level:'ok',msg:'CPF válido.'} : {valid:false,level:'er',msg:'CPF inválido (dígito verificador não confere).'};
+    }
+    if(v.length === 14){
+      if(!/^[0-9A-Z]{12}\d{2}$/.test(v)) return { valid:false, level:'er', msg:'CNPJ: os 2 últimos caracteres (dígitos verificadores) são sempre números.' };
+      var alfa = /[A-Z]/.test(v) ? ' alfanumérico' : '';
+      return validCNPJ(v) ? {valid:true,level:'ok',msg:'CNPJ' + alfa + ' válido.'} : {valid:false,level:'er',msg:'CNPJ' + alfa + ' inválido (dígito verificador não confere).'};
+    }
+    return { valid:false, level:'er', msg:'Deve ter 11 (CPF) ou 14 (CNPJ) caracteres; atual: ' + v.length + '.' };
   }
 
   if(rule.kind === 'charset'){
