@@ -19,7 +19,7 @@ versão mais recente publicada, e o que isso significa para o sistema.
 | Banco | Validador feito sobre | Versão oficial atual | O que mudou | Impacto no sistema |
 |---|---|---|---|---|
 | **Santander** (033) | ~~V11.6~~ → **V11.7** (jun/2026) | **V11.7** (jun/2026) | CNPJ com letras; fim do GARE-SP | ✅ **Corrigido** em 20/10/2026 (validador e Preenchedor) |
-| **Banco do Brasil** (001) | nov/2020 | **jun/2026** | FGTS Digital via QR Code; formas de TED 41 e 43 | 🟠 **Médio.** Casos novos que o validador não reconhece |
+| **Banco do Brasil** (001) | ~~nov/2020~~ → **jun/2026** | **jun/2026** | FGTS Digital via QR Code; formas de TED 41 e 43 | ✅ **Corrigido** em 20/10/2026 (auditoria completa) |
 | **Sicredi** (748) | ~~v1.2~~ → **V1.4** (abr/2024) | **V1.4** (abr/2024) | Ajustes na composição do arquivo e no Pix QR Code | ✅ **Corrigido** em 20/10/2026 |
 | **Sicoob** (756) | ~~v2.11~~ → **v3.3** + Folha v1.0 | **v3.3** (mai/2025) | Códigos de retorno da Folha; guia de Folha separado | ✅ **Corrigido** em 20/10/2026 (guia de Folha catalogado e aplicado) |
 | **Bradesco** (237) | v6 (jul/2023) | v6 (jul/2023) | Nada | ⚫ Manual em dia, mas **o validador não tem lógica** |
@@ -204,6 +204,16 @@ exige mudança no validador, mas indica que o BB não revisou essas partes.
 Diferente do Santander, o manual do BB de jun/2026 **não menciona CNPJ
 alfanumérico**. É provável que venha numa próxima versão.
 
+> ✅ **Corrigido em 20/10/2026** após auditoria completa do validador contra o
+> manual de jun/2026. Os dois achados mais graves rejeitavam arquivos corretos:
+> - **todo segmento B era validado como Pix**, então um B de TED levava erro;
+> - **o CNPJ alinhado com brancos à esquerda**, como o BB pede, era recusado.
+>
+> O validador também passou a tratar FGTS Digital, formas de TED 41/43 (com a
+> câmara obrigatória), Depósito Judicial, GARE-SP e DARJ. O CNPJ alfanumérico é
+> aceito com aviso para confirmação com o banco. Detalhes no
+> [relatório do BB](relatorios/2026-10-20-001-banco-do-brasil.md).
+
 ---
 
 ### Sicredi (748) — da v1.2 para a V1.4
@@ -315,8 +325,8 @@ Em ordem de urgência:
 
 1. ~~**Santander: CNPJ com letras** no validador e no Preenchedor.~~ ✅ feito
 2. ~~**Santander: remover o GARE-SP.**~~ ✅ feito
-3. **Banco do Brasil:** auditoria completa, começando por FGTS Digital e formas
-   de TED 41/43.
+3. ~~**Banco do Brasil:** auditoria completa, começando por FGTS Digital e formas
+   de TED 41/43.~~ ✅ feito
 4. ~~**Sicredi:** conferir a composição do arquivo e o Pix QR Code contra a V1.4.~~ ✅ feito
 5. ~~**Sicoob:** incluir o guia de Folha de Pagamento no catálogo.~~ ✅ feito
 6. **Itaú:** obter o manual SISPAG v086 ou mais recente.

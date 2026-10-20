@@ -47,5 +47,6 @@ Ao adotar uma versão nova, atualize no `catalogo.js` os campos `versao`,
 - **Itaú:** o único SISPAG publicado em domínio oficial é de out/2020, mais
   antigo que a v086 (02/2024) em que o validador se baseia. Se tiver o PDF da
   v086 fornecido pelo banco, coloque-o em `341-itau/` e cadastre-o no catálogo.
-- **Banco do Brasil:** a versão de nov/2020, base do validador, não está mais
-  no site oficial, e o manual não traz histórico de alterações.
+- **Banco do Brasil:** o manual não traz histórico de alterações; para saber o
+  que muda numa versão nova, compare o validador com o manual (skill
+  `auditar-cnab`).

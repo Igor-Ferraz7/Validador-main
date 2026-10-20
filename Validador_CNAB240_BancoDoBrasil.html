@@ -179,7 +179,7 @@ header{position:relative;z-index:10;display:flex;align-items:center;justify-cont
       <p>Arquivo de Pagamentos · Banco do Brasil</p>
     </div>
   </div>
-  <span class="htag">Banco 001 · Nov/2020 · PIX · TED · Boleto · Tributos</span>
+  <span class="htag">Banco 001 · jun/2026 · PIX · TED · Boleto · Tributos · FGTS Digital</span>
 </header>
 
 <div class="wrap">
@@ -230,7 +230,7 @@ header{position:relative;z-index:10;display:flex;align-items:center;justify-cont
         <strong>Como usar a Inspeção de Campos:</strong><br>
         Cada campo exibe duas fitas CNAB empilhadas:
         a fita <span style="color:var(--er);font-weight:700">📄 atual</span> mostra os bytes exatos do seu arquivo;
-        a fita <span style="color:var(--ok);font-weight:700">✓ manual</span> mostra como deve ficar segundo o manual BB (nov/2020).
+        a fita <span style="color:var(--ok);font-weight:700">✓ manual</span> mostra como deve ficar segundo o manual BB (jun/2026).
         Células <span style="display:inline-block;width:10px;height:10px;background:var(--erb);border:1px solid var(--er);border-radius:2px;vertical-align:middle"></span> são bytes errados no arquivo;
         células <span style="display:inline-block;width:10px;height:10px;background:var(--okm);border:1px solid var(--ok);border-radius:2px;vertical-align:middle"></span> são a correção exata.
         Campos ✓ OK ficam compactos. Para campos longos é exibida uma comparação de texto.<br>
@@ -287,7 +287,28 @@ function chkDt(s){
   return{ok:true};
 }
 function chkCPF(s){const n=s.replace(/\D/g,'');if(n.length!==11||/^(\d)\1{10}$/.test(n))return false;let a=0;for(let i=0;i<9;i++)a+=+n[i]*(10-i);let r=(a*10)%11;if(r>=10)r=0;if(r!==+n[9])return false;let b2=0;for(let i=0;i<10;i++)b2+=+n[i]*(11-i);let s2=(b2*10)%11;if(s2>=10)s2=0;return s2===+n[10];}
-function chkCNPJ(s){const n=s.replace(/\D/g,'');if(n.length!==14||/^(\d)\1{13}$/.test(n))return false;const c=(str,l)=>{let sm=0,pp=l-7;for(let i=l;i>=1;i--){sm+=+str[l-i]*pp--;if(pp<2)pp=9;}return sm%11<2?0:11-sm%11;};return c(n,12)===+n[12]&&c(n,13)===+n[13];}
+/* Aceita também o CNPJ alfanumérico (12 caracteres [0-9A-Z] + 2 dígitos); no
+   DV cada caractere vale o código ASCII − 48 (regra da Receita Federal). */
+function chkCNPJ(s){const n=s.replace(/[^0-9A-Za-z]/g,'');if(!/^[0-9A-Z]{12}\d{2}$/.test(n)||/^(.)\1{13}$/.test(n))return false;const c=l=>{let sm=0,pp=l-7;for(let i=0;i<l;i++){sm+=(n.charCodeAt(i)-48)*pp--;if(pp<2)pp=9;}return sm%11<2?0:11-sm%11;};return c(12)===+n[12]&&c(13)===+n[13];}
+/* Inscrição (CPF/CNPJ) alinhada à direita, conforme o manual BB (jun/2026):
+   CPF com zeros à esquerda; CNPJ com brancos à esquerda (zeros também são
+   aceitos). O manual ainda não trata o CNPJ alfanumérico: ele é aceito com
+   aviso. Devolve [severidade, mensagem] ou null se estiver certo. */
+function inscrBB(v,ti){
+  if(ti==='1'){
+    if(!/^\d+$/.test(v))return['ERROR','CPF: só dígitos, alinhado à direita com zeros à esquerda'];
+    return chkCPF(v.slice(-11))?null:['WARN',`CPF "${v.slice(-11)}" com DV inválido`];
+  }
+  if(ti!=='2')return null; // o tipo de inscrição é conferido no próprio campo
+  const pad=v.slice(0,v.length-14),c=v.slice(-14);
+  if(!/^[ 0]*$/.test(pad))return['ERROR','CNPJ ocupa as últimas 14 posições, com brancos (ou zeros) à esquerda'];
+  if(!/^[0-9A-Z]{12}\d{2}$/.test(c))return['ERROR',`CNPJ deve ter 14 caracteres (dígitos; ou 12 letras/dígitos + 2 dígitos no CNPJ alfanumérico). Encontrado "${c}"`];
+  if(!chkCNPJ(c))return['WARN',`CNPJ "${c}" com DV inválido`];
+  if(/[A-Z]/.test(c))return['WARN','CNPJ alfanumérico: o manual do BB (jun/2026) ainda não trata desse formato; confirme com o banco antes de enviar'];
+  return null;
+}
+/* Converte o resultado de inscrBB num check do CF. */
+const ckInscr=(v,ti)=>{const r=inscrBB(v,ti);return{test:!r,sev:r?r[0]:'WARN',msg:r?r[1]:''};};
 
 /* CF = checkField */
 function CF(ctx,campo,ini,fim,ln,checks,esp,fix=null){
@@ -317,11 +338,7 @@ function vHA(ctx,ln){
   const ti=p(ln,18,18);
   CF(ctx,'05.0 Tipo de Inscrição',18,18,ln,[{test:['1','2'].includes(ti),sev:'ERROR',msg:`Deve ser "1"(CPF) ou "2"(CNPJ), encontrado "${ti}"`}],'"1"=CPF / "2"=CNPJ');
   const ni=p(ln,19,32);
-  CF(ctx,'06.0 Número de Inscrição (19–32)',19,32,ln,[
-    {test:/^\d{14}$/.test(ni),sev:'ERROR',msg:`Deve ter 14 dígitos, encontrado "${ni}"`},
-    {test:!(ti==='1'&&!chkCPF(ni.slice(-11))),sev:'WARN',msg:`CPF "${ni.slice(-11)}" com DV inválido`},
-    {test:!(ti==='2'&&!chkCNPJ(ni)),sev:'WARN',msg:`CNPJ "${ni}" com DV inválido`}
-  ],'14 dígitos numéricos (CPF com zeros à esq. ou CNPJ)');
+  CF(ctx,'06.0 Número de Inscrição (19–32)',19,32,ln,[ckInscr(ni,ti)],'14 posições: CPF com zeros à esquerda ou CNPJ');
   /* BB: Convênio pos 33–52 subdivide em: 33–41=Nº Convênio, 42–45='0126', 46–50=brancos, 51–52=prod/teste */
   const conv=p(ln,33,41);
   CF(ctx,'07.0 BB1 Nº do Convênio (33–41)',33,41,ln,[
@@ -351,6 +368,10 @@ function vHA(ctx,ln){
   CF(ctx,'19.0 NSA Número Sequencial (158–163)',158,163,ln,[{test:/^\d{6}$/.test(p(ln,158,163)),sev:'WARN',msg:`Deve ser 6 dígitos, encontrado "${p(ln,158,163)}"`}],'6 dígitos, incremental');
   CF(ctx,'20.0 Versão do Layout (164–166)',164,166,ln,[{test:/^\d{3}$/.test(p(ln,164,166)),sev:'WARN',msg:`Deve ser 3 dígitos, encontrado "${p(ln,164,166)}"`}],'3 dígitos numéricos');
   CF(ctx,'21.0 Densidade de Gravação (167–171)',167,171,ln,[{test:p(ln,167,171)==='00000',sev:'WARN',msg:`BB usa "00000", encontrado "${p(ln,167,171)}"`}],'"00000"','00000');
+  CF(ctx,'22.0 Reservado do Banco (172–191)',172,191,ln,[],'Reservado do banco');
+  CF(ctx,'23.0 Reservado da Empresa (192–211)',192,211,ln,[],'Uso livre da empresa');
+  CF(ctx,'24.0 Uso FEBRABAN (212–222)',212,222,ln,[{test:isBl(p(ln,212,222)),sev:'WARN',msg:'Deve ser 11 brancos'}],'11 brancos','           ');
+  CF(ctx,'25.0 Identificação Cobrança sem Papel (223–225)',223,225,ln,[{test:isBl(p(ln,223,225)),sev:'WARN',msg:'Deve ser 3 brancos'}],'3 brancos','   ');
   CF(ctx,'26.0 Uso VANs (226–228)',226,228,ln,[{test:p(ln,226,228)==='000',sev:'WARN',msg:`Deve ser "000", encontrado "${p(ln,226,228)}"`}],'"000"','000');
   CF(ctx,'27.0 Tipo de Serviço (229–230)',229,230,ln,[{test:p(ln,229,230)==='00',sev:'WARN',msg:`Deve ser "00", encontrado "${p(ln,229,230)}"`}],'"00"','00');
   CF(ctx,'28.0 Ocorrências (231–240)',231,240,ln,[{test:isBl(p(ln,231,240))||p(ln,231,240)==='0000000000',sev:'WARN',msg:'Remessa deve ter zeros ou brancos neste campo'}],'0000000000 (remessa)','0000000000');
@@ -365,17 +386,27 @@ function vHL(ctx,ln){
   const tsValidos=['20','30','98'];
   CF(ctx,'05.1 Tipo de Serviço (10–11)',10,11,ln,[{test:tsValidos.includes(ts),sev:'WARN',msg:`Tipo "${ts}" incomum. BB aceita: 20=Fornecedor 30=Salário/Outros 98=Diversos`}],'20=Fornecedor · 30=Salário · 98=Diversos');
   const fo=p(ln,12,13);
-  const foValidos=['01','05','10','11','16','17','18','21','22','23','24','30','31','45','47'];
-  CF(ctx,'06.1 Forma de Lançamento (12–13)',12,13,ln,[{test:foValidos.includes(fo),sev:'WARN',msg:`Forma "${fo}" incomum. BB aceita: 01=CC 05=TED Poupança 10=OP 11=CodBarras 16=DARF 17=GPS 18=DARFSimples 21=DARJ 22=GARE-ICMS 23=GARE-DR 24=GARE-ITCMD 30=Boleto BB 31=Boleto OutrosBancos 45=PIX ChaveEmail/Tel 47=PIX Dados Bancários`}],'01 05 10 11 16 17 18 21 22 23 24 30 31 45 47');
+  /* Formas e tipos de serviço por lote (manual BB jun/2026, p. 6–11):
+     AB (crédito/TED/Pix): serviço 20, 30 ou 98 · formas 01, 03, 05, 41, 43, 45, 47
+     J (boletos):          serviço 98 · formas 30, 31 · FGTS Digital: 47
+     ON (tributos):        serviço 98 · formas 11, 16, 17, 18, 21, 22, 23, 24
+     Depósito Judicial:    serviço 30 · forma 71 */
+  const foDesc={'01':'Conta Corrente','03':'DOC/TED','05':'Poupança','41':'TED Outra Titularidade','43':'TED Mesma Titularidade','45':'Pix Transferência','47':'Pix QR Code / FGTS Digital','30':'Boleto BB','31':'Boleto Outros Bancos','11':'Tributo com Código de Barras','16':'DARF Normal','17':'GPS','18':'DARF Simples','21':'DARJ','22':'GARE-SP ICMS','23':'GARE-SP DR','24':'GARE-SP ITCMD','71':'Depósito Judicial'};
+  const tsPorForma=fo==='71'?['30']:['30','31','11','16','17','18','21','22','23','24'].includes(fo)?['98']:['20','30','98'];
+  CF(ctx,'06.1 Forma de Lançamento (12–13)',12,13,ln,[
+    {test:!!foDesc[fo],sev:'WARN',msg:`Forma "${fo}" não consta no manual BB. Válidas: ${Object.keys(foDesc).sort().map(k=>k+'='+foDesc[k]).join(' · ')}`},
+    {test:!foDesc[fo]||tsPorForma.includes(ts),sev:'WARN',msg:`Forma ${fo} (${foDesc[fo]}) pede tipo de serviço ${tsPorForma.join(' ou ')}; encontrado "${ts}"`}
+  ],Object.keys(foDesc).sort().join(' '));
   CF(ctx,'07.1 Versão Layout do Lote (14–16)',14,16,ln,[{test:/^\d{3}$/.test(p(ln,14,16)),sev:'WARN',msg:`Deve ser 3 dígitos, encontrado "${p(ln,14,16)}"`}],'3 dígitos numéricos');
   CF(ctx,'08.1 Filler (17)',17,17,ln,[{test:isBl(p(ln,17,17)),sev:'WARN',msg:`Deve ser branco, encontrado "${p(ln,17,17)}"`}],'1 branco',' ');
   CF(ctx,'09.1 Tipo de Inscrição (18)',18,18,ln,[{test:['1','2'].includes(p(ln,18,18)),sev:'WARN',msg:`Deve ser "1"(CPF) ou "2"(CNPJ), encontrado "${p(ln,18,18)}"`}],'"1"=CPF / "2"=CNPJ');
-  CF(ctx,'10.1 Número de Inscrição (19–32)',19,32,ln,[{test:/^\d{14}$/.test(p(ln,19,32)),sev:'ERROR',msg:`Deve ter 14 dígitos, encontrado "${p(ln,19,32)}"`}],'14 dígitos numéricos');
+  CF(ctx,'10.1 Número de Inscrição (19–32)',19,32,ln,[ckInscr(p(ln,19,32),p(ln,18,18))],'14 posições: CPF com zeros à esquerda ou CNPJ');
   /* BB convênio no lote também */
   const conv=p(ln,33,41);
   CF(ctx,'11.1 BB1 Nº Convênio Lote (33–41)',33,41,ln,[{test:/^\d{9}$/.test(conv)&&parseInt(conv,10)>0,sev:'ERROR',msg:`Deve ser 9 dígitos não zerados, encontrado "${conv}"`}],'9 dígitos do convênio BB');
   CF(ctx,'11.1 BB2 Código 0126 (42–45)',42,45,ln,[{test:p(ln,42,45)==='0126',sev:'ERROR',msg:`Deve ser "0126", encontrado "${p(ln,42,45)}"`}],'"0126"','0126');
   CF(ctx,'11.1 BB3 Reservado Banco (46–50)',46,50,ln,[{test:isBl(p(ln,46,50)),sev:'WARN',msg:'Deve ser 5 brancos'}],'5 brancos');
+  CF(ctx,'11.1 BB4 Arquivo de Teste (51–52)',51,52,ln,[{test:isBl(p(ln,51,52))||p(ln,51,52)==='TS',sev:'WARN',msg:`Deve ser brancos (produção) ou "TS" (teste), encontrado "${p(ln,51,52)}"`}],'Brancos em produção · "TS" em teste','  ');
   CF(ctx,'12.1 Agência (53–57)',53,57,ln,[{test:/^\d{5}$/.test(p(ln,53,57)),sev:'ERROR',msg:`Deve ser 5 dígitos, encontrado "${p(ln,53,57)}"`}],'5 dígitos numéricos');
   CF(ctx,'14.1 Conta Corrente (59–70)',59,70,ln,[{test:/^\d{12}$/.test(p(ln,59,70)),sev:'ERROR',msg:`Deve ter 12 dígitos, encontrado "${p(ln,59,70)}"`}],'12 dígitos numéricos');
   CF(ctx,'16.1 DV Ag/Conta (72)',72,72,ln,[{test:p(ln,72,72)==='0',sev:'WARN',msg:`BB usa "0", encontrado "${p(ln,72,72)}"`}],'"0"','0');
@@ -419,11 +450,16 @@ function vSA(ctx,ln,fo){
   CF(ctx,'06.3A Tipo de Movimento (15)',15,15,ln,[{test:['0','9'].includes(p(ln,15,15)),sev:'ERROR',msg:`Deve ser "0"(Inclusão) ou "9"(Exclusão), encontrado "${p(ln,15,15)}"`}],'"0"=Inclusão / "9"=Exclusão','0');
   CF(ctx,'07.3A Código de Instrução (16–17)',16,17,ln,[{test:['00','99'].includes(p(ln,16,17)),sev:'WARN',msg:`Deve ser "00"(Inclusão) ou "99"(Exclusão), encontrado "${p(ln,16,17)}"`}],'"00"=Inclusão / "99"=Exclusão','00');
   const cm=p(ln,18,20);
-  const cmValidos=['000','018','009'];
-  CF(ctx,'08.3A Câmara de Compensação (18–20)',18,20,ln,[{test:cmValidos.includes(cm),sev:'WARN',msg:`Câmara "${cm}" incomum. 000=CCtaBB/OP · 018=TED(STR/CIP) · 009=PIX(SPI)`}],'000=Conta BB · 018=TED · 009=PIX');
-  /* BB-specific: validar câmara vs forma */
-  if((fo==='01'||fo==='05'||fo==='10')&&cm!=='000')ctx.iss.push({line:ctx.ln,sev:'WARN',seg:ctx.seg,msg:`[BB] Crédito em conta/OP/Poupança (Forma ${fo}) usa Câmara 000 (Conta BB). Encontrado: "${cm}"`});
+  const cmValidos=['000','018','009','700','988'];
+  CF(ctx,'08.3A Câmara de Compensação (18–20)',18,20,ln,[{test:cmValidos.includes(cm),sev:'WARN',msg:`Câmara "${cm}" incomum. 000=Conta BB · 018=TED (STR/CIP) · 009=Pix (SPI) · 700=DOC (COMPE) · 988=TED Depósito Judicial`}],'000=Conta BB · 018=TED · 009=Pix · 700=DOC · 988=TED Dep. Judicial');
+  /* BB-specific: validar câmara vs forma (manual jun/2026, p. 6 e 12–14) */
+  if((fo==='01'||fo==='05')&&cm!=='000')ctx.iss.push({line:ctx.ln,sev:'WARN',seg:ctx.seg,msg:`[BB] Crédito em conta/Poupança (Forma ${fo}) usa Câmara 000 (Conta BB). Encontrado: "${cm}"`});
   if(fo==='45'&&cm!=='009')ctx.iss.push({line:ctx.ln,sev:'WARN',seg:ctx.seg,msg:`[BB] PIX (Forma 45) usa Câmara 009 (SPI). Encontrado: "${cm}"`});
+  // Formas 03/41/43 exigem o código da câmara (018 TED; 700 DOC só na forma 03)
+  if(['41','43'].includes(fo)&&cm!=='018')ctx.iss.push({line:ctx.ln,sev:'ERROR',seg:ctx.seg,msg:`[BB] TED (Forma ${fo}) exige Câmara 018 (STR/CIP) nas posições 18–20. Encontrado: "${cm}"`});
+  if(fo==='03'&&!['018','700'].includes(cm))ctx.iss.push({line:ctx.ln,sev:'ERROR',seg:ctx.seg,msg:`[BB] DOC/TED (Forma 03) exige Câmara 018 (TED) ou 700 (DOC) nas posições 18–20. Encontrado: "${cm}"`});
+  if(fo==='71'&&!['018','700','988'].includes(cm))ctx.iss.push({line:ctx.ln,sev:'WARN',seg:ctx.seg,msg:`[BB] Depósito Judicial (Forma 71) usa Câmara 018, 700 ou 988. Encontrado: "${cm}"`});
+  if(fo==='71')CF(ctx,'23.3A ID do Depósito Judicial/Garantia (178–217)',178,217,ln,[{test:p(ln,178,217).trim().length>0,sev:'ERROR',msg:'Informe a identificação do Depósito Judicial / Depósito em Garantia (ID depósito) nas posições 178–217'}],'ID do depósito (obrigatório na forma 71)');
   CF(ctx,'09.3A Banco Favorecido (21–23)',21,23,ln,[{test:/^\d{3}$/.test(p(ln,21,23)),sev:'ERROR',msg:`Deve ter 3 dígitos, encontrado "${p(ln,21,23)}"`}],'3 dígitos (código BACEN)');
   CF(ctx,'10.3A Agência Favorecido (24–28)',24,28,ln,[{test:/^\d{5}$/.test(p(ln,24,28))||isBl(p(ln,24,28)),sev:'WARN',msg:`Deve ter 5 dígitos (ou brancos para PIX por chave), encontrado "${p(ln,24,28)}"`}],'5 dígitos numéricos (brancos para PIX chave)');
   CF(ctx,'12.3A Conta do Favorecido (30–41)',30,41,ln,[{test:/^\d{12}$/.test(p(ln,30,41))||isBl(p(ln,30,41)),sev:'ERROR',msg:`Deve ter 12 dígitos (ou brancos para PIX chave), encontrado "${p(ln,30,41)}"`}],'12 dígitos numéricos');
@@ -441,11 +477,32 @@ function vSA(ctx,ln,fo){
     {test:parseInt(vp,10)>0,sev:'WARN',msg:'Valor zerado'}
   ],'15 dígitos numéricos (centavos)');
   CF(ctx,'22.3A Data Real (155–162)',155,162,ln,[{test:/^\d{8}$/.test(p(ln,155,162))||isBl(p(ln,155,162))||p(ln,155,162)==='00000000',sev:'WARN',msg:'Na remessa deve ser 00000000 (zeros) ou brancos'}],'00000000 na remessa','00000000');
+  CF(ctx,'22.3A Valor Real (163–177)',163,177,ln,[{test:/^0{15}$/.test(p(ln,163,177))||isBl(p(ln,163,177)),sev:'WARN',msg:'Na remessa deve ser zeros (o banco devolve o valor efetivado no retorno)'}],'Zeros na remessa','000000000000000');
+  CF(ctx,'28.3A Uso FEBRABAN (227–229)',227,229,ln,[{test:isBl(p(ln,227,229)),sev:'WARN',msg:'Deve ser 3 brancos'}],'3 brancos','   ');
   CF(ctx,'29.3A Aviso ao Favorecido (230)',230,230,ln,[{test:p(ln,230,230)==='0',sev:'WARN',msg:`BB padrão é "0" (sem aviso), encontrado "${p(ln,230,230)}"`}],'"0" (BB padrão)','0');
   CF(ctx,'30.3A Ocorrências (231–240)',231,240,ln,[{test:isBl(p(ln,231,240))||p(ln,231,240)==='0000000000',sev:'WARN',msg:'Remessa deve ter zeros/brancos'}],'0000000000 na remessa','0000000000');
 }
 
-/* SEGMENTO B — BB CNAB240 */
+/* SEGMENTO B (crédito em conta, poupança, TED, depósito judicial) — manual BB
+   jun/2026, p. 15. Os campos de endereço e valores são opcionais e "não
+   tratados pelo BB": quando vazios, brancos (alfa) ou zeros (num). */
+function vSBnormal(ctx,ln){
+  const num0=(a,b)=>/^\d+$/.test(p(ln,a,b))||isBl(p(ln,a,b));
+  CF(ctx,'05.3B Segmento (14)',14,14,ln,[{test:p(ln,14,14)==='B',sev:'ERROR',msg:`Deve ser "B", encontrado "${p(ln,14,14)}"`}],'"B"','B');
+  CF(ctx,'06.3B Uso FEBRABAN (15–17)',15,17,ln,[{test:isBl(p(ln,15,17)),sev:'ERROR',msg:`Deve ser 3 brancos fora dos lotes de Pix (forma 45), encontrado "${p(ln,15,17)}"`}],'3 brancos','   ');
+  const ti=p(ln,18,18);
+  CF(ctx,'07.3B Tipo Inscrição Favorecido (18)',18,18,ln,[{test:['1','2'].includes(ti),sev:'WARN',msg:`Deve ser "1"(CPF) ou "2"(CNPJ), encontrado "${ti}"`}],'"1"=CPF / "2"=CNPJ');
+  CF(ctx,'08.3B Nº Inscrição Favorecido (19–32)',19,32,ln,[ckInscr(p(ln,19,32),ti)],'14 posições: CPF com zeros à esquerda ou CNPJ');
+  CF(ctx,'10.3B Nº do Local (63–67)',63,67,ln,[{test:num0(63,67),sev:'WARN',msg:`Numérico (zeros se não informado), encontrado "${p(ln,63,67)}"`}],'5 dígitos (zeros se vazio)');
+  CF(ctx,'14.3B CEP (118–122)',118,122,ln,[{test:num0(118,122),sev:'WARN',msg:`Numérico ("00000" se não informado), encontrado "${p(ln,118,122)}"`}],'5 dígitos ("00000" se vazio)');
+  CF(ctx,'17.3B Data do Vencimento (128–135)',128,135,ln,[{test:num0(128,135),sev:'WARN',msg:`DDMMAAAA ou zeros, encontrado "${p(ln,128,135)}"`}],'DDMMAAAA ou zeros');
+  CF(ctx,'18–22.3B Valores do Documento (136–210)',136,210,ln,[{test:num0(136,210),sev:'WARN',msg:'Valores (documento, abatimento, desconto, mora, multa): só dígitos, zeros se não informados'}],'Zeros se não informados');
+  CF(ctx,'24.3B Aviso ao Favorecido (226)',226,226,ln,[{test:p(ln,226,226)==='0'||isBl(p(ln,226,226)),sev:'WARN',msg:`BB usa "0", encontrado "${p(ln,226,226)}"`}],'"0"','0');
+  CF(ctx,'25.3B Código UG / SIAPE (227–232)',227,232,ln,[{test:num0(227,232),sev:'WARN',msg:`Numérico (zeros se não usado), encontrado "${p(ln,227,232)}"`}],'Zeros se não usado');
+  CF(ctx,'26.3B Código ISPB (233–240)',233,240,ln,[{test:num0(233,240),sev:'WARN',msg:`ISPB com 8 dígitos (ou brancos), encontrado "${p(ln,233,240)}"`}],'ISPB (8 dígitos) ou brancos');
+}
+
+/* SEGMENTO B — Pix Transferência (forma 45) */
 function vSB(ctx,ln){
   CF(ctx,'05.3B Segmento (14)',14,14,ln,[{test:p(ln,14,14)==='B',sev:'ERROR',msg:`Deve ser "B", encontrado "${p(ln,14,14)}"`}],'"B"','B');
   const fi=p(ln,15,17);
@@ -455,8 +512,7 @@ function vSB(ctx,ln){
   const ti=p(ln,18,18);
   CF(ctx,'07.3B Tipo Inscrição Favorecido (18)',18,18,ln,[{test:['1','2'].includes(ti),sev:'WARN',msg:`Deve ser "1"(CPF) ou "2"(CNPJ), encontrado "${ti}"`}],'"1"=CPF / "2"=CNPJ');
   const ni=p(ln,19,32);
-  if(ti==='1'&&!chkCPF(ni.slice(-11)))ctx.iss.push({line:ctx.ln,sev:'WARN',seg:ctx.seg,msg:`[08.3B CPF] CPF "${ni.slice(-11)}" com DV inválido`});
-  if(ti==='2'&&!chkCNPJ(ni))ctx.iss.push({line:ctx.ln,sev:'WARN',seg:ctx.seg,msg:`[08.3B CNPJ] CNPJ "${ni}" com DV inválido`});
+  CF(ctx,'08.3B Nº Inscrição Favorecido (19–32)',19,32,ln,[ckInscr(ni,ti)],'14 posições: CPF com zeros à esquerda ou CNPJ');
   /* chave nas posições 128-226 (Informação 12) */
   if(fi==='001'){
     const ch=p(ln,128,226).trim();
@@ -519,11 +575,11 @@ function vSJ52(ctx,ln){
   CF(ctx,'08.4.J52 Identificação Reg. Opcional (18–19)',18,19,ln,[{test:p(ln,18,19)==='52',sev:'ERROR',msg:`Deve ser "52", encontrado "${p(ln,18,19)}"`}],'"52"','52');
   const ti1=p(ln,20,20);
   CF(ctx,'09.4.J52 Tipo Inscrição Pagador (20)',20,20,ln,[{test:['1','2'].includes(ti1),sev:'ERROR',msg:`Deve ser "1"(CPF) ou "2"(CNPJ), encontrado "${ti1}"`}],'"1"=CPF / "2"=CNPJ');
-  CF(ctx,'10.4.J52 Número Inscrição Pagador (21–35)',21,35,ln,[{test:/^\d{15}$/.test(p(ln,21,35)),sev:'ERROR',msg:`Deve ter 15 dígitos, encontrado "${p(ln,21,35)}"`}],'15 dígitos');
+  CF(ctx,'10.4.J52 Número Inscrição Pagador (21–35)',21,35,ln,[ckInscr(p(ln,21,35),ti1)],'15 posições: CPF com zeros à esquerda; CNPJ com brancos à esquerda');
   CF(ctx,'11.4.J52 Nome Pagador (36–75)',36,75,ln,[{test:p(ln,36,75).trim().length>0,sev:'ERROR',msg:'Nome do pagador obrigatório'}],'Alfanumérico, obrigatório');
   const ti2=p(ln,76,76);
   CF(ctx,'12.4.J52 Tipo Inscrição Beneficiário (76)',76,76,ln,[{test:['1','2'].includes(ti2),sev:'ERROR',msg:`Deve ser "1"(CPF) ou "2"(CNPJ), encontrado "${ti2}"`}],'"1"=CPF / "2"=CNPJ');
-  CF(ctx,'13.4.J52 Número Inscrição Beneficiário (77–91)',77,91,ln,[{test:/^\d{15}$/.test(p(ln,77,91)),sev:'ERROR',msg:`Deve ter 15 dígitos, encontrado "${p(ln,77,91)}"`}],'15 dígitos');
+  CF(ctx,'13.4.J52 Número Inscrição Beneficiário (77–91)',77,91,ln,[ckInscr(p(ln,77,91),ti2)],'15 posições: CPF com zeros à esquerda; CNPJ com brancos à esquerda');
   CF(ctx,'14.4.J52 Nome Beneficiário (92–131)',92,131,ln,[{test:p(ln,92,131).trim().length>0,sev:'ERROR',msg:'Nome do beneficiário obrigatório'}],'Alfanumérico, obrigatório');
 }
 
@@ -531,15 +587,25 @@ function vSJ52(ctx,ln){
 function vSJ52pix(ctx,ln){
   CF(ctx,'08.4.J52-PIX Identificação (18–19)',18,19,ln,[{test:p(ln,18,19)==='52',sev:'ERROR',msg:`Deve ser "52", encontrado "${p(ln,18,19)}"`}],'"52"','52');
   CF(ctx,'09.4.J52-PIX Tipo Inscrição Devedor (20)',20,20,ln,[{test:['1','2'].includes(p(ln,20,20)),sev:'WARN',msg:`Deve ser "1"(CPF) ou "2"(CNPJ), encontrado "${p(ln,20,20)}"`}],'"1"=CPF / "2"=CNPJ');
+  CF(ctx,'10.4.J52-PIX Número Inscrição Devedor (21–35)',21,35,ln,[ckInscr(p(ln,21,35),p(ln,20,20))],'15 posições: CPF com zeros à esquerda; CNPJ com brancos à esquerda');
   CF(ctx,'11.4.J52-PIX Nome Devedor (36–75)',36,75,ln,[{test:p(ln,36,75).trim().length>0,sev:'WARN',msg:'Nome do devedor não informado'}],'Alfanumérico');
-  CF(ctx,'12.4.J52-PIX Tipo Inscrição Favorecido (76)',76,76,ln,[{test:['1','2'].includes(p(ln,76,76)),sev:'WARN',msg:`Deve ser "1"(CPF) ou "2"(CNPJ), encontrado "${p(ln,76,76)}"`}],'"1"=CPF / "2"=CNPJ');
+  // FGTS Digital (manual BB jun/2026, p. 21): beneficiário é a Caixa (CNPJ 00360305000104)
+  const fgts=isFgtsDigital(ln);
+  CF(ctx,'12.4.J52-PIX Tipo Inscrição Favorecido (76)',76,76,ln,[
+    {test:['1','2'].includes(p(ln,76,76)),sev:'WARN',msg:`Deve ser "1"(CPF) ou "2"(CNPJ), encontrado "${p(ln,76,76)}"`},
+    {test:!fgts||p(ln,76,76)==='2',sev:'ERROR',msg:'FGTS Digital: o tipo de inscrição do beneficiário deve ser "2" (CNPJ da Caixa)'}
+  ],fgts?'"2" (FGTS Digital)':'"1"=CPF / "2"=CNPJ');
+  CF(ctx,'13.4.J52-PIX Número Inscrição Favorecido (77–91)',77,91,ln,[ckInscr(p(ln,77,91),p(ln,76,76))],fgts?'CNPJ da Caixa 00360305000104 (FGTS Digital)':'15 posições: CPF com zeros à esquerda; CNPJ com brancos à esquerda');
   CF(ctx,'14.4.J52-PIX Nome Favorecido (92–131)',92,131,ln,[{test:p(ln,92,131).trim().length>0,sev:'WARN',msg:'Nome do favorecido não informado'}],'Alfanumérico');
   const url=p(ln,132,210).trim();
   CF(ctx,'15.4.J52-PIX URL/Chave QR (132–210)',132,210,ln,[
-    {test:url.length>0,sev:'ERROR',msg:'URL do QR Code ou chave de endereçamento é obrigatória (pos 132-210)'},
+    {test:url.length>0,sev:'ERROR',msg:fgts?'FGTS Digital: informe a URL (Payload Location) da Guia de Recolhimento do FGTS Digital nas posições 132–210':'URL do QR Code ou chave de endereçamento é obrigatória (pos 132-210)'},
     {test:!url||url.length<=79,sev:'WARN',msg:`URL/chave longa demais: ${url.length} chars (máx 79)`}
-  ],'URL do QR Code ou chave de endereçamento (obrigatório)');
+  ],fgts?'URL (Payload Location) da guia do FGTS Digital (obrigatório)':'URL do QR Code ou chave de endereçamento (obrigatório)');
+  if(fgts)CF(ctx,'16.4.J52-PIX TXID (211–240)',211,240,ln,[{test:isBl(p(ln,211,240)),sev:'WARN',msg:'FGTS Digital: o TXID deve ficar em branco'}],'Brancos (FGTS Digital)');
 }
+/* J-52 de recolhimento do FGTS Digital: beneficiário = CNPJ da Caixa. */
+function isFgtsDigital(ln){return p(ln,77,91).slice(-14)==='00360305000104';}
 
 /* SEGMENTO N — Tributos */
 function vSN(ctx,ln,fo){
@@ -569,8 +635,31 @@ function vSN(ctx,ln,fo){
     CF(ctx,'04.N1 Identificação Tributo GPS (133–134)',133,134,ln,[{test:p(ln,133,134)==='17',sev:'WARN',msg:`GPS deve ter "17", encontrado "${p(ln,133,134)}"`}],'"17"','17');
     CF(ctx,'05.N1 Competência MMAAAA (135–140)',135,140,ln,[{test:/^\d{6}$/.test(p(ln,135,140)),sev:'WARN',msg:`Deve ser MMAAAA, encontrado "${p(ln,135,140)}"`}],'MMAAAA (6 dígitos)');
   }
-  if(fo==='18'||codTrib==='18'){/* DARF Simples */
+  const dt8=(a,b)=>/^\d{8}$/.test(p(ln,a,b))&&chkDt(p(ln,a,b)).ok;
+  const val=(a,b)=>/^\d+$/.test(p(ln,a,b));
+  const mmaaaa=(a,b)=>/^(0[1-9]|1[0-2])\d{4}$/.test(p(ln,a,b));
+  if(fo==='18'||codTrib==='18'){/* DARF Simples — N3, manual BB p. 25 */
     CF(ctx,'04.N3 Identificação Tributo (133–134)',133,134,ln,[{test:p(ln,133,134)==='18',sev:'WARN',msg:`DARF Simples deve ter "18", encontrado "${p(ln,133,134)}"`}],'"18"','18');
+    CF(ctx,'05.N3 Período de Apuração (135–142)',135,142,ln,[{test:dt8(135,142),sev:'ERROR',msg:`DDMMAAAA válida, encontrado "${p(ln,135,142)}"`}],'DDMMAAAA');
+    CF(ctx,'06.N3 Receita Bruta Acumulada (143–157)',143,157,ln,[{test:val(143,157),sev:'ERROR',msg:`15 dígitos 9(13)V2, encontrado "${p(ln,143,157)}"`}],'15 dígitos');
+    CF(ctx,'07.N3 Percentual sobre a Receita (158–164)',158,164,ln,[{test:val(158,164),sev:'ERROR',msg:`7 dígitos 9(5)V2, encontrado "${p(ln,158,164)}"`}],'7 dígitos');
+    CF(ctx,'08–10.N3 Principal, Multa e Juros (165–209)',165,209,ln,[{test:val(165,209),sev:'ERROR',msg:'Valores principal, multa e juros: só dígitos (zeros se não houver)'}],'3 × 15 dígitos');
+  }
+  if(['22','23','24'].includes(fo)||['22','23','24'].includes(codTrib)){/* GARE-SP — N4, manual BB p. 26 */
+    CF(ctx,'04.N4 Identificação Tributo (133–134)',133,134,ln,[{test:['22','23','24'].includes(p(ln,133,134)),sev:'ERROR',msg:`GARE-SP: "22" (ICMS), "23" (DR) ou "24" (ITCMD); encontrado "${p(ln,133,134)}"`}],'22=ICMS · 23=DR · 24=ITCMD');
+    CF(ctx,'05.N4 Data de Vencimento (135–142)',135,142,ln,[{test:dt8(135,142),sev:'ERROR',msg:`DDMMAAAA válida, encontrado "${p(ln,135,142)}"`}],'DDMMAAAA');
+    CF(ctx,'06.N4 IE / Município / Declaração (143–154)',143,154,ln,[{test:val(143,154)&&+p(ln,143,154)>0,sev:'ERROR',msg:'Informação obrigatória: inscrição estadual, código do município ou número da declaração (12 dígitos)'}],'12 dígitos (obrigatório)');
+    CF(ctx,'07.N4 Dívida Ativa / Etiqueta (155–167)',155,167,ln,[{test:val(155,167),sev:'WARN',msg:'13 dígitos (zeros se não houver)'}],'13 dígitos');
+    CF(ctx,'08.N4 Período de Referência (168–173)',168,173,ln,[{test:mmaaaa(168,173),sev:'ERROR',msg:`MMAAAA, encontrado "${p(ln,168,173)}"`}],'MMAAAA');
+    CF(ctx,'09.N4 Nº Parcela / Notificação (174–186)',174,186,ln,[{test:val(174,186),sev:'WARN',msg:'13 dígitos (zeros se não houver)'}],'13 dígitos');
+    CF(ctx,'10–12.N4 Receita, Juros e Multa (187–229)',187,229,ln,[{test:val(187,229),sev:'ERROR',msg:'Valores da receita (15), juros (14) e multa (14): só dígitos'}],'15 + 14 + 14 dígitos');
+  }
+  if(fo==='21'||codTrib==='21'){/* DARJ — N8, manual BB p. 27 */
+    CF(ctx,'04.N8 Inscrição Estadual (133–140)',133,140,ln,[{test:p(ln,133,140).trim().length>0,sev:'WARN',msg:'Inscrição estadual não informada'}],'8 posições');
+    CF(ctx,'05.N8 Documento de Origem (141–156)',141,156,ln,[{test:val(141,156),sev:'WARN',msg:'16 dígitos (zeros se não houver)'}],'16 dígitos');
+    CF(ctx,'06–09.N8 Principal, Atualização, Mora e Multa (157–216)',157,216,ln,[{test:val(157,216),sev:'ERROR',msg:'Valores (4 × 15): só dígitos, zeros se não houver'}],'4 × 15 dígitos');
+    CF(ctx,'10.N8 Data de Vencimento (217–224)',217,224,ln,[{test:dt8(217,224),sev:'ERROR',msg:`DDMMAAAA válida, encontrado "${p(ln,217,224)}"`}],'DDMMAAAA');
+    CF(ctx,'11.N8 Período de Referência ou Parcela (225–230)',225,230,ln,[{test:val(225,230),sev:'WARN',msg:`MMAAAA ou número da parcela, encontrado "${p(ln,225,230)}"`}],'MMAAAA ou parcela');
   }
   CF(ctx,'14.3N Ocorrências (231–240)',231,240,ln,[{test:isBl(p(ln,231,240))||p(ln,231,240)==='0000000000',sev:'WARN',msg:'Remessa deve ter zeros/brancos'}],'0000000000 na remessa','0000000000');
 }
@@ -629,7 +718,7 @@ function validate(lines){
       const r=vHL(ctx,lineP);
       loteForma=r.fo;loteTipo=r.ts;
       const tipoDesc=loteTipo==='20'?'Fornecedor':loteTipo==='30'?'Salário/Outros':loteTipo==='98'?'Diversos':'Tipo '+loteTipo;
-      const formaDesc=loteForma==='01'?'Conta Corrente':loteForma==='05'?'TED Poupança':loteForma==='30'?'Boleto BB':loteForma==='31'?'Boleto Outros Bancos':loteForma==='45'?'PIX Chave':loteForma==='47'?'PIX Dados Bancários':loteForma==='16'?'DARF':loteForma==='17'?'GPS':loteForma==='18'?'DARF Simples':loteForma==='11'?'Barras':loteForma==='21'?'DARJ':loteForma==='22'?'GARE-ICMS':loteForma==='23'?'GARE-DR':loteForma==='24'?'GARE-ITCMD':'Forma '+loteForma;
+      const formaDesc={'01':'Conta Corrente','03':'DOC/TED','05':'Poupança','41':'TED Outra Titularidade','43':'TED Mesma Titularidade','45':'PIX Transferência','47':'PIX QR Code / FGTS Digital','30':'Boleto BB','31':'Boleto Outros Bancos','11':'Barras','16':'DARF','17':'GPS','18':'DARF Simples','21':'DARJ','22':'GARE-ICMS','23':'GARE-DR','24':'GARE-ITCMD','71':'Depósito Judicial'}[loteForma]||'Forma '+loteForma;
       recs.push({ln,desc:`Header Lote #${loteCur} · ${tipoDesc} · ${formaDesc}`,ind:1,ok:true});
     } else if(rt==='5'){
       lotsOpen--;
@@ -655,16 +744,18 @@ function validate(lines){
         vSA(ctx,lineP,loteForma);
         somaLote+=parseInt(p(lineP,120,134),10)||0;
         const isPix=loteForma==='45';
-        recs.push({ln,desc:`Seg. A — ${isPix?'PIX':loteForma==='01'?'Conta BB':loteForma==='05'?'TED Poupança':'TED/Crédito'} · Lote: ${p(lineP,4,7)} · Seq: ${String(sr).padStart(5,'0')}`,ind:2,ok:true});
+        recs.push({ln,desc:`Seg. A — ${isPix?'PIX':loteForma==='01'?'Conta BB':loteForma==='05'?'Poupança':loteForma==='71'?'Depósito Judicial':'TED/Crédito'} · Lote: ${p(lineP,4,7)} · Seq: ${String(sr).padStart(5,'0')}`,ind:2,ok:true});
       } else if(sc==='B'){
-        vSB(ctx,lineP);
-        recs.push({ln,desc:`Seg. B PIX · Lote: ${p(lineP,4,7)} · Seq: ${String(sr).padStart(5,'0')}`,ind:2,ok:true});
+        // B de Pix (forma de iniciação 001–005) só nos lotes de Pix Transferência
+        const bPix=loteForma==='45';
+        if(bPix)vSB(ctx,lineP);else vSBnormal(ctx,lineP);
+        recs.push({ln,desc:`Seg. B ${bPix?'PIX':'Complementar'} · Lote: ${p(lineP,4,7)} · Seq: ${String(sr).padStart(5,'0')}`,ind:2,ok:true});
       } else if(sc==='J'){
         const id=p(lineP,18,19);
         if(id==='52'){
           const url=p(lineP,132,210).trim();
           const isPixQR=url.length>5||(loteForma==='47'||loteForma==='45');
-          if(isPixQR){vSJ52pix(ctx,lineP);recs.push({ln,desc:`Seg. J52 PIX QR Code · Lote: ${p(lineP,4,7)} · Seq: ${String(sr).padStart(5,'0')}`,ind:2,ok:true});}
+          if(isPixQR){vSJ52pix(ctx,lineP);recs.push({ln,desc:`Seg. J52 ${isFgtsDigital(lineP)?'FGTS Digital (QR Code)':'PIX QR Code'} · Lote: ${p(lineP,4,7)} · Seq: ${String(sr).padStart(5,'0')}`,ind:2,ok:true});}
           else{vSJ52(ctx,lineP);recs.push({ln,desc:`Seg. J52 Pagador/Beneficiário · Lote: ${p(lineP,4,7)} · Seq: ${String(sr).padStart(5,'0')}`,ind:2,ok:true});}
         } else {
           vSJ(ctx,lineP);
@@ -726,7 +817,7 @@ function renderRes(file,lines,res){
   const vb=$('vb');
   if(errs>0){vb.className='vd ver';$('vi').textContent='✗';$('vtt').textContent=`${errs} erro(s) encontrado(s)`;$('vts').textContent='Arquivo com erros que causarão rejeição no BB. Corrija antes de transmitir.';}
   else if(warns>0){vb.className='vd vwa';$('vi').textContent='⚠';$('vtt').textContent=`Arquivo válido com ${warns} aviso(s)`;$('vts').textContent='Estrutura OK — verifique os campos sinalizados antes de transmitir ao BB.';}
-  else{vb.className='vd vok';$('vi').textContent='✓';$('vtt').textContent='Arquivo válido — sem erros';$('vts').textContent='Estrutura CNAB240 Banco do Brasil em conformidade com o manual (nov/2020).';}
+  else{vb.className='vd vok';$('vi').textContent='✓';$('vtt').textContent='Arquivo válido — sem erros';$('vts').textContent='Estrutura CNAB240 Banco do Brasil em conformidade com o manual (jun/2026).';}
   $('sg').innerHTML=[
     {c:'er',l:'Erros',v:errs,s:'críticos / estruturais'},
     {c:'wa',l:'Avisos',v:warns,s:'campos a verificar'},

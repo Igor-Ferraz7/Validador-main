@@ -19,7 +19,7 @@ window.CNAB_DOCS = {
       "nome": "Banco do Brasil",
       "pasta": "001-banco-do-brasil",
       "validador": "Validador_CNAB240_BancoDoBrasil.html",
-      "baseDoValidador": "Arquivo de Pagamentos, nov/2020",
+      "baseDoValidador": "Arquivo de Pagamentos, jun/2026",
       "documentos": [
         {
           "titulo": "Arquivo de Pagamentos – Particularidades BB CNAB240",
