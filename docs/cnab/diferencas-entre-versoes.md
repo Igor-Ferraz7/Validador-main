@@ -22,7 +22,7 @@ versão mais recente publicada, e o que isso significa para o sistema.
 | **Banco do Brasil** (001) | ~~nov/2020~~ → **jun/2026** | **jun/2026** | FGTS Digital via QR Code; formas de TED 41 e 43 | ✅ **Corrigido** em 20/10/2026 (auditoria completa) |
 | **Sicredi** (748) | ~~v1.2~~ → **V1.4** (abr/2024) | **V1.4** (abr/2024) | Ajustes na composição do arquivo e no Pix QR Code | ✅ **Corrigido** em 20/10/2026 |
 | **Sicoob** (756) | ~~v2.11~~ → **v3.3** + Folha v1.0 | **v3.3** (mai/2025) | Códigos de retorno da Folha; guia de Folha separado | ✅ **Corrigido** em 20/10/2026 (guia de Folha catalogado e aplicado) |
-| **Bradesco** (237) | v6 (jul/2023) | v6 (jul/2023) | Nada | ⚫ Manual em dia, mas **o validador não tem lógica** |
+| **Bradesco** (237) | v6 (jul/2023) | v6 (jul/2023) | Nada | ✅ **Validador escrito** em 20/10/2026 (antes não tinha lógica) |
 | **Itaú** (341) | v086 (fev/2024) | não publicada | — | ⚪ **Sem como comparar:** o manual público oficial é de 2020 |
 
 O que fazer primeiro está em [Próximos passos](#próximos-passos).
@@ -304,6 +304,21 @@ diferença de versão.
 validação.** A página existe e aceita o arquivo, mas não confere nenhum campo.
 O trabalho aqui é escrever o validador a partir da v6.
 
+> ✅ **Feito em 20/10/2026.** O validador foi escrito a partir do Manual
+> Multipag v6 e cobre as remessas de pagamento nos três tipos de lote:
+> - **Pagamentos** (segmentos A, B, C e 5; layout de lote `045`);
+> - **Títulos de cobrança** (J, J-52 e J-52 Pix; `040`);
+> - **Tributos** (O e N, com GPS, DARF, DARF Simples e GARE-SP; `012`).
+>
+> Regras próprias do Bradesco que ele aplica:
+> - Pix em arquivo separado, com "PIX" no header (posições 172–174);
+> - B obrigatório após o A, e J-52 obrigatório no Pix QR Code;
+> - câmara conforme a forma de lançamento;
+> - identificação do depósito judicial nas formas 71/72.
+>
+> Os layouts de retorno e DDA (bloqueto eletrônico, alegação do pagador) ficam
+> fora do escopo.
+
 ---
 
 ### Itaú (341) — sem como comparar
@@ -330,7 +345,7 @@ Em ordem de urgência:
 4. ~~**Sicredi:** conferir a composição do arquivo e o Pix QR Code contra a V1.4.~~ ✅ feito
 5. ~~**Sicoob:** incluir o guia de Folha de Pagamento no catálogo.~~ ✅ feito
 6. **Itaú:** obter o manual SISPAG v086 ou mais recente.
-7. **Bradesco:** escrever o validador a partir da v6.
+7. ~~**Bradesco:** escrever o validador a partir da v6.~~ ✅ feito
 
 ---
 

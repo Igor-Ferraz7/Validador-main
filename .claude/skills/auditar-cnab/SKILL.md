@@ -149,8 +149,10 @@ versão, e `baseDoValidador` no catálogo) e teste a página no navegador.
 
 ## Armadilhas conhecidas
 
-- **Bradesco:** o validador não tem lógica (o `<script>` está vazio). Não liste
-  cada campo como ausente; diga que o validador precisa ser escrito.
+- **Bradesco:** o validador cobre só remessas de pagamento (lotes de
+  Pagamentos, Títulos e Tributos). Os layouts de retorno/DDA do manual
+  (bloqueto eletrônico, alegação do pagador, segmentos G/H/Y/1/2/3) estão fora
+  do escopo; não os aponte como ausentes.
 - **Itaú:** o único manual oficial público (out/2020) é mais antigo que a v086
   em que o validador se baseia. Comparar com ele gera falsas regressões; avise
   a limitação e peça o PDF da v086.

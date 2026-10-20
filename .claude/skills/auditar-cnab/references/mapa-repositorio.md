@@ -6,7 +6,7 @@ comparar com o manual.
 ## Validadores (`Validador_CNAB240_<Banco>.html`)
 
 Página única com HTML, CSS e um `<script>` com toda a lógica. O padrão é o
-mesmo em todos os bancos (o Bradesco ainda não tem lógica).
+mesmo em todos os bancos.
 
 ### Código do banco e versão declarada
 
