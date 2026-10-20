@@ -95,7 +95,7 @@ window.CNAB_DOCS = {
       "nome": "Sicredi",
       "pasta": "748-sicredi",
       "validador": "Validador_CNAB240_Sicredi - v2 1.html",
-      "baseDoValidador": "Pagfor v1.2 (03/2024)",
+      "baseDoValidador": "Pagfor V1.4 (04/2024)",
       "documentos": [
         {
           "titulo": "Manual para Empresas Associadas – Pagamento a Fornecedor – CNAB 240 FEBRABAN",

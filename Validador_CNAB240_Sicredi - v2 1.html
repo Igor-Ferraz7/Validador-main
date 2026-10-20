@@ -193,7 +193,7 @@ header{position:relative;z-index:10;display:flex;align-items:center;justify-cont
       <p>Pagfor · Pagamento a Fornecedor</p>
     </div>
   </div>
-  <span class="htag">Banco 748 · v1.2 (03/2024) · PIX · QR Code</span>
+  <span class="htag">Banco 748 · V1.4 (04/2024) · PIX · QR Code</span>
 </header>
 
 <div class="wrap">
@@ -493,7 +493,15 @@ function vSJ52p(ctx,ln){
   CF(ctx,'13.J52-PIX CPF/CNPJ Favorecido (77–91)',77,91,ln,[{test:/^\d{15}$/.test(p(ln,77,91)),sev:'ERROR',msg:`Deve ter 15 dígitos, encontrado "${p(ln,77,91)}"`}],'15 dígitos com zeros iniciais');
   CF(ctx,'14.J52-PIX Nome Favorecido (92–131)',92,131,ln,[{test:p(ln,92,131).trim().length>0,sev:'ERROR',msg:'Nome do favorecido obrigatório'}],'Alfanumérico, obrigatório');
   const url=p(ln,132,210).trim();
-  CF(ctx,'15.J52-PIX URL/Chave Endereçamento (132–210)',132,210,ln,[{test:url.length>0,sev:'ERROR',msg:'URL ou chave de endereçamento PIX QR obrigatória nas posições 132-210 (G102)'}],'URL do QR Code Dinâmico — ex: pix-qrcode-h.sicredi.com.br/qr/v2/...');
+  // Manual V1.4, itens 5.10.1/5.10.2: QR dinâmico → URL extraída do QR
+  // (Payload Location); QR estático → chave Pix extraída do QR.
+  CF(ctx,'15.J52-PIX URL/Chave Endereçamento (132–210)',132,210,ln,[
+    {test:url.length>0,sev:'ERROR',msg:'URL ou chave de endereçamento PIX QR obrigatória nas posições 132-210 (G102)'},
+    {test:!/^000201|br\.gov\.bcb\.pix/i.test(url),sev:'ERROR',msg:'Informe só a URL (QR dinâmico) ou a chave Pix (QR estático) extraída do QR Code, não o código "copia e cola" inteiro (Manual Sicredi V1.4, itens 5.10.1 e 5.10.2)'},
+    {test:!/^https?:\/\//i.test(url),sev:'WARN',msg:'A URL do QR dinâmico vai como está no QR Code, sem "https://" (ex.: pix-qrcode-h.sicredi.com.br/qr/v2/...)'}
+  ],'QR dinâmico: URL do QR (Payload Location), ex. pix-qrcode-h.sicredi.com.br/qr/v2/... · QR estático: chave Pix extraída do QR');
+  const txid=p(ln,211,240).trim();
+  CF(ctx,'16.J52-PIX TXID (211–240)',211,240,ln,[{test:!txid||/^[A-Za-z0-9]{1,25}$/.test(txid),sev:'WARN',msg:`O TXID tem até 25 caracteres alfanuméricos. Encontrado: "${txid}"`}],'Opcional: TXID do QR estático, quando houver (até 25 caracteres)');
 }
 
 function vSO(ctx,ln){
@@ -532,6 +540,15 @@ function validate(lines){
   const iss=[],fr=[],recs=[];
   let lotsOpen=0,loteCur=0,regsInLote=0,somaLote=0,totalRegs=0,totalLotes=0,seqLote=1,seqReg=0;
   let hdrFound=false,trlFound=false,loteForma='',loteTipoS='';
+  // Composição da remessa (Manual Sicredi V1.4, item 4.3): todo segmento A
+  // vem seguido do B, e todo J de boleto/Pix QR Code vem seguido do J-52.
+  let pend=null,isRem=true;
+  const fechaPend=()=>{
+    if(pend&&isRem)addI(pend.ln,'ERROR',`SEG ${pend.sc}`,pend.sc==='A'
+      ?'Segmento A sem o segmento B obrigatório logo em seguida: crédito em conta, TED, OP e Pix exigem A + B (Manual Sicredi V1.4, item 4.3).'
+      :'Segmento J sem o segmento J-52 obrigatório logo em seguida: boletos e Pix QR Code exigem J + J-52 (Manual Sicredi V1.4, item 4.3).');
+    pend=null;
+  };
   const movLote={};
   const addI=(ln,sev,seg,msg)=>iss.push({line:ln,sev,seg,msg});
   if(!lines.length){addI(0,'ERROR','ARQUIVO','Arquivo vazio.');return{iss,fr,recs};}
@@ -541,22 +558,22 @@ function validate(lines){
     const rt=p(line,8,8);
     if(rt==='0'){
       hdrFound=true;if(idx!==0)addI(ln,'ERROR','HEADER ARQ','Header do arquivo deve ser a primeira linha.');totalRegs++;
-      const ctx={iss,fr,ln,seg:'HEADER ARQ'};vHA(ctx,line);
+      const ctx={iss,fr,ln,seg:'HEADER ARQ'};vHA(ctx,line);isRem=p(line,143,143)!=='2';
       recs.push({ln,desc:`Header do Arquivo · Sicredi 748 · Layout: ${p(line,164,166)} · ${p(line,143,143)==='1'?'Remessa':'Retorno'}`,ok:true});
     } else if(rt==='1'){
-      totalRegs++;const lN=parseInt(p(line,4,7),10);
+      fechaPend();totalRegs++;const lN=parseInt(p(line,4,7),10);
       if(lN!==seqLote)addI(ln,'ERROR','HEADER LOTE',`Lote fora de sequência: "${p(line,4,7)}" (esperado: ${String(seqLote).padStart(4,'0')})`);
       lotsOpen++;totalLotes++;loteCur=lN;seqLote++;seqReg=0;regsInLote=0;somaLote=0;movLote[lN]=0;
       const ctx={iss,fr,ln,seg:`HEADER LOTE #${String(lN).padStart(4,'0')}`};
       const r=vHL(ctx,line);loteTipoS=r.ts;loteForma=r.fo;
       recs.push({ln,desc:`Header Lote #${p(line,4,7)} · Serviço: ${loteTipoS} · Forma: ${loteForma}`,ind:1,ok:['03','20','22'].includes(loteTipoS)});
     } else if(rt==='5'&&p(line,4,7)!=='9999'){
-      totalRegs++;if(p(line,4,7)!==String(loteCur).padStart(4,'0'))addI(ln,'ERROR','TRAILER LOTE',`Lote "${p(line,4,7)}" diverge do lote aberto "${String(loteCur).padStart(4,'0')}".`);
+      fechaPend();totalRegs++;if(p(line,4,7)!==String(loteCur).padStart(4,'0'))addI(ln,'ERROR','TRAILER LOTE',`Lote "${p(line,4,7)}" diverge do lote aberto "${String(loteCur).padStart(4,'0')}".`);
       lotsOpen--;if((movLote[loteCur]||0)>10000)addI(ln,'ERROR','TRAILER LOTE',`[Sicredi] Máx. 10.000 movimentos por lote. Este lote tem ${movLote[loteCur]}.`);
       const ctx={iss,fr,ln,seg:`TRAILER LOTE #${p(line,4,7)}`};vTL(ctx,line,regsInLote,somaLote);
       recs.push({ln,desc:`Trailer Lote #${p(line,4,7)} · Registros: ${parseInt(p(line,18,23),10)}`,ind:1,ok:true});
     } else if(rt==='9'){
-      trlFound=true;totalRegs++;if(ln!==lines.length)addI(ln,'WARN','TRAILER ARQ','Trailer não é a última linha.');
+      fechaPend();trlFound=true;totalRegs++;if(ln!==lines.length)addI(ln,'WARN','TRAILER ARQ','Trailer não é a última linha.');
       if(p(line,4,7)!=='9999')addI(ln,'ERROR','TRAILER ARQ',`Lote deve ser "9999", encontrado "${p(line,4,7)}".`);
       if(lotsOpen!==0)addI(ln,'ERROR','TRAILER ARQ',`${lotsOpen} lote(s) sem trailer.`);
       if(totalLotes>70)addI(ln,'ERROR','TRAILER ARQ',`[Sicredi] Máx. 70 lotes por arquivo. Encontrado: ${totalLotes}.`);
@@ -567,6 +584,10 @@ function validate(lines){
       const sc=p(line,14,14).toUpperCase();const sr=parseInt(p(line,9,13),10);
       if(sr!==seqReg)addI(ln,'ERROR',`SEG ${sc}`,`Seq: ${sr} (esperado: ${seqReg}). Inicia em 00001 em cada lote.`);
       const ctx={iss,fr,ln,seg:`SEG ${sc}`};
+      if(sc==='A'){fechaPend();pend={sc,ln};}
+      else if(sc==='B'){if(pend&&pend.sc==='A')pend=null;}
+      else if(sc==='J'){if(p(line,18,19)==='52'){if(pend&&pend.sc==='J')pend=null;}else{fechaPend();pend={sc,ln};}}
+      else fechaPend();
       if(sc==='A'){vSA(ctx,line,loteForma);somaLote+=parseInt(p(line,120,134),10)||0;recs.push({ln,desc:`Seg. A — ${loteForma==='45'?'PIX':loteForma==='41'?'TED':'Crédito/OP'} · Lote: ${p(line,4,7)} · Seq: ${String(sr).padStart(5,'0')}`,ind:2,ok:true});}
       else if(sc==='B'){const tk=p(line,15,16).trim();const isP=['01','02','03','04','05'].includes(tk);if(isP){vSBp(ctx,line);recs.push({ln,desc:`Seg. B PIX (chave ${tk}) · Lote: ${p(line,4,7)} · Seq: ${String(sr).padStart(5,'0')}`,ind:2,ok:true});}else{vSBn(ctx,line);recs.push({ln,desc:`Seg. B — Dados Complementares · Lote: ${p(line,4,7)} · Seq: ${String(sr).padStart(5,'0')}`,ind:2,ok:true});}}
       else if(sc==='J'){const id=p(line,18,19);if(id==='52'){const url=p(line,132,210).trim();const isQR=url.length>5||loteForma==='47';if(isQR){vSJ52p(ctx,line);recs.push({ln,desc:`Seg. J52-PIX QR Code · Lote: ${p(line,4,7)} · Seq: ${String(sr).padStart(5,'0')}`,ind:2,ok:true});}else{vSJ52(ctx,line);recs.push({ln,desc:`Seg. J52 — Pagador/Beneficiário · Lote: ${p(line,4,7)} · Seq: ${String(sr).padStart(5,'0')}`,ind:2,ok:true});}}else{vSJ(ctx,line,loteForma);somaLote+=parseInt(p(line,153,167),10)||0;recs.push({ln,desc:`Seg. J — ${loteForma==='47'?'PIX QR':'Boleto'} · Lote: ${p(line,4,7)} · Seq: ${String(sr).padStart(5,'0')}`,ind:2,ok:true});}}
@@ -576,6 +597,7 @@ function validate(lines){
       else{addI(ln,'WARN',`SEG ${sc}`,`Segmento desconhecido: "${sc}". Sicredi suporta: A,B,J,J52,O,N,Z.`);recs.push({ln,desc:`Seg. ${sc} — Desconhecido`,ind:2,ok:false});}
     } else if(rt!=='5')addI(ln,'ERROR','ESTRUTURA',`Tipo de registro inválido: "${rt}" (válidos: 0,1,3,5,9).`);
   });
+  fechaPend();
   if(!hdrFound)addI(0,'ERROR','ARQUIVO','Header do arquivo (tipo 0) não encontrado — deve ser a primeira linha.');
   if(!trlFound)addI(0,'ERROR','ARQUIVO','Trailer do arquivo (tipo 9) não encontrado — deve ser a última linha.');
   if(lotsOpen>0)addI(0,'ERROR','ARQUIVO',`${lotsOpen} lote(s) sem trailer correspondente.`);

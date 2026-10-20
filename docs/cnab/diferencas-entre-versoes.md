@@ -20,7 +20,7 @@ versão mais recente publicada, e o que isso significa para o sistema.
 |---|---|---|---|---|
 | **Santander** (033) | ~~V11.6~~ → **V11.7** (jun/2026) | **V11.7** (jun/2026) | CNPJ com letras; fim do GARE-SP | ✅ **Corrigido** em 20/10/2026 (validador e Preenchedor) |
 | **Banco do Brasil** (001) | nov/2020 | **jun/2026** | FGTS Digital via QR Code; formas de TED 41 e 43 | 🟠 **Médio.** Casos novos que o validador não reconhece |
-| **Sicredi** (748) | v1.2 (mar/2024) | **V1.4** (abr/2024) | Ajustes na composição do arquivo e no Pix QR Code | 🟡 **Baixo.** Conferir os dois pontos |
+| **Sicredi** (748) | ~~v1.2~~ → **V1.4** (abr/2024) | **V1.4** (abr/2024) | Ajustes na composição do arquivo e no Pix QR Code | ✅ **Corrigido** em 20/10/2026 |
 | **Sicoob** (756) | ~~v2.11~~ → **v3.3** + Folha v1.0 | **v3.3** (mai/2025) | Códigos de retorno da Folha; guia de Folha separado | ✅ **Corrigido** em 20/10/2026 (guia de Folha catalogado e aplicado) |
 | **Bradesco** (237) | v6 (jul/2023) | v6 (jul/2023) | Nada | ⚫ Manual em dia, mas **o validador não tem lógica** |
 | **Itaú** (341) | v086 (fev/2024) | não publicada | — | ⚪ **Sem como comparar:** o manual público oficial é de 2020 |
@@ -233,6 +233,20 @@ A última página registra as versões.
 auditoria precisa conferir se ele exige os segmentos certos para cada tipo de
 lote e se segue as regras de QR Code dinâmico e estático das p. 21–22.
 
+> ✅ **Corrigido em 20/10/2026.** O validador agora:
+> - exige a composição da remessa: todo segmento A seguido do B e todo J de
+>   boleto/Pix QR seguido do J-52 (no retorno, não exige);
+> - no J-52 de Pix QR, recusa o código "copia e cola" inteiro (o certo é a URL,
+>   no QR dinâmico, ou a chave, no estático);
+> - avisa sobre URL com `https://` e confere o TXID opcional (até 25
+>   caracteres).
+>
+> Ele agora segue a V1.4.
+>
+> Uma ressalva do próprio manual: a tabela do J-52 marca o TXID como "não
+> solicitado", e a explicação do QR estático diz que ele deve ser informado
+> quando existir. Por isso o validador trata o TXID como opcional.
+
 ---
 
 ### Sicoob (756) — da v2.11 para a v3.3
@@ -303,7 +317,7 @@ Em ordem de urgência:
 2. ~~**Santander: remover o GARE-SP.**~~ ✅ feito
 3. **Banco do Brasil:** auditoria completa, começando por FGTS Digital e formas
    de TED 41/43.
-4. **Sicredi:** conferir a composição do arquivo e o Pix QR Code contra a V1.4.
+4. ~~**Sicredi:** conferir a composição do arquivo e o Pix QR Code contra a V1.4.~~ ✅ feito
 5. ~~**Sicoob:** incluir o guia de Folha de Pagamento no catálogo.~~ ✅ feito
 6. **Itaú:** obter o manual SISPAG v086 ou mais recente.
 7. **Bradesco:** escrever o validador a partir da v6.
