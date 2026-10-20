@@ -26,3 +26,26 @@ preencher os dados do cliente e clicar em **Gerar .srb**.
 
 Para um banco novo, crie também `configs/<banco>.js` e inclua o `<script>`
 correspondente em `Preenchedor_SRB.html`.
+
+## Manuais oficiais
+
+`docs/cnab/catalogo.js` lista o manual oficial de cada banco (e o padrão
+FEBRABAN): versão, data, link e SHA-256. Cada validador tem o botão
+**📄 Manuais oficiais**, que abre esses links (e a cópia local, quando a página
+é aberta do disco).
+
+Os PDFs ficam só no disco, fora do git. Para baixá-los ou checar se algum banco
+publicou versão nova, veja `docs/cnab/README.md`:
+
+```
+powershell -ExecutionPolicy Bypass -File tools/baixar-docs.ps1
+powershell -ExecutionPolicy Bypass -File tools/baixar-docs.ps1 -Verificar
+```
+
+## Auditoria contra os manuais (Claude Code)
+
+A skill de projeto `.claude/skills/auditar-cnab` compara validadores, templates
+e configs com os manuais e gera um relatório em `docs/cnab/relatorios/`. No
+Claude Code, aberto nesta pasta, basta pedir, por exemplo: "audite o validador
+do Sicoob contra o manual atual". Requer o `pdftotext`
+(`winget install oschwartz10612.Poppler`) e os PDFs baixados.

@@ -1,0 +1,5 @@
+# Manuais oficiais dos bancos e o texto extraído deles: ficam só no disco,
+# para não republicar material dos bancos no repositório público.
+# Baixe com tools/baixar-docs.ps1 (ver docs/cnab/README.md).
+docs/cnab/**/*.pdf
+docs/cnab/**/*.txt
