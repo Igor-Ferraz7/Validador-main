@@ -21,7 +21,7 @@ versão mais recente publicada, e o que isso significa para o sistema.
 | **Santander** (033) | ~~V11.6~~ → **V11.7** (jun/2026) | **V11.7** (jun/2026) | CNPJ com letras; fim do GARE-SP | ✅ **Corrigido** em 20/10/2026 (validador e Preenchedor) |
 | **Banco do Brasil** (001) | nov/2020 | **jun/2026** | FGTS Digital via QR Code; formas de TED 41 e 43 | 🟠 **Médio.** Casos novos que o validador não reconhece |
 | **Sicredi** (748) | v1.2 (mar/2024) | **V1.4** (abr/2024) | Ajustes na composição do arquivo e no Pix QR Code | 🟡 **Baixo.** Conferir os dois pontos |
-| **Sicoob** (756) | v2.11 (dez/2024) | **v3.3** (mai/2025) | Códigos de retorno da Folha; guia de Folha separado | 🟢 **Baixo.** Só a documentação de Folha mudou de lugar |
+| **Sicoob** (756) | ~~v2.11~~ → **v3.3** + Folha v1.0 | **v3.3** (mai/2025) | Códigos de retorno da Folha; guia de Folha separado | ✅ **Corrigido** em 20/10/2026 (guia de Folha catalogado e aplicado) |
 | **Bradesco** (237) | v6 (jul/2023) | v6 (jul/2023) | Nada | ⚫ Manual em dia, mas **o validador não tem lógica** |
 | **Itaú** (341) | v086 (fev/2024) | não publicada | — | ⚪ **Sem como comparar:** o manual público oficial é de 2020 |
 
@@ -260,6 +260,14 @@ validador segue. Depois da base vieram:
   de serviço `30`), mas o guia de Folha ainda não está no catálogo de manuais e
   precisa ser incluído para servir de referência.
 
+> ✅ **Corrigido em 20/10/2026.** O *Guia de Importação – Folha de Pagamento*
+> v1.0 (19/05/2025) entrou no catálogo. Comparado com ele, o validador passou a:
+> - conferir os 26 campos do segmento B de Folha (antes conferia 5);
+> - aceitar em lotes de Folha só as formas de lançamento do guia: `01` (conta
+>   corrente), `05` (poupança) e `41` (TED outra titularidade).
+>
+> Ele agora segue a v3.3 de Pagamentos e a v1.0 de Folha.
+
 ---
 
 ### Bradesco (237) — v6 nas duas pontas
@@ -296,7 +304,7 @@ Em ordem de urgência:
 3. **Banco do Brasil:** auditoria completa, começando por FGTS Digital e formas
    de TED 41/43.
 4. **Sicredi:** conferir a composição do arquivo e o Pix QR Code contra a V1.4.
-5. **Sicoob:** incluir o guia de Folha de Pagamento no catálogo.
+5. ~~**Sicoob:** incluir o guia de Folha de Pagamento no catálogo.~~ ✅ feito
 6. **Itaú:** obter o manual SISPAG v086 ou mais recente.
 7. **Bradesco:** escrever o validador a partir da v6.
 

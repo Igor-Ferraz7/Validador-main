@@ -114,7 +114,7 @@ window.CNAB_DOCS = {
       "nome": "Sicoob",
       "pasta": "756-sicoob",
       "validador": "Validador_CNAB240_Sicoob.html",
-      "baseDoValidador": "v2.11 (12/2024)",
+      "baseDoValidador": "v3.3 (05/2025) + Folha v1.0 (05/2025)",
       "documentos": [
         {
           "titulo": "Guia de Importação de Arquivos CNAB 240 – Pagamentos e Transferências",
@@ -125,6 +125,16 @@ window.CNAB_DOCS = {
           "bytes": 311923,
           "sha256": "348135530f05351d1fee1e99f0fffdabc9e7203865ec7957eeef906472708a2c",
           "observacao": ""
+        },
+        {
+          "titulo": "Guia de Importação de Arquivos CNAB 240 – Folha de Pagamento",
+          "versao": "1.0",
+          "data": "2025-05-19",
+          "arquivo": "sicoob-importacao-cnab240-folha.pdf",
+          "url": "https://www.sicoob.com.br/documents/20128/1635942/Folha_Pagamento_CNAB_240.pdf/a4fd337e-6004-1cc3-f848-03f1727e82f2?version=1.0&t=1747666718558&download=true",
+          "bytes": 153536,
+          "sha256": "03bec14097265336be164a65dd9a1f642098ed9e6ed6f56fbff58f671bbd1b4d",
+          "observacao": "Separado do guia de Pagamentos na v3.3; regras dos lotes de Folha (tipo de serviço 30)."
         }
       ]
     }

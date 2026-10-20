@@ -171,10 +171,10 @@ header{position:relative;z-index:10;display:flex;align-items:center;justify-cont
     </div>
     <div class="lt">
       <h1>Validador CNAB240</h1>
-      <p>Sicoobnet Empresarial · v2.11 (12/2024)</p>
+      <p>Sicoobnet Empresarial · v3.3 (05/2025)</p>
     </div>
   </div>
-  <span class="htag">Banco 756 · Layout v2.11 · TED · PIX · Boleto · Tributos</span>
+  <span class="htag">Banco 756 · Layout v3.3 · Folha v1.0 · TED · PIX · Boleto · Tributos</span>
 </header>
 
 <div class="wrap">
@@ -225,7 +225,7 @@ header{position:relative;z-index:10;display:flex;align-items:center;justify-cont
         <strong>Como usar a Inspeção de Campos:</strong><br>
         Cada campo exibe duas fitas CNAB empilhadas:
         a fita <span style="color:var(--er);font-weight:700">📄 atual</span> mostra os bytes exatos do seu arquivo;
-        a fita <span style="color:var(--ok);font-weight:700">✓ manual</span> mostra como deve ficar segundo o manual Sicoob v2.11.
+        a fita <span style="color:var(--ok);font-weight:700">✓ manual</span> mostra como deve ficar segundo os guias Sicoob v3.3 (Pagamentos) e v1.0 (Folha).
         Células <span style="display:inline-block;width:10px;height:10px;background:var(--erb);border:1px solid var(--er);border-radius:2px;vertical-align:middle"></span> são bytes errados no arquivo;
         células <span style="display:inline-block;width:10px;height:10px;background:var(--okm);border:1px solid var(--ok);border-radius:2px;vertical-align:middle"></span> são a correção exata.
         Campos ✓ OK ficam compactos. Para campos longos é exibida uma comparação de texto.<br>
@@ -297,7 +297,7 @@ function CF(ctx,campo,ini,fim,ln,checks,esp,fix=null){
 }
 
 /* ══════════════════════════════════════════════════════════════
-   VALIDADORES — SICOOB (Banco 756) · CNAB240 v2.11
+   VALIDADORES — SICOOB (Banco 756) · CNAB240 v3.3 + Folha v1.0
    ══════════════════════════════════════════════════════════════ */
 
 /* ── 01. HEADER DO ARQUIVO (tipo 0) ───────────────────────── */
@@ -334,7 +334,7 @@ function vHA(ctx,ln){
   CF(ctx,'20.0 Versão do Layout (164–166)',164,166,ln,[
     {test:/^\d{3}$/.test(p(ln,164,166)),sev:'WARN',msg:`Deve ser 3 dígitos, encontrado "${p(ln,164,166)}"`},
     {test:p(ln,164,166)==='087',sev:'WARN',msg:`[Sicoob] Versão esperada é "087". Encontrado: "${p(ln,164,166)}"`}
-  ].filter(c=>c.msg!==''),'3 dígitos — "087" (Sicoob v2.11)','087');
+  ].filter(c=>c.msg!==''),'3 dígitos — "087" (Sicoob v3.3)','087');
   CF(ctx,'21.0 Densidade de Gravação (167–171)',167,171,ln,[{test:/^\d{5}$/.test(p(ln,167,171)),sev:'WARN',msg:`Deve ser 5 dígitos, encontrado "${p(ln,167,171)}"`}],'5 dígitos numéricos');
 }
 
@@ -346,7 +346,11 @@ function vHL(ctx,ln){
   CF(ctx,'05.1 Tipo de Serviço (10–11)',10,11,ln,[{test:['01','03','04','05','20','22','30'].includes(ts),sev:'WARN',msg:`Tipo "${ts}" incomum. Válidos: 20=Fornecedor 22=Tributos 30=Salários 01=Cobrança`}],'20=Fornecedor · 22=Tributos · 30=Salários · 01=Cobrança');
   const fo=p(ln,12,13);
   const fok=['01','05','11','16','17','18','30','31','41','43','45','47'];
-  CF(ctx,'06.1 Forma de Lançamento (12–13)',12,13,ln,[{test:fok.includes(fo),sev:'WARN',msg:`Forma "${fo}" incomum. Sicoob aceita: 01=CCtaCte 05=Poupança 11=TribCB 16=DARF 17=GPS 18=DARFSim 30=LiqTitulosSicoob 31=OutrosBancos 41=TED 43=TED MesmaTit 45=PIX 47=PIX_QRCode`}],'01 05 11 16 17 18 30 31 41 43 45 47');
+  CF(ctx,'06.1 Forma de Lançamento (12–13)',12,13,ln,[
+    {test:fok.includes(fo),sev:'WARN',msg:`Forma "${fo}" incomum. Sicoob aceita: 01=CCtaCte 05=Poupança 11=TribCB 16=DARF 17=GPS 18=DARFSim 30=LiqTitulosSicoob 31=OutrosBancos 41=TED 43=TED MesmaTit 45=PIX 47=PIX_QRCode`},
+    // Guia de Folha de Pagamento v1.0 (G029): lotes de salário só com 01, 05 ou 41
+    {test:ts!=='30'||['01','05','41'].includes(fo),sev:'ERROR',msg:`Folha de Pagamento (tipo de serviço 30) aceita só as formas 01 (conta corrente), 05 (poupança) e 41 (TED outra titularidade). Encontrado "${fo}"`}
+  ],'01 05 11 16 17 18 30 31 41 43 45 47 · Folha (30): 01, 05 ou 41');
   // Validações cruzadas Sicoob
   if(fo==='41'&&!['020'].includes(ts))ctx.iss.push({line:ctx.ln,sev:'WARN',seg:ctx.seg,msg:`[Sicoob] TED Outra Titularidade (Forma 41) — Câmara 018 obrigatória no Segmento A (P001=018).`});
   if(fo==='43')ctx.iss.push({line:ctx.ln,sev:'WARN',seg:ctx.seg,msg:`[Sicoob] TED Mesma Titularidade (Forma 43) — Câmara 018 obrigatória no Segmento A (P001=018).`});
@@ -568,9 +572,17 @@ function vSN(ctx,ln){
 }
 
 /* ── 12. SEGMENTO B — Folha de Pagamento ──────────────────── */
+/* Campos conforme o "Guia de Importação de Arquivos CNAB 240 – Folha de
+   Pagamento" v1.0 (19/05/2025), item 7.3, separado do guia de Pagamentos na v3.3. */
 function vSBFolha(ctx,ln){
+  const numOuBranco=(a,b)=>/^\d+$/.test(p(ln,a,b))||isBl(p(ln,a,b));
+  const valor=(a,b)=>/^\d{15}$/.test(p(ln,a,b));
   CF(ctx,'01.3B Código do Banco (1–3)',1,3,ln,[{test:p(ln,1,3)===BANCO,sev:'ERROR',msg:`Deve ser "${BANCO}", encontrado "${p(ln,1,3)}"`}],'"756"',BANCO);
+  CF(ctx,'02.3B Lote de Serviço (4–7)',4,7,ln,[{test:/^\d{4}$/.test(p(ln,4,7)),sev:'ERROR',msg:`Deve ter 4 dígitos, encontrado "${p(ln,4,7)}"`}],'4 dígitos (igual ao header do lote)');
+  CF(ctx,'03.3B Tipo de Registro (8)',8,8,ln,[{test:p(ln,8,8)==='3',sev:'ERROR',msg:`Deve ser "3", encontrado "${p(ln,8,8)}"`}],'"3"','3');
+  CF(ctx,'04.3B Nº Sequencial do Registro (9–13)',9,13,ln,[{test:/^\d{5}$/.test(p(ln,9,13)),sev:'ERROR',msg:`Deve ter 5 dígitos, encontrado "${p(ln,9,13)}"`}],'5 dígitos');
   CF(ctx,'05.3B Segmento (14)',14,14,ln,[{test:p(ln,14,14).toUpperCase()==='B',sev:'ERROR',msg:`Deve ser "B", encontrado "${p(ln,14,14)}"`}],'"B"','B');
+  CF(ctx,'06.3B Uso Exclusivo FEBRABAN (15–17)',15,17,ln,[{test:isBl(p(ln,15,17)),sev:'WARN',msg:'Deve ser 3 brancos'}],'3 brancos','   ');
   CF(ctx,'07.3B Tipo Inscrição Favorecido (18)',18,18,ln,[{test:['1','2'].includes(p(ln,18,18)),sev:'ERROR',msg:`Deve ser "1"(PF) ou "2"(PJ) — obrigatório para Folha. Encontrado: "${p(ln,18,18)}"`}],'"1"=Pessoa Física / "2"=Pessoa Jurídica');
   const ni=p(ln,19,32);
   const ti=p(ln,18,18);
@@ -579,7 +591,26 @@ function vSBFolha(ctx,ln){
     {test:!(ti==='1'&&!chkCPF(ni.slice(-11))),sev:'WARN',msg:`CPF "${ni.slice(-11)}" com DV inválido`},
     {test:!(ti==='2'&&!chkCNPJ(ni)),sev:'WARN',msg:`CNPJ "${ni}" com DV inválido`}
   ],'14 dígitos numéricos (CPF c/ zeros à esq. ou CNPJ)');
+  // Endereço do favorecido (opcional)
+  CF(ctx,'09.3B Logradouro (33–62)',33,62,ln,[],'Alfanumérico, opcional');
+  CF(ctx,'10.3B Nº do Local (63–67)',63,67,ln,[{test:numOuBranco(63,67),sev:'WARN',msg:`Numérico (ou brancos se não informado), encontrado "${p(ln,63,67)}"`}],'5 dígitos, opcional');
+  CF(ctx,'11.3B Complemento (68–82)',68,82,ln,[],'Alfanumérico, opcional');
+  CF(ctx,'12.3B Bairro (83–97)',83,97,ln,[],'Alfanumérico, opcional');
+  CF(ctx,'13.3B Cidade (98–117)',98,117,ln,[],'Alfanumérico, opcional');
+  CF(ctx,'14.3B CEP (118–122)',118,122,ln,[{test:numOuBranco(118,122),sev:'WARN',msg:`Numérico (ou brancos se não informado), encontrado "${p(ln,118,122)}"`}],'5 dígitos, opcional');
+  CF(ctx,'15.3B Complemento do CEP (123–125)',123,125,ln,[],'3 posições, opcional');
+  CF(ctx,'16.3B Estado (126–127)',126,127,ln,[{test:/^[A-Z]{2}$/.test(p(ln,126,127))||isBl(p(ln,126,127)),sev:'WARN',msg:`Sigla com 2 letras maiúsculas (ou brancos), encontrado "${p(ln,126,127)}"`}],'Sigla da UF, opcional');
+  // Dados do pagamento
+  CF(ctx,'17.3B Data do Vencimento (128–135)',128,135,ln,[{test:p(ln,128,135)==='00000000'||isBl(p(ln,128,135))||chkDt(p(ln,128,135)).ok,sev:'WARN',msg:`DDMMAAAA, zeros ou brancos. Encontrado "${p(ln,128,135)}"`}],'DDMMAAAA (ou zeros)');
+  CF(ctx,'18.3B Valor do Documento (136–150)',136,150,ln,[{test:valor(136,150)||isBl(p(ln,136,150)),sev:'WARN',msg:`15 dígitos 9(13)V2, encontrado "${p(ln,136,150)}"`}],'15 dígitos 9(13)V2');
+  CF(ctx,'19.3B Valor do Abatimento (151–165)',151,165,ln,[{test:valor(151,165)||isBl(p(ln,151,165)),sev:'WARN',msg:`15 dígitos 9(13)V2, encontrado "${p(ln,151,165)}"`}],'15 dígitos 9(13)V2');
+  CF(ctx,'20.3B Valor do Desconto (166–180)',166,180,ln,[{test:valor(166,180)||isBl(p(ln,166,180)),sev:'WARN',msg:`15 dígitos 9(13)V2, encontrado "${p(ln,166,180)}"`}],'15 dígitos 9(13)V2');
+  CF(ctx,'21.3B Valor da Mora (181–195)',181,195,ln,[{test:valor(181,195)||isBl(p(ln,181,195)),sev:'WARN',msg:`15 dígitos 9(13)V2, encontrado "${p(ln,181,195)}"`}],'15 dígitos 9(13)V2');
+  CF(ctx,'22.3B Valor da Multa (196–210)',196,210,ln,[{test:valor(196,210)||isBl(p(ln,196,210)),sev:'WARN',msg:`15 dígitos 9(13)V2, encontrado "${p(ln,196,210)}"`}],'15 dígitos 9(13)V2');
+  CF(ctx,'23.3B Código/Documento do Favorecido (211–225)',211,225,ln,[],'Alfanumérico, opcional (P008)');
   CF(ctx,'24.3B Aviso ao Favorecido (226)',226,226,ln,[{test:['0','2','5','6','7'].includes(p(ln,226,226)),sev:'WARN',msg:`Valor inválido: "${p(ln,226,226)}". Válidos: 0=Não Emite 2=Só Remetente 5=Só Favorecido 6=Ambos`}],'0=Não Emite / 2=Só Remetente / 5=Só Favorecido / 6=Ambos','0');
+  CF(ctx,'25.3B Código UG Centralizadora — SIAPE (227–232)',227,232,ln,[],'Uso exclusivo do SIAPE; brancos para os demais');
+  CF(ctx,'26.3B Uso Exclusivo FEBRABAN (233–240)',233,240,ln,[{test:isBl(p(ln,233,240)),sev:'WARN',msg:'Deve ser 8 brancos'}],'8 brancos','        ');
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -705,7 +736,7 @@ function renderRes(file,lines,res){
   const vb=$('vb');
   if(errs>0){vb.className='vd ver';$('vi').textContent='✗';$('vtt').textContent=`${errs} erro(s) encontrado(s)`;$('vts').textContent='Arquivo com erros que causarão rejeição no Sicoobnet Empresarial.';}
   else if(warns>0){vb.className='vd vwa';$('vi').textContent='⚠';$('vtt').textContent=`Arquivo válido com ${warns} aviso(s)`;$('vts').textContent='Estrutura OK — verifique os campos sinalizados antes de transmitir.';}
-  else{vb.className='vd vok';$('vi').textContent='✓';$('vtt').textContent='Arquivo válido — sem erros';$('vts').textContent='Estrutura CNAB240 Sicoob v2.11 em conformidade total.';}
+  else{vb.className='vd vok';$('vi').textContent='✓';$('vtt').textContent='Arquivo válido — sem erros';$('vts').textContent='Estrutura CNAB240 Sicoob v3.3 em conformidade total.';}
   $('sg').innerHTML=[
     {c:'er',l:'Erros',v:errs,s:'críticos / estruturais'},
     {c:'wa',l:'Avisos',v:warns,s:'campos a verificar'},
