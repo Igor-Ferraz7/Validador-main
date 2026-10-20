@@ -196,8 +196,8 @@
 |SJ|S|62|91|D| |0|0|Cedente|N|NomeCedente|
 |SJ|S|92|99|E|0|0|0|DataVcto|N|DataVencimento|
 |SJ|N|100|114|E|0|2|100|Valor|N|ValorTitulo|
-|SJ|S|115|129|E|0|0|0|Desconto|N|DescontoAbatimento|
-|SJ|S|130|144|E|0|0|0|Multa|N|MoraMulta|
+|SJ|S|115|129|E|0|2|100|Desconto|N|DescontoAbatimento|
+|SJ|S|130|144|E|0|2|100|Multa|N|MoraMulta|
 |SJ|S|145|152|E|0|0|0|Data|N|DataPagamento|
 |SJ|N|153|167|E|0|2|100|VPago|N|ValorPagamento|
 |SJ|S|168|182|E|0|0|0|QuantidadeMoeda|S|1|
