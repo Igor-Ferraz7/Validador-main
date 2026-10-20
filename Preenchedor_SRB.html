@@ -35,21 +35,10 @@ header{position:relative;z-index:10;display:flex;align-items:center;justify-cont
 .bankrow select{font-family:var(--mono);font-size:12px;padding:8px 12px;border:1px solid var(--br2);border-radius:8px;background:#fff;color:var(--tx);cursor:pointer;}
 .bankrow label{font-weight:700;letter-spacing:.04em;text-transform:uppercase;font-size:10px;color:var(--txd);}
 
-.dz{border:2px dashed var(--br2);border-radius:16px;padding:52px 40px;text-align:center;cursor:pointer;transition:all .2s;background:var(--cd);position:relative;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.04);}
-.dz::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 50% 100%,rgba(236,0,0,.04),transparent);pointer-events:none;}
-.dz:hover,.dz.over{border-color:var(--bk);box-shadow:0 0 0 4px rgba(236,0,0,.08);}
-.dz h2{font-family:var(--sans);font-weight:700;font-size:20px;margin-bottom:8px;}
-.dz p{font-size:12px;color:var(--txd);line-height:1.7;}
-.dz p strong{color:var(--bk);font-weight:700;}
-.bup{display:inline-flex;align-items:center;gap:8px;margin-top:22px;padding:11px 24px;background:var(--bk);color:#fff;border:none;border-radius:8px;font-family:var(--mono);font-weight:700;font-size:12px;cursor:pointer;transition:background .15s;}
-.bup:hover{background:var(--bkl);}
-#fi{display:none;}
-
 .fb{display:flex;align-items:center;gap:10px;background:var(--cd);border:1px solid var(--br);border-radius:10px;padding:12px 16px;margin-bottom:22px;font-size:11px;box-shadow:0 1px 3px rgba(0,0,0,.04);}
 .fb .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);flex-shrink:0;}
 .fb .fn{font-weight:700;}
 .fb .fm{color:var(--txd);}
-.fb .lnk{margin-left:auto;font-size:11px;color:var(--bk);cursor:pointer;text-decoration:underline;font-weight:700;}
 
 .sec-title{font-family:var(--sans);font-weight:700;font-size:14px;margin:26px 0 12px;display:flex;align-items:center;gap:8px;}
 .sec-title .pill{font-family:var(--mono);font-size:10px;font-weight:700;background:var(--bkl);color:#fff;border-radius:100px;padding:2px 9px;}
@@ -137,24 +126,14 @@ header{position:relative;z-index:10;display:flex;align-items:center;justify-cont
   <div class="bankrow">
     <label for="bankSel">Banco</label>
     <select id="bankSel"></select>
-    <span class="fm" style="color:var(--txd)">A validação é definida por configuração (configs/&lt;banco&gt;.js).</span>
+    <span class="fm" style="color:var(--txd)">O template do banco já vem configurado — é só preencher os dados do cliente.</span>
   </div>
 
-  <!-- DROPZONE -->
-  <div class="dz" id="dz" onclick="document.getElementById('fi').click()">
-    <h2>Arraste o arquivo .srb aqui</h2>
-    <p>Suporta arquivos <strong>.srb</strong> e <strong>.txt</strong> de definição de remessa<br>
-    O arquivo é preservado byte a byte — apenas os <strong>placeholders</strong> são substituídos.</p>
-    <button class="bup" onclick="event.stopPropagation();document.getElementById('fi').click()">↑ Selecionar arquivo</button>
-    <input type="file" id="fi" accept=".srb,.SRB,.txt,.TXT">
-  </div>
-
-  <!-- FILE BAR -->
+  <!-- TEMPLATE CARREGADO -->
   <div class="fb hidden" id="fb">
     <span class="dot"></span>
     <span class="fn" id="fbName">—</span>
     <span class="fm" id="fbMeta"></span>
-    <span class="lnk" id="fbReset">Trocar arquivo</span>
   </div>
 
   <!-- BANNERS -->
@@ -180,8 +159,10 @@ header{position:relative;z-index:10;display:flex;align-items:center;justify-cont
 
 </div>
 
-<!-- O motor genérico consome esta configuração. Adicione outros bancos
-     criando configs/<banco>.js e incluindo o <script> correspondente. -->
+<!-- Templates embutidos (gerados de Placeholders/ por tools/gerar-templates.ps1)
+     e regras por banco. Para outro banco: adicione o .TXT em Placeholders/,
+     rode o gerador e crie configs/<banco>.js com o <script> correspondente. -->
+<script src="templates/templates.js"></script>
 <script src="configs/santander.js"></script>
 
 <script>
@@ -189,9 +170,10 @@ header{position:relative;z-index:10;display:flex;align-items:center;justify-cont
 
 /* ===================== Estado ===================== */
 var CONFIGS = window.SRB_CONFIGS || {};
+var TEMPLATES = window.SRB_TEMPLATES || [];
 var state = {
-  cfg: null,            // config do banco selecionado
-  originalBinary: '',   // arquivo decodificado latin1 (1 byte = 1 char), preserva bytes
+  cfg: null,            // config do banco do template selecionado
+  originalBinary: '',   // template como latin1 (1 byte = 1 char), preserva bytes
   originalName: '',
   detected: {},         // token -> {count, minWidth, firstIndex}
   rows: []              // objetos de linha (estado + refs DOM)
@@ -684,35 +666,48 @@ function generate(){
   setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
 }
 
-/* ===================== Carregamento do arquivo ===================== */
-function loadFile(file){
-  state.originalName = file.name;
-  var reader = new FileReader();
-  reader.onload = function(e){
-    var u8 = new Uint8Array(e.target.result);
-    // latin1 = mapeamento 1-para-1 byte↔char → preserva os bytes exatamente
-    state.originalBinary = new TextDecoder('latin1').decode(u8);
-    state.detected = detectTokens(state.originalBinary);
+/* ===================== Carregamento do template ===================== */
+// Reconstrói o arquivo a partir de templates/templates.js como "binary
+// string" latin1 (1 char = 1 byte), igual ao arquivo em Placeholders/.
+function templateBinary(tpl){
+  var eol = tpl.eol === 'CRLF' ? '\r\n' : '\n';
+  return tpl.lines.join(eol) + (tpl.finalNewline ? eol : '');
+}
 
-    var nTokens = Object.keys(state.detected).length;
-    var crlf = (state.originalBinary.match(/\r\n/g) || []).length;
+function loadTemplate(tpl){
+  state.cfg = CONFIGS[tpl.bank] || null;
+  state.originalName = tpl.fileName;
+  state.originalBinary = templateBinary(tpl);
+  state.rows = [];
+  document.getElementById('rows').innerHTML = '';
 
-    document.getElementById('fb').classList.remove('hidden');
-    document.getElementById('fbName').textContent = file.name;
-    document.getElementById('fbMeta').textContent =
-      u8.length + ' bytes · ' + crlf + ' linhas CRLF · ' + nTokens + ' token(s) distinto(s)';
+  // Integridade: o template embutido precisa ter o tamanho registrado pelo gerador.
+  if(state.originalBinary.length !== tpl.bytes){
+    state.detected = {};
+    document.getElementById('fb').classList.add('hidden');
+    document.getElementById('panel').classList.add('hidden');
+    document.getElementById('bannerArea').innerHTML =
+      '<div class="banner"><span class="ic">!</span><div>O template <b>' + esc(tpl.fileName) + '</b> está corrompido (' +
+      state.originalBinary.length + ' bytes; esperado ' + tpl.bytes + '). Rode <code>tools/gerar-templates.ps1</code> novamente.</div></div>';
+    return;
+  }
 
-    document.getElementById('dz').classList.add('hidden');
+  state.detected = detectTokens(state.originalBinary);
+  var nTokens = Object.keys(state.detected).length;
+  var nLines = tpl.lines.length;
 
-    showBanners();
-    if(nTokens === 0){
-      document.getElementById('panel').classList.add('hidden');
-    } else {
-      document.getElementById('panel').classList.remove('hidden');
-      buildRows();
-    }
-  };
-  reader.readAsArrayBuffer(file);
+  document.getElementById('fb').classList.remove('hidden');
+  document.getElementById('fbName').textContent = tpl.fileName;
+  document.getElementById('fbMeta').textContent =
+    tpl.bytes + ' bytes · ' + nLines + ' linhas ' + tpl.eol + ' · ' + nTokens + ' token(s) distinto(s)';
+
+  showBanners();
+  if(nTokens === 0){
+    document.getElementById('panel').classList.add('hidden');
+  } else {
+    document.getElementById('panel').classList.remove('hidden');
+    buildRows();
+  }
 }
 
 function showBanners(){
@@ -732,52 +727,30 @@ function showBanners(){
   }
 }
 
-function resetAll(){
-  state.originalBinary = ''; state.originalName=''; state.detected={}; state.rows=[];
-  document.getElementById('fi').value = '';
-  document.getElementById('fb').classList.add('hidden');
-  document.getElementById('panel').classList.add('hidden');
-  document.getElementById('bannerArea').innerHTML = '';
-  document.getElementById('dz').classList.remove('hidden');
-}
-
 /* ===================== Inicialização ===================== */
 (function init(){
-  // popular seletor de banco a partir das configs registradas
+  // Um item por template embutido. O nome do banco vem da config; o nome do
+  // arquivo só aparece se o banco tiver mais de um template.
   var sel = document.getElementById('bankSel');
-  var codes = Object.keys(CONFIGS);
-  codes.forEach(function(code){
+  var perBank = {};
+  TEMPLATES.forEach(function(t){ perBank[t.bank] = (perBank[t.bank] || 0) + 1; });
+  TEMPLATES.forEach(function(t, i){
     var opt = document.createElement('option');
-    opt.value = code;
-    opt.textContent = CONFIGS[code].name + ' (' + code + ')';
+    opt.value = String(i);
+    opt.textContent = (CONFIGS[t.bank] ? CONFIGS[t.bank].name : 'Banco') + ' (' + t.bank + ')' +
+      (perBank[t.bank] > 1 ? ' — ' + t.fileName : '');
     sel.appendChild(opt);
   });
-  if(codes.length){
-    sel.value = codes[0];
-    state.cfg = CONFIGS[codes[0]];
-  }
-  sel.addEventListener('change', function(){
-    state.cfg = CONFIGS[sel.value] || null;
-    if(state.originalName){ showBanners(); buildRows(); }
-  });
-
-  // dropzone
-  var dz = document.getElementById('dz');
-  var fi = document.getElementById('fi');
-  fi.addEventListener('change', function(){ if(fi.files && fi.files[0]) loadFile(fi.files[0]); });
-  ['dragenter','dragover'].forEach(function(ev){
-    dz.addEventListener(ev, function(e){ e.preventDefault(); e.stopPropagation(); dz.classList.add('over'); });
-  });
-  ['dragleave','drop'].forEach(function(ev){
-    dz.addEventListener(ev, function(e){ e.preventDefault(); e.stopPropagation(); dz.classList.remove('over'); });
-  });
-  dz.addEventListener('drop', function(e){
-    var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-    if(f) loadFile(f);
-  });
-
-  document.getElementById('fbReset').addEventListener('click', resetAll);
+  sel.addEventListener('change', function(){ loadTemplate(TEMPLATES[+sel.value]); });
   document.getElementById('btnGen').addEventListener('click', generate);
+
+  if(TEMPLATES.length){
+    loadTemplate(TEMPLATES[0]);
+  } else {
+    sel.disabled = true;
+    document.getElementById('bannerArea').innerHTML =
+      '<div class="banner"><span class="ic">!</span><div>Nenhum template configurado. Adicione o arquivo em <code>Placeholders/</code> e rode <code>tools/gerar-templates.ps1</code>.</div></div>';
+  }
 })();
 </script>
 
