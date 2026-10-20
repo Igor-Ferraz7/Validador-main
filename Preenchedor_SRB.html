@@ -54,16 +54,17 @@ header{position:relative;z-index:10;display:flex;align-items:center;justify-cont
 .sec-title{font-family:var(--sans);font-weight:700;font-size:14px;margin:26px 0 12px;display:flex;align-items:center;gap:8px;}
 .sec-title .pill{font-family:var(--mono);font-size:10px;font-weight:700;background:var(--bkl);color:#fff;border-radius:100px;padding:2px 9px;}
 
-.thead,.trow{display:grid;grid-template-columns:1.05fr 1.1fr 1.35fr;gap:16px;align-items:start;}
+.thead,.trow{display:grid;grid-template-columns:1fr 1.5fr;gap:18px;align-items:start;}
 .thead{padding:0 4px 8px;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--txd);font-weight:700;}
 .trow{background:var(--cd);border:1px solid var(--br);border-radius:12px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.03);position:relative;}
 .trow.row-er{border-color:var(--erm);background:linear-gradient(0deg,var(--erb),var(--erb)),var(--cd);}
 .trow.row-derived{background:var(--cd2);}
 
-.tmeta .lbl{font-family:var(--sans);font-weight:700;font-size:13px;color:var(--txm);}
-.tmeta .obs{font-size:10px;color:var(--txd);line-height:1.5;margin-top:4px;}
-.tag-novalid{display:inline-block;margin-top:6px;font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--wa);background:var(--wab);border:1px solid var(--wam);border-radius:100px;padding:2px 8px;}
-.tag-derived{display:inline-block;margin-top:6px;font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--in);background:var(--inb);border:1px solid rgba(0,104,165,.3);border-radius:100px;padding:2px 8px;}
+.vhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;}
+.vhead .lbl{font-family:var(--sans);font-weight:700;font-size:13px;color:var(--txm);}
+.obs{font-size:10px;color:var(--txd);line-height:1.5;margin-top:6px;}
+.tag-novalid{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--wa);background:var(--wab);border:1px solid var(--wam);border-radius:100px;padding:2px 8px;}
+.tag-derived{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--in);background:var(--inb);border:1px solid rgba(0,104,165,.3);border-radius:100px;padding:2px 8px;}
 
 .fld label{display:block;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--txd);margin-bottom:4px;font-weight:700;}
 .fld input{width:100%;font-family:var(--mono);font-size:13px;padding:9px 11px;border:1px solid var(--br2);border-radius:8px;background:#fff;color:var(--tx);transition:border-color .15s,box-shadow .15s;}
@@ -163,8 +164,7 @@ header{position:relative;z-index:10;display:flex;align-items:center;justify-cont
   <div id="panel" class="hidden">
     <div class="sec-title">Placeholders detectados <span class="pill" id="tkCount">0</span></div>
     <div class="thead">
-      <div>Token / Campo</div>
-      <div>Placeholder (no arquivo)</div>
+      <div>Placeholder</div>
       <div>Valor do cliente</div>
     </div>
     <div id="rows"></div>
@@ -362,10 +362,11 @@ function buildRows(){
       hasInput: hasInput,
       raw: '',
       norm: '',
-      detectedDv: '',
-      dvNote: '',
-      dvConflict: false,
-      dvConflictMsg: '',
+      detectedDv: '',     // DV extraído da conta no padrão "-X"
+      dvMoved: false,     // DV foi movido automaticamente para o campo DV
+      dvNote: '',         // aviso informativo (recalculado em recompute)
+      conflictMsg: '',    // conflito conta×DV (recalculado em recompute)
+      phErr: '',          // erro do placeholder (recalculado em recompute)
       touched: false,
       valid: false,
       el: {}
@@ -377,56 +378,49 @@ function buildRows(){
 
     var label = cfg ? cfg.label : token;
     var obs   = cfg ? (cfg.obs || '') : '';
-    var maxBadge = 'máx ' + info.minWidth + ' car.';
+    var maxBadge = 'máx ' + info.minWidth + ' posição(ões) no arquivo';
+    var tag = !cfg ? '<span class="tag-novalid">sem validação</span>'
+            : (isDerived ? '<span class="tag-derived">derivado</span>' : '');
 
-    // coluna META
-    var metaHtml =
-      '<div class="tmeta">' +
-        '<div class="lbl">' + esc(label) + '</div>' +
-        '<div class="obs">' + esc(obs) + ' · ' + maxBadge + '</div>' +
-        (cfg ? (isDerived ? '<span class="tag-derived">derivado</span>'
-                          : '')
-             : '<span class="tag-novalid">sem validação</span>') +
-      '</div>';
-
-    // coluna PLACEHOLDER
+    // coluna 1 — PLACEHOLDER
     var phHtml =
       '<div class="fld">' +
         '<label>Token a substituir</label>' +
         '<input type="text" class="ph-input" spellcheck="false" value="' + esc('<'+token+'>') + '">' +
         '<div class="count ph-count"></div>' +
+        '<div class="msg er ph-msg"></div>' +
       '</div>';
 
-    // coluna VALOR
+    // coluna 2 — VALOR DO CLIENTE
+    var vhead = '<div class="vhead"><span class="lbl">' + esc(label) + '</span>' + tag + '</div>';
+    var hint  = '<div class="obs">' + (obs ? esc(obs) + ' · ' : '') + maxBadge + '</div>';
     var valHtml;
     if(!hasInput){
       valHtml =
-        '<div class="fld">' +
-          '<label>Valor (derivado)</label>' +
+        '<div class="fld">' + vhead +
           '<div class="derived-val"><span class="empty">aguardando…</span></div>' +
-          '<div class="msg in derived-msg"></div>' +
+          '<div class="msg val-msg"></div>' + hint +
         '</div>';
     } else {
       valHtml =
-        '<div class="fld">' +
-          '<label>Valor do cliente</label>' +
+        '<div class="fld">' + vhead +
           '<input type="text" class="val-input" spellcheck="false" placeholder="digite ou cole o valor">' +
           '<div class="preview prev"></div>' +
-          '<div class="msg val-msg"></div>' +
+          '<div class="msg val-msg"></div>' + hint +
         '</div>';
     }
 
-    rootEl.innerHTML = metaHtml + phHtml + valHtml;
+    rootEl.innerHTML = phHtml + valHtml;
     rowsEl.appendChild(rootEl);
 
     row.el.root    = rootEl;
     row.el.phInput = rootEl.querySelector('.ph-input');
     row.el.phCount = rootEl.querySelector('.ph-count');
+    row.el.phMsg   = rootEl.querySelector('.ph-msg');
     row.el.valInput= rootEl.querySelector('.val-input');
     row.el.prev    = rootEl.querySelector('.prev');
     row.el.valMsg  = rootEl.querySelector('.val-msg');
     row.el.derived = rootEl.querySelector('.derived-val');
-    row.el.derivedMsg = rootEl.querySelector('.derived-msg');
 
     // eventos
     row.el.phInput.addEventListener('input', function(){
@@ -438,10 +432,6 @@ function buildRows(){
         row.touched = true;
         normalizeRow(row);
         recompute();
-      });
-      row.el.valInput.addEventListener('input', function(){
-        // mantém o preview "ao vivo" enquanto digita, sem validar ainda
-        row.raw = row.el.valInput.value;
       });
     }
 
@@ -456,12 +446,26 @@ function buildRows(){
 function recountPlaceholder(row){
   var ph = row.el.phInput.value;
   row.count = countOcc(state.originalBinary, ph);
-  if(row.count === 0){
-    row.el.phCount.innerHTML = '<span style="color:var(--er);font-weight:700">0 ocorrências — placeholder não encontrado</span>';
-  } else {
-    row.el.phCount.innerHTML = '<b>' + row.count + '</b> ocorrência' + (row.count>1?'s':'') + ' no arquivo';
-  }
+  row.el.phCount.innerHTML = '<b>' + row.count + '</b> ocorrência' + (row.count===1?'':'s') + ' no arquivo';
 }
+
+// Erro do placeholder editado. Exigir o formato <Nome_InsertIA> e proibir
+// duplicatas garante que só tokens sejam alterados na saída e que cada
+// token detectado seja substituído exatamente uma vez.
+function placeholderError(row){
+  var ph = row.el.phInput.value;
+  if(!/^<\w+_InsertIA>$/.test(ph)) return 'Formato inválido: use <Nome_InsertIA>.';
+  if(row.count === 0) return 'Placeholder não encontrado no arquivo (0 ocorrências).';
+  for(var i=0;i<state.rows.length;i++){
+    var o = state.rows[i];
+    if(o !== row && o.el.phInput.value === ph){
+      return 'Placeholder duplicado: também usado em "' + (o.cfg ? o.cfg.label : o.token) + '".';
+    }
+  }
+  return '';
+}
+
+function byteLen(s){ return new TextEncoder().encode(s).length; }
 
 function findRow(token){
   for(var i=0;i<state.rows.length;i++) if(state.rows[i].token === token) return state.rows[i];
@@ -475,29 +479,20 @@ function normalizeRow(row){
   var cfg = row.cfg;
   var normName = cfg ? cfg.normalizer : 'trim';
 
-  // limpa estado de DV
-  row.detectedDv = ''; row.dvNote = ''; row.dvConflict = false; row.dvConflictMsg = '';
-
   if(normName === 'account'){
     var res = normAccount(raw);
     row.norm = res.value;
+    if(res.dv !== row.detectedDv) row.dvMoved = false;
     row.detectedDv = res.dv;
-    if(res.dv && cfg && cfg.dvToken){
-      var dvRow = findRow(cfg.dvToken);
-      if(dvRow){
-        var cur = (dvRow.el.valInput.value || '').trim();
-        if(cur === ''){
-          dvRow.el.valInput.value = res.dv;
-          dvRow.touched = true;
-          normalizeRow(dvRow);
-          row.dvNote = 'DV detectado e movido para o campo próprio (DV = "' + res.dv + '").';
-        } else if(cur === res.dv){
-          row.dvNote = 'DV detectado coincide com o campo DV ("' + res.dv + '").';
-        } else {
-          row.dvConflict = true;
-          row.dvConflictMsg = 'Conflito: a conta termina em "-' + res.dv + '", mas o campo DV já contém "' + cur + '". Resolva antes de gerar.';
-        }
-      }
+    // DV vazio → recebe o DV detectado. Se já tiver valor diferente, o
+    // conflito é apontado em recompute() e some assim que for resolvido
+    // em qualquer um dos dois campos.
+    var dvRow = (res.dv && cfg && cfg.dvToken) ? findRow(cfg.dvToken) : null;
+    if(dvRow && dvRow.el.valInput && dvRow.el.valInput.value.trim() === ''){
+      dvRow.el.valInput.value = res.dv;
+      dvRow.touched = true;
+      normalizeRow(dvRow);
+      row.dvMoved = true;
     }
   } else {
     var fn = NORMALIZERS[normName] || NORMALIZERS.trim;
@@ -505,13 +500,11 @@ function normalizeRow(row){
   }
 }
 
+// Valida o VALOR da linha (o placeholder é validado à parte).
 function validateRow(row){
-  if(row.count === 0){
-    return { valid:false, level:'er', msg:'Placeholder não encontrado no arquivo (0 ocorrências).' };
-  }
   if(row.isDerived){
     if(row.norm === '') return { valid:false, level:'wa', msg:'Aguardando CPF/CNPJ válido na linha correspondente.' };
-    if(row.norm.length > row.minWidth) return { valid:false, level:'er', msg:'Valor derivado excede a largura do campo (' + row.minWidth + ').' };
+    if(byteLen(row.norm) > row.minWidth) return { valid:false, level:'er', msg:'Valor derivado excede a largura do campo (' + row.minWidth + ').' };
     return { valid:true, level:'ok', msg:'Valor derivado: "' + row.norm + '".' };
   }
 
@@ -519,12 +512,15 @@ function validateRow(row){
   if(v === ''){
     return { valid:false, level: row.touched ? 'er' : 'in', msg: row.touched ? 'Informe um valor.' : 'Aguardando preenchimento.' };
   }
-  if(row.dvConflict){
-    return { valid:false, level:'er', msg: row.dvConflictMsg };
+  if(row.conflictMsg){
+    return { valid:false, level:'er', msg: row.conflictMsg };
   }
-  // largura máxima (estrutural) vale para todos os tokens
-  if(v.length > row.minWidth){
-    return { valid:false, level:'er', msg:'Máximo de ' + row.minWidth + ' caractere(s); valor normalizado tem ' + v.length + '.' };
+  // largura máxima (estrutural) vale para todos os tokens. POS_INI/POS_FIM
+  // são posições em bytes, então medimos o valor já codificado.
+  var bl = byteLen(v);
+  if(bl > row.minWidth){
+    return { valid:false, level:'er', msg:'Máximo de ' + row.minWidth + ' posição(ões); o valor normalizado ocupa ' + bl +
+      (bl > v.length ? ' (caracteres acentuados/especiais ocupam mais de 1 byte).' : '.') };
   }
 
   var rule = row.cfg && row.cfg.rule;
@@ -567,18 +563,18 @@ function updateRowDisplay(row, res){
     } else {
       row.el.derived.textContent = row.norm;
     }
-    if(row.el.derivedMsg) row.el.derivedMsg.textContent = row.cfg ? row.cfg.obs : '';
   }
-  // mensagem de validação
+  // mensagem de validação do valor (+ aviso de DV, se houver)
   var msgEl = row.el.valMsg;
   if(msgEl){
-    var parts = [];
-    if(row.dvNote) parts.push('<span class="msg in" style="display:block">' + esc(row.dvNote) + '</span>');
     msgEl.className = 'msg ' + res.level + ' val-msg';
-    msgEl.innerHTML = (row.dvNote ? parts.join('') : '') + esc(res.msg);
+    msgEl.innerHTML = (row.dvNote ? '<span class="msg in" style="display:block;margin-top:0">' + esc(row.dvNote) + '</span>' : '') + esc(res.msg);
   }
+  // erro do placeholder (coluna 1)
+  row.el.phMsg.textContent = row.phErr;
+  row.el.phInput.classList.toggle('err', !!row.phErr);
   // estados visuais
-  row.el.root.classList.toggle('row-er', res.level === 'er');
+  row.el.root.classList.toggle('row-er', res.level === 'er' || !!row.phErr);
   if(row.el.valInput){
     row.el.valInput.classList.toggle('err', res.level === 'er');
     row.el.valInput.classList.toggle('okv', res.level === 'ok');
@@ -586,7 +582,26 @@ function updateRowDisplay(row, res){
 }
 
 function recompute(){
-  // 1) derivados primeiro (dependem do valor normalizado de origem)
+  state.rows.forEach(function(r){ r.dvNote = ''; r.conflictMsg = ''; });
+
+  // 1) conta × DV, a partir dos valores atuais dos dois campos
+  state.rows.forEach(function(r){
+    if(!r.detectedDv || !r.cfg || !r.cfg.dvToken) return;
+    var dvRow = findRow(r.cfg.dvToken);
+    if(!dvRow) return;
+    var dvVal = dvRow.norm || '';
+    if(dvVal === r.detectedDv){
+      r.dvNote = r.dvMoved
+        ? 'DV detectado e movido para o campo próprio (DV = "' + r.detectedDv + '").'
+        : 'DV detectado coincide com o campo DV ("' + r.detectedDv + '").';
+    } else if(dvVal !== ''){
+      r.conflictMsg = 'Conflito: a conta termina em "-' + r.detectedDv + '", mas o campo DV contém "' + dvVal +
+        '". Ajuste a conta ou o DV antes de gerar.';
+      dvRow.conflictMsg = 'Conflito com a conta (que termina em "-' + r.detectedDv + '").';
+    }
+  });
+
+  // 2) derivados (dependem do valor normalizado de origem)
   state.rows.forEach(function(r){
     if(r.isDerived && r.cfg){
       var src = findRow(r.cfg.deriveFrom);
@@ -595,13 +610,14 @@ function recompute(){
     }
   });
 
-  // 2) valida cada linha e atualiza UI
+  // 3) valida placeholder + valor de cada linha e atualiza UI
   var allValid = state.rows.length > 0;
   state.rows.forEach(function(r){
+    r.phErr = placeholderError(r);
     var res = validateRow(r);
-    r.valid = res.valid;
+    r.valid = res.valid && !r.phErr;
     updateRowDisplay(r, res);
-    if(!res.valid) allValid = false;
+    if(!r.valid) allValid = false;
   });
 
   updateSummary();
