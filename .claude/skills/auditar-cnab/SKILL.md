@@ -159,6 +159,13 @@ versão, e `baseDoValidador` no catálogo) e teste a página no navegador.
   com `-Bruto`). As colunas mantêm a ordem: o n-ésimo nome corresponde à n-ésima
   posição e ao n-ésimo formato. Confira pelo tamanho — `9(003)` exige
   fim − início + 1 = 3 — antes de afirmar que um campo mudou.
+- **Tabelas de histórico de versões:** numa célula com várias linhas, o número
+  da versão sai na linha do meio, não na primeira. Atribua cada linha de texto
+  à versão pela posição da célula, senão itens caem na versão vizinha.
+- **Sem histórico:** alguns manuais (ex.: BB) não registram alterações e a
+  versão-base pode ter saído do ar. Nesse caso, use o validador como retrato da
+  versão-base e compare-o com o manual atual, deixando claro que não dá para
+  datar cada mudança.
 - **Notas (G015, G042...):** as tabelas só citam a nota; a regra fica numa
   seção de informações genéricas no fim do manual. Ache a definição ancorando
   no início da linha: `-Padrao '^\s*G042\b'`.

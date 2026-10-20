@@ -4,6 +4,10 @@ Manuais de layout publicados por cada banco (e o padrão FEBRABAN), usados
 como referência pelos validadores e pela skill de auditoria
 (`.claude/skills/auditar-cnab`).
 
+**Para entender o que mudou** entre a versão em que cada validador se baseia e
+a versão atual de cada banco, leia
+[diferencas-entre-versoes.md](diferencas-entre-versoes.md).
+
 | Pasta | Conteúdo |
 |---|---|
 | `catalogo.js` | Lista de manuais: título, versão, data, link oficial, tamanho e SHA-256. **Fonte única** para o botão "Manuais oficiais" dos validadores, o script de download e a skill. |
@@ -43,3 +47,7 @@ Ao adotar uma versão nova, atualize no `catalogo.js` os campos `versao`,
 - **Itaú:** o único SISPAG publicado em domínio oficial é de out/2020, mais
   antigo que a v086 (02/2024) em que o validador se baseia. Se tiver o PDF da
   v086 fornecido pelo banco, coloque-o em `341-itau/` e cadastre-o no catálogo.
+- **Sicoob:** desde a v3.3 as regras de Folha de Pagamento estão num guia
+  separado, que ainda não está no catálogo (o validador valida Folha).
+- **Banco do Brasil:** a versão de nov/2020, base do validador, não está mais
+  no site oficial, e o manual não traz histórico de alterações.

@@ -10,7 +10,8 @@
         com até 3 linhas de contexto por página.
 
     buscar-manual.ps1 -Banco 033 -Pagina 21,22
-        Texto completo das páginas pedidas.
+    buscar-manual.ps1 -Banco 033 -Pagina 21-24
+        Texto completo das páginas pedidas (lista e/ou intervalos).
 
   -Banco aceita o código (001, 033, ...) ou 'febraban'.
   -Documento filtra pelo nome do arquivo quando o banco tem mais de um.
@@ -24,12 +25,21 @@
 param(
   [Parameter(Mandatory = $true)][string]$Banco,
   [string]$Padrao = '',
-  [int[]]$Pagina = @(),
+  [string]$Pagina = '',
   [string]$Documento = '',
   [int]$Max = 15,
   [switch]$Bruto
 )
 $ErrorActionPreference = 'Stop'
+
+# -Pagina chega como texto quando o script é chamado com -File; converter
+# "5,6" direto para [int[]] vira 56 na cultura pt-BR. Por isso o parse é nosso.
+$paginasPedidas = @()
+foreach ($parte in ($Pagina -split '[,;\s]+' | Where-Object { $_ })) {
+  if ($parte -match '^(\d+)-(\d+)$') { $paginasPedidas += [int]$Matches[1]..[int]$Matches[2] }
+  elseif ($parte -match '^\d+$')     { $paginasPedidas += [int]$parte }
+  else { throw "Página inválida: '$parte' (use 8, 8,9 ou 8-10)." }
+}
 
 $root    = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..')).Path
 $docsDir = Join-Path $root 'docs\cnab'
@@ -60,8 +70,8 @@ foreach ($d in $docs) {
   $n = $paginas.Length
   Write-Output "# $($d.titulo) — versão $($d.versao) ($($d.data)) — $n páginas — $($d.arquivo)"
 
-  if ($Pagina.Count) {
-    foreach ($pg in $Pagina) {
+  if ($paginasPedidas.Count) {
+    foreach ($pg in $paginasPedidas) {
       if ($pg -lt 1 -or $pg -gt $n) { Write-Output "(página $pg não existe)"; continue }
       Write-Output "`n=== página $pg/$n ==="
       $vazias = 0

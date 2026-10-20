@@ -34,6 +34,9 @@ FEBRABAN): versão, data, link e SHA-256. Cada validador tem o botão
 **📄 Manuais oficiais**, que abre esses links (e a cópia local, quando a página
 é aberta do disco).
 
+O que mudou em cada manual desde a versão em que o validador se baseia está
+explicado em [docs/cnab/diferencas-entre-versoes.md](docs/cnab/diferencas-entre-versoes.md).
+
 Os PDFs ficam só no disco, fora do git. Para baixá-los ou checar se algum banco
 publicou versão nova, veja `docs/cnab/README.md`:
 
