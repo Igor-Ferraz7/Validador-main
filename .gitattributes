@@ -1,0 +1,4 @@
+# Templates de remessa (.srb/.TXT): guardar os bytes exatamente como estão
+# (CRLF incluído), sem conversão de fim de linha. O Preenchedor precisa gerar
+# o arquivo idêntico ao template.
+Placeholders/** -text

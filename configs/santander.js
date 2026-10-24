@@ -9,13 +9,17 @@
  * crie configs/<banco>.js no mesmo formato e registre-o em
  * window.SRB_CONFIGS — a UI passa a oferecê-lo automaticamente.
  *
+ * Campos do banco: code, name, produto (texto do cabeçalho), logo, cor e
+ * corClara (identidade visual aplicada à página quando o banco é escolhido).
+ *
  * Campos de cada entrada de `fields`:
  *   token       Token detectado no arquivo (sem os sinais < >).
  *   label       Rótulo exibido ao usuário.
  *   normalizer  Nome de um normalizador genérico do motor:
  *               'trim' | 'digits' | 'cpfcnpj' | 'account' | 'companyName'
  *   rule        Regra de validação (aplicada ao valor NORMALIZADO):
- *               { kind:'cpfcnpj' }
+ *               { kind:'cpfcnpj', alfanumerico:true|false }
+ *               (alfanumerico: o manual do banco aceita CNPJ com letras)
  *               { kind:'charset', charset:'digits'|'alnum'|'company'|'any', min:N }
  *               (o comprimento MÁXIMO nunca é fixado aqui — é calculado a
  *                partir da MENOR largura do token no arquivo carregado)
@@ -23,8 +27,9 @@
  *   derived     true  → valor calculado a partir de outro token.
  *   deriveFrom  token de origem do valor derivado.
  *   deriveKind  nome da derivação genérica ('tipoInscricao').
- *   dvToken     (campo conta) token do DV correspondente, para mover o
- *               dígito verificador detectado no padrão "-X".
+ *   dvToken     (normalizador 'account', usado em conta ou agência) token do
+ *               DV correspondente, para onde vai o dígito verificador
+ *               digitado no padrão "-X".
  *   obs         Texto de ajuda exibido junto ao campo.
  * ===================================================================== */
 (function () {
@@ -33,12 +38,16 @@
   window.SRB_CONFIGS['033'] = {
     code: '033',
     name: 'Santander',
+    produto: 'Pagamento a Fornecedores · YLEC_2403 V11.7',
+    logo: 'logos/Banco%20Santander%20Brasil%20S.A/santander-fundo-vermelho.svg',
+    cor: '#EC0000',
+    corClara: '#FF1A1A',
     fields: [
       {
         token: 'Inscricao_InsertIA',
         label: 'CPF / CNPJ do titular',
         normalizer: 'cpfcnpj',
-        rule: { kind: 'cpfcnpj' },
+        rule: { kind: 'cpfcnpj', alfanumerico: true },
         obs: 'CPF (11 dígitos) ou CNPJ (14 caracteres; pode ter letras, como o CNPJ alfanumérico), com DV válido. Aceita máscara.'
       },
       {

@@ -1,8 +1,12 @@
-/* Botão "Manuais oficiais" no cabeçalho dos validadores.
+/* Botão "Manuais oficiais" no cabeçalho das páginas de banco.
  *
  * Uso (depois de docs/cnab/catalogo.js):
  *   <script src="docs/cnab/catalogo.js"></script>
  *   <script src="assets/docs-cnab.js" data-banco="033"></script>
+ *
+ * Com data-banco="auto", o banco inicial vem do atributo data-banco do <html>,
+ * e a página troca de banco chamando window.CnabDocs.montar('341') (usado pelo
+ * Preenchedor, que muda de banco conforme o template escolhido).
  *
  * Lista os manuais do banco (e o padrão FEBRABAN) a partir do catálogo, com
  * link para o site oficial e, quando a página é aberta do disco, para a cópia
@@ -11,15 +15,12 @@
  */
 (function () {
   var script = document.currentScript;
-  var codigo = script && script.getAttribute('data-banco');
+  var inicial = script && script.getAttribute('data-banco');
   var cat = window.CNAB_DOCS;
-  if (!codigo || !cat) return;
-
-  var banco = null;
-  for (var i = 0; i < cat.bancos.length; i++) if (cat.bancos[i].codigo === codigo) banco = cat.bancos[i];
-  if (!banco) return;
+  if (!cat) return;
 
   var local = location.protocol === 'file:';
+  var btn = null, pop = null, wrap = null;
 
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
@@ -40,25 +41,28 @@
       '<div class="cnabdoc-l">' + links + '</div></li>';
   }
 
-  var html = '<div class="cnabdoc-h">Manuais oficiais · ' + esc(banco.nome) + ' (' + esc(banco.codigo) + ')</div>';
-  // A versão-base só faz sentido na página do próprio validador.
-  var naPaginaDoValidador = banco.validador &&
-    decodeURIComponent(location.pathname).slice(-banco.validador.length) === banco.validador;
-  if (banco.baseDoValidador && naPaginaDoValidador) {
-    html += '<div class="cnabdoc-b">Este validador segue: <b>' + esc(banco.baseDoValidador) + '</b></div>';
+  function htmlDoBanco(banco) {
+    var html = '<div class="cnabdoc-h">Manuais oficiais · ' + esc(banco.nome) + ' (' + esc(banco.codigo) + ')</div>';
+    // A versão-base só faz sentido na página do próprio validador.
+    var naPaginaDoValidador = banco.validador &&
+      decodeURIComponent(location.pathname).slice(-banco.validador.length) === banco.validador;
+    if (banco.baseDoValidador && naPaginaDoValidador) {
+      html += '<div class="cnabdoc-b">Este validador segue: <b>' + esc(banco.baseDoValidador) + '</b></div>';
+    }
+    html += '<ul>' + banco.documentos.map(function (d) { return itemHtml(banco.pasta, d); }).join('') + '</ul>';
+    (cat.referencias || []).forEach(function (r) {
+      html += '<div class="cnabdoc-s">Referência · ' + esc(r.nome) + '</div>' +
+        '<ul>' + r.documentos.map(function (d) { return itemHtml(r.pasta, d); }).join('') + '</ul>';
+    });
+    return html + '<div class="cnabdoc-f">Catálogo atualizado em ' + esc(cat.atualizadoEm) + '</div>';
   }
-  html += '<ul>' + banco.documentos.map(function (d) { return itemHtml(banco.pasta, d); }).join('') + '</ul>';
-  (cat.referencias || []).forEach(function (r) {
-    html += '<div class="cnabdoc-s">Referência · ' + esc(r.nome) + '</div>' +
-      '<ul>' + r.documentos.map(function (d) { return itemHtml(r.pasta, d); }).join('') + '</ul>';
-  });
-  html += '<div class="cnabdoc-f">Catálogo atualizado em ' + esc(cat.atualizadoEm) + '</div>';
 
   var css =
     '.cnabdoc-wrap{position:relative;display:flex;align-items:center;gap:10px;}' +
     '.cnabdoc-btn{font-family:var(--mono,monospace);font-size:11px;font-weight:700;cursor:pointer;' +
       'padding:6px 12px;border-radius:100px;border:1px solid var(--bk,#333);background:#fff;color:var(--bk,#333);' +
       'display:inline-flex;align-items:center;gap:6px;transition:background .15s,color .15s;}' +
+    '.cnabdoc-btn[hidden]{display:none;}' +
     '.cnabdoc-btn:hover,.cnabdoc-btn[aria-expanded="true"]{background:var(--bk,#333);color:#fff;}' +
     '.cnabdoc-pop{position:absolute;right:0;top:calc(100% + 10px);z-index:1000;width:440px;max-width:calc(100vw - 32px);' +
       'max-height:70vh;overflow:auto;background:var(--cd,#fff);color:var(--tx,#111);border:1px solid var(--br,#ddd);' +
@@ -78,28 +82,32 @@
     '.cnabdoc-l a:hover{text-decoration:underline;}' +
     '.cnabdoc-f{margin-top:10px;padding-top:8px;border-top:1px solid var(--br,#ddd);color:var(--txd,#666);font-size:10px;}';
 
-  function mount() {
+  function setOpen(open) {
+    pop.hidden = !open;
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+
+  // Cria botão e popover uma única vez, à direita do cabeçalho, junto da .htag.
+  function criar() {
     var header = document.querySelector('header');
-    if (!header) return;
+    if (!header) return false;
     var st = document.createElement('style');
     st.textContent = css;
     document.head.appendChild(st);
 
-    // botão + popover ficam num bloco à direita, junto da etiqueta .htag
-    var wrap = document.createElement('div');
+    wrap = document.createElement('div');
     wrap.className = 'cnabdoc-wrap';
-    var btn = document.createElement('button');
+    btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'cnabdoc-btn';
     btn.setAttribute('aria-haspopup', 'true');
     btn.setAttribute('aria-expanded', 'false');
     btn.setAttribute('aria-controls', 'cnabdoc-pop');
     btn.textContent = '📄 Manuais oficiais';
-    var pop = document.createElement('div');
+    pop = document.createElement('div');
     pop.id = 'cnabdoc-pop';
     pop.className = 'cnabdoc-pop';
     pop.hidden = true;
-    pop.innerHTML = html;
 
     var htag = header.querySelector('.htag');
     if (htag) header.insertBefore(wrap, htag);
@@ -108,16 +116,29 @@
     if (htag) wrap.appendChild(htag);
     wrap.appendChild(pop);
 
-    function setOpen(open) {
-      pop.hidden = !open;
-      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-    }
     btn.addEventListener('click', function (e) { e.stopPropagation(); setOpen(pop.hidden); });
     pop.addEventListener('click', function (e) { e.stopPropagation(); });
     document.addEventListener('click', function () { setOpen(false); });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setOpen(false); });
+    return true;
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount);
-  else mount();
+  /* Mostra os manuais do banco informado; sem manuais catalogados, esconde o botão. */
+  function montar(codigo) {
+    if (!btn && !criar()) return;
+    var banco = null;
+    for (var i = 0; i < cat.bancos.length; i++) if (cat.bancos[i].codigo === codigo) banco = cat.bancos[i];
+    setOpen(false);
+    btn.hidden = !banco;
+    pop.innerHTML = banco ? htmlDoBanco(banco) : '';
+  }
+
+  window.CnabDocs = { montar: montar };
+
+  function iniciar() {
+    var codigo = inicial === 'auto' ? document.documentElement.getAttribute('data-banco') : inicial;
+    if (codigo) montar(codigo);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar);
+  else iniciar();
 })();

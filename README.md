@@ -6,7 +6,10 @@ Abra o `index.html` (no navegador, direto do disco, ou pelo GitHub Pages).
 ## Preenchedor de Remessa .srb
 
 `Preenchedor_SRB.html` já abre com o template de cada banco carregado: basta
-preencher os dados do cliente e clicar em **Gerar .srb**.
+escolher o banco, preencher os dados do cliente e clicar em **Gerar .srb**.
+Templates disponíveis: Itaú, Santander, Sicoob e Sicredi. A página assume o
+logo, a cor e os manuais oficiais do banco escolhido e lembra o último banco
+usado no navegador.
 
 - **Templates:** os arquivos em `Placeholders/` são a fonte. A página lê uma
   cópia embutida em `templates/templates.js`, gerada a partir deles.
@@ -24,8 +27,10 @@ preencher os dados do cliente e clicar em **Gerar .srb**.
 
 3. Faça commit do template e do `templates/templates.js` juntos.
 
-Para um banco novo, crie também `configs/<banco>.js` e inclua o `<script>`
-correspondente em `Preenchedor_SRB.html`.
+Para um banco novo, crie também `configs/<banco>.js` (regras de cada token,
+nome, logo e cor; use os existentes como modelo) e inclua o `<script>`
+correspondente em `Preenchedor_SRB.html`. O banco do template é identificado
+pelo campo `CodOficial` (ou `BancoCompensacao`) do próprio arquivo.
 
 ## Manuais oficiais
 

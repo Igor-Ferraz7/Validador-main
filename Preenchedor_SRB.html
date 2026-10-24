@@ -3,14 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Preenchedor de Remessa .srb — Santander 033</title>
+<title>Preenchedor de Remessa .srb</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
+  /* --bk/--bkl = cor do banco do template escolhido (definida no script) */
   --bk:#EC0000;--bkl:#FF1A1A;
-  --bg:#FBF2F2;--cd:#FFFFFF;--cd2:#FFF5F5;
-  --br:#F2D5D5;--br2:#E8AAAA;
-  --tx:#1A0505;--txd:#7A5555;--txm:#3D1515;
+  --bg:#F5F6F8;--cd:#FFFFFF;--cd2:#F8F9FB;
+  --br:#E2E5EA;--br2:#C9CED6;
+  --tx:#14181F;--txd:#5F6773;--txm:#2A303A;
   --ok:#1A7A3C;--okb:rgba(26,122,60,.09);--okm:rgba(26,122,60,.30);
   --wa:#C07B00;--wab:rgba(192,123,0,.10);--wam:rgba(192,123,0,.30);
   --er:#C4202A;--erb:rgba(196,32,42,.10);--erm:rgba(196,32,42,.35);
@@ -19,7 +20,7 @@
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:var(--bg);color:var(--tx);font-family:var(--mono);min-height:100vh;overflow-x:hidden;}
-body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 40% at 110% -10%,rgba(236,0,0,.05),transparent 60%),radial-gradient(ellipse 60% 50% at -10% 110%,rgba(236,0,0,.03),transparent 60%);pointer-events:none;z-index:0;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 40% at 110% -10%,color-mix(in srgb,var(--bk) 6%,transparent),transparent 60%),radial-gradient(ellipse 60% 50% at -10% 110%,color-mix(in srgb,var(--bk) 4%,transparent),transparent 60%);pointer-events:none;z-index:0;}
 
 header{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:64px;background:#fff;border-bottom:3px solid var(--bk);box-shadow:0 2px 8px rgba(0,0,0,.06);}
 .logo{display:flex;align-items:center;gap:16px;}
@@ -57,7 +58,7 @@ header{position:relative;z-index:10;display:flex;align-items:center;justify-cont
 
 .fld label{display:block;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--txd);margin-bottom:4px;font-weight:700;}
 .fld input{width:100%;font-family:var(--mono);font-size:13px;padding:9px 11px;border:1px solid var(--br2);border-radius:8px;background:#fff;color:var(--tx);transition:border-color .15s,box-shadow .15s;}
-.fld input:focus{outline:none;border-color:var(--bk);box-shadow:0 0 0 3px rgba(236,0,0,.08);}
+.fld input:focus{outline:none;border-color:var(--bk);box-shadow:0 0 0 3px color-mix(in srgb,var(--bk) 12%,transparent);}
 .fld input.err{border-color:var(--er);box-shadow:0 0 0 3px var(--erb);}
 .fld input.okv{border-color:var(--okm);}
 .fld input:disabled{background:var(--bg);color:var(--txd);cursor:not-allowed;}
@@ -109,16 +110,17 @@ header{position:relative;z-index:10;display:flex;align-items:center;justify-cont
 
 <header>
   <div class="logo">
+    <!-- logo, nome e textos do banco: preenchidos pelo script conforme o template -->
     <div class="lb">
-      <img src="logos/Banco%20Santander%20Brasil%20S.A/santander-fundo-vermelho.svg" class="bank-logo" alt="Santander">
-      Santander
+      <img id="hLogo" src="" class="bank-logo" alt="" hidden>
+      <span id="hBanco">—</span>
     </div>
     <div class="lt">
       <h1>Preenchedor de Remessa .srb</h1>
-      <p>Templates estruturais · Substituição de placeholders</p>
+      <p id="hProduto">Templates estruturais · Substituição de placeholders</p>
     </div>
   </div>
-  <span class="htag">Banco 033 · Tokens &lt;Campo_InsertIA&gt; · Sem padding</span>
+  <span class="htag" id="hTag">Tokens &lt;Campo_InsertIA&gt; · Sem padding</span>
 </header>
 
 <div class="wrap">
@@ -163,7 +165,10 @@ header{position:relative;z-index:10;display:flex;align-items:center;justify-cont
      e regras por banco. Para outro banco: adicione o .TXT em Placeholders/,
      rode o gerador e crie configs/<banco>.js com o <script> correspondente. -->
 <script src="templates/templates.js"></script>
+<script src="configs/itau.js"></script>
 <script src="configs/santander.js"></script>
+<script src="configs/sicoob.js"></script>
+<script src="configs/sicredi.js"></script>
 
 <script>
 "use strict";
@@ -522,6 +527,7 @@ function validateRow(row){
     if(v.length === 14){
       if(!/^[0-9A-Z]{12}\d{2}$/.test(v)) return { valid:false, level:'er', msg:'CNPJ: os 2 últimos caracteres (dígitos verificadores) são sempre números.' };
       var alfa = /[A-Z]/.test(v) ? ' alfanumérico' : '';
+      if(alfa && !rule.alfanumerico) return { valid:false, level:'er', msg:'O manual do ' + (state.cfg ? state.cfg.name : 'banco') + ' ainda não aceita CNPJ com letras (CNPJ alfanumérico).' };
       return validCNPJ(v) ? {valid:true,level:'ok',msg:'CNPJ' + alfa + ' válido.'} : {valid:false,level:'er',msg:'CNPJ' + alfa + ' inválido (dígito verificador não confere).'};
     }
     return { valid:false, level:'er', msg:'Deve ter 11 (CPF) ou 14 (CNPJ) caracteres; atual: ' + v.length + '.' };
@@ -583,14 +589,16 @@ function recompute(){
     var dvRow = findRow(r.cfg.dvToken);
     if(!dvRow) return;
     var dvVal = dvRow.norm || '';
+    var campo = (r.cfg.label || 'campo').toLowerCase();
+    var campoDv = (dvRow.cfg && dvRow.cfg.label) || 'DV';
     if(dvVal === r.detectedDv){
       r.dvNote = r.dvMoved
-        ? 'DV detectado e movido para o campo próprio (DV = "' + r.detectedDv + '").'
-        : 'DV detectado coincide com o campo DV ("' + r.detectedDv + '").';
+        ? 'DV detectado e movido para o campo "' + campoDv + '" (' + r.detectedDv + ').'
+        : 'DV detectado coincide com o campo "' + campoDv + '" (' + r.detectedDv + ').';
     } else if(dvVal !== ''){
-      r.conflictMsg = 'Conflito: a conta termina em "-' + r.detectedDv + '", mas o campo DV contém "' + dvVal +
-        '". Ajuste a conta ou o DV antes de gerar.';
-      dvRow.conflictMsg = 'Conflito com a conta (que termina em "-' + r.detectedDv + '").';
+      r.conflictMsg = 'Conflito: ' + campo + ' termina em "-' + r.detectedDv + '", mas o campo "' + campoDv + '" contém "' + dvVal +
+        '". Ajuste um dos dois antes de gerar.';
+      dvRow.conflictMsg = 'Conflito com ' + campo + ' (que termina em "-' + r.detectedDv + '").';
     }
   });
 
@@ -685,7 +693,26 @@ function templateBinary(tpl){
   return tpl.lines.join(eol) + (tpl.finalNewline ? eol : '');
 }
 
+// Identidade do banco do template: cabeçalho, cor de destaque e botão de manuais.
+function aplicarBanco(code){
+  var c = CONFIGS[code] || {};
+  var nome = c.name || ('Banco ' + code);
+  var logo = document.getElementById('hLogo');
+  if(c.logo){ logo.src = c.logo; logo.alt = nome; logo.hidden = false; } else { logo.hidden = true; }
+  document.getElementById('hBanco').textContent = nome;
+  document.getElementById('hProduto').textContent = c.produto || 'Templates estruturais · Substituição de placeholders';
+  document.getElementById('hTag').textContent = 'Banco ' + code + ' · Tokens <Campo_InsertIA> · Sem padding';
+  if(c.cor){
+    document.documentElement.style.setProperty('--bk', c.cor);
+    document.documentElement.style.setProperty('--bkl', c.corClara || c.cor);
+  }
+  document.documentElement.setAttribute('data-banco', code);
+  document.title = 'Preenchedor de Remessa .srb — ' + nome + ' ' + code;
+  if(window.CnabDocs) window.CnabDocs.montar(code);
+}
+
 function loadTemplate(tpl){
+  aplicarBanco(tpl.bank);
   state.cfg = CONFIGS[tpl.bank] || null;
   state.originalName = tpl.fileName;
   state.originalBinary = templateBinary(tpl);
@@ -740,23 +767,37 @@ function showBanners(){
 
 /* ===================== Inicialização ===================== */
 (function init(){
-  // Um item por template embutido. O nome do banco vem da config; o nome do
+  // Um item por template embutido, em ordem alfabética de banco. O nome do
   // arquivo só aparece se o banco tiver mais de um template.
   var sel = document.getElementById('bankSel');
   var perBank = {};
+  var nomeBanco = function(t){ return CONFIGS[t.bank] ? CONFIGS[t.bank].name : 'Banco ' + t.bank; };
   TEMPLATES.forEach(function(t){ perBank[t.bank] = (perBank[t.bank] || 0) + 1; });
-  TEMPLATES.forEach(function(t, i){
+  var ordem = TEMPLATES.map(function(t, i){ return i; }).sort(function(a, b){
+    return nomeBanco(TEMPLATES[a]).localeCompare(nomeBanco(TEMPLATES[b]), 'pt-BR') ||
+      TEMPLATES[a].fileName.localeCompare(TEMPLATES[b].fileName);
+  });
+  ordem.forEach(function(i){
+    var t = TEMPLATES[i];
     var opt = document.createElement('option');
     opt.value = String(i);
-    opt.textContent = (CONFIGS[t.bank] ? CONFIGS[t.bank].name : 'Banco') + ' (' + t.bank + ')' +
-      (perBank[t.bank] > 1 ? ' — ' + t.fileName : '');
+    opt.textContent = nomeBanco(t) + ' (' + t.bank + ')' + (perBank[t.bank] > 1 ? ' — ' + t.fileName : '');
     sel.appendChild(opt);
   });
-  sel.addEventListener('change', function(){ loadTemplate(TEMPLATES[+sel.value]); });
+  // Lembra o último template escolhido neste navegador (conveniência; pode faltar).
+  sel.addEventListener('change', function(){
+    loadTemplate(TEMPLATES[+sel.value]);
+    try { localStorage.setItem('srb.template', TEMPLATES[+sel.value].fileName); } catch(e){}
+  });
   document.getElementById('btnGen').addEventListener('click', generate);
 
   if(TEMPLATES.length){
-    loadTemplate(TEMPLATES[0]);
+    var salvo = null;
+    try { salvo = localStorage.getItem('srb.template'); } catch(e){}
+    var inicial = ordem.filter(function(i){ return TEMPLATES[i].fileName === salvo; })[0];
+    if(inicial === undefined) inicial = ordem[0];
+    sel.value = String(inicial);
+    loadTemplate(TEMPLATES[inicial]);
   } else {
     sel.disabled = true;
     document.getElementById('bannerArea').innerHTML =
@@ -766,6 +807,6 @@ function showBanners(){
 </script>
 
 <script src="docs/cnab/catalogo.js"></script>
-<script src="assets/docs-cnab.js" data-banco="033"></script>
+<script src="assets/docs-cnab.js" data-banco="auto"></script>
 </body>
 </html>
