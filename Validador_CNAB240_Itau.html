@@ -578,6 +578,15 @@ function validate(lines){
   let hdrFound=false,trlFound=false,lotsOpen=0,totalLotes=0,totalRegs=0;
   let loteCur='',loteForma='',loteTipo='';
   let regsInLote=0,somaLote=0,seqReg=0;
+  let hdrArq=null; // header de arquivo, para comparar a empresa de cada lote
+  // Data de pagamento anterior à data de geração do arquivo: o Itaú rejeita com
+  // "DATA DO CREDITO INFERIOR A DATA DO ENVIO ARQUIVO".
+  const chkDataPgto=(ctx,line,campo,a,b)=>{
+    const dp=p(line,a,b),dg=hdrArq?p(hdrArq,144,151):'';
+    if(!/^\d{8}$/.test(dp)||!/^\d{8}$/.test(dg))return;
+    const iso=d=>d.slice(4)+d.slice(2,4)+d.slice(0,2);
+    CF(ctx,`${campo} ≥ Data de Geração do Arquivo`,a,b,line,[{test:iso(dp)>=iso(dg),sev:'ERROR',msg:`Pagamento em ${dp} é anterior à geração do arquivo (${dg}). O Itaú rejeita com "DATA DO CREDITO INFERIOR A DATA DO ENVIO ARQUIVO"`}],`Data igual ou posterior a ${dg}`);
+  };
 
   lines.forEach((line,idx)=>{
     const ln=idx+1;
@@ -586,7 +595,7 @@ function validate(lines){
 
     if(rt==='0'){
       hdrFound=true;totalRegs++;
-      const ctx={iss,fr,ln,seg:'HEADER ARQ'};vHA(ctx,line);
+      const ctx={iss,fr,ln,seg:'HEADER ARQ'};vHA(ctx,line);hdrArq=line;
       recs.push({ln,desc:`Header do Arquivo · Banco: ${p(line,1,3)} · Data: ${p(line,144,151)}`,ok:true});
     } else if(rt==='1'){
       totalRegs++;totalLotes++;lotsOpen++;seqReg=0;regsInLote=0;somaLote=0;
@@ -595,6 +604,15 @@ function validate(lines){
       const ctx={iss,fr,ln,seg:`HEADER LOTE #${loteCur}`};
       const {tp,fo}=vHL(ctx,line);
       loteForma=fo;loteTipo=tp;
+      // A empresa debitada do lote é a mesma do arquivo. Agência, conta, DAC ou
+      // CNPJ diferentes do header de arquivo fazem o Itaú rejeitar o lote com
+      // "EMPRESA NAO CADASTRADA (AG/CONTA)" ou "(TIPO/CNPJ)".
+      if(hdrArq){
+        [['Agência',53,57],['Conta',59,70],['DAC da Agência/Conta',72,72],['Tipo de Inscrição',18,18],['CNPJ/CPF',19,32]].forEach(([nome,a,b])=>{
+          const v=p(line,a,b),e=p(hdrArq,a,b);
+          CF(ctx,`Empresa = Header de Arquivo · ${nome} (${a===b?a:a+'–'+b})`,a,b,line,[{test:v===e,sev:'ERROR',msg:`Diferente do header de arquivo ("${e}"), encontrado "${v}". O Itaú rejeita o lote com "EMPRESA NAO CADASTRADA"`}],`"${e}" (igual ao header de arquivo)`,e);
+        });
+      }
       const foDesc=fo==='45'?'PIX Transferência':fo==='47'?'PIX QR-CODE':fo==='41'?'TED Outro Titular':fo==='43'?'TED Mesmo Titular':fo==='30'?'Boleto Itaú':fo==='31'?'Boleto Outros Bancos':fo==='01'?'CCtaCte':fo==='06'?'CC-Mesma Titularidade':fo==='13'?'Concessionárias':fo==='16'?'DARF':fo==='17'?'GPS':fo==='35'?'FGTS':`Forma ${fo}`;
       const tpDesc=tp==='20'?'Fornecedores':tp==='22'?'Tributos':tp==='30'?'Salários':tp==='98'?'Diversos':tp==='10'?'Dividendos':tp==='40'?'Fundos':`Tipo ${tp}`;
       recs.push({ln,desc:`Header Lote #${loteCur} · ${tpDesc} · ${foDesc}`,ind:1,ok:true});
@@ -616,7 +634,7 @@ function validate(lines){
       if(sr!==seqReg)addI(ln,'ERROR',`SEG ${sc}`,`Sequência: ${sr} (esperado: ${seqReg}). Deve iniciar em 00001 em cada lote e ser incrementada.`);
       const ctx={iss,fr,ln,seg:`SEG ${sc}`};
       if(sc==='A'){
-        vSA(ctx,line,loteForma);
+        vSA(ctx,line,loteForma);chkDataPgto(ctx,line,'Data de Pagamento (94–101)',94,101);
         somaLote+=parseInt(p(line,120,134),10)||0;
         const foInfo=loteForma==='45'?'PIX':loteForma==='47'?'PIX QR':loteForma==='41'?'TED':loteForma==='43'?'TED-MT':loteForma==='01'?'CCtaCte':loteForma==='06'?'CC-MT':`Forma ${loteForma}`;
         recs.push({ln,desc:`Seg. A — ${foInfo} · Lote: ${p(line,4,7)} · Seq: ${String(sr).padStart(5,'0')} · Fav: ${p(line,44,73).trim()}`,ind:2,ok:true});
@@ -631,12 +649,12 @@ function validate(lines){
           if(isQRPix){vSJ52pix(ctx,line);recs.push({ln,desc:`Seg. J52-PIX · QR Code · Lote: ${p(line,4,7)} · Seq: ${String(sr).padStart(5,'0')}`,ind:2,ok:true});}
           else{vSJ52(ctx,line);recs.push({ln,desc:`Seg. J52 · Sacado/Cedente · Lote: ${p(line,4,7)} · Seq: ${String(sr).padStart(5,'0')}`,ind:2,ok:true});}
         } else {
-          vSJ(ctx,line,loteForma);
+          vSJ(ctx,line,loteForma);chkDataPgto(ctx,line,'Data de Pagamento (145–152)',145,152);
           somaLote+=parseInt(p(line,153,167),10)||0;
           recs.push({ln,desc:`Seg. J — ${loteForma==='47'?'PIX QR':'Boleto'} · Lote: ${p(line,4,7)} · Seq: ${String(sr).padStart(5,'0')} · Benef: ${p(line,62,91).trim()}`,ind:2,ok:true});
         }
       } else if(sc==='O'){
-        vSO(ctx,line);
+        vSO(ctx,line);chkDataPgto(ctx,line,'Data de Pagamento (137–144)',137,144);
         somaLote+=parseInt(p(line,122,136),10)||0;
         recs.push({ln,desc:`Seg. O — Concessionárias/Tributos CB · Lote: ${p(line,4,7)} · Seq: ${String(sr).padStart(5,'0')}`,ind:2,ok:true});
       } else if(sc==='N'){
