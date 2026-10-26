@@ -588,10 +588,16 @@ function validate(lines){
     CF(ctx,`${campo} ≥ Data de Geração do Arquivo`,a,b,line,[{test:iso(dp)>=iso(dg),sev:'ERROR',msg:`Pagamento em ${dp} é anterior à geração do arquivo (${dg}). O Itaú rejeita com "DATA DO CREDITO INFERIOR A DATA DO ENVIO ARQUIVO"`}],`Data igual ou posterior a ${dg}`);
   };
 
+  // O J-52 é obrigatório e "deve vir sempre após o respectivo segmento J"
+  // (manual SISPAG): guarda a linha do último J que ainda espera o seu J-52.
+  let jSemJ52=0;
+  const msgJSemJ52=l=>addI(l,'ERROR','SEG J','Segmento J sem o seu J-52 logo em seguida. O J-52 é obrigatório para cada boleto/PIX QR Code e deve vir imediatamente após o respectivo J (J, J-52, J, J-52…).');
+
   lines.forEach((line,idx)=>{
     const ln=idx+1;
     if(line.length<240)line=line.padEnd(240,' ');
     const rt=p(line,8,8);
+    if(jSemJ52&&!(rt==='3'&&p(line,14,14).toUpperCase()==='J'&&p(line,18,19)==='52')){msgJSemJ52(jSemJ52);jSemJ52=0;}
 
     if(rt==='0'){
       hdrFound=true;totalRegs++;
@@ -644,12 +650,15 @@ function validate(lines){
       } else if(sc==='J'){
         const idReg=p(line,18,19);
         if(idReg==='52'){
+          if(!jSemJ52)addI(ln,'ERROR','SEG J52','J-52 sem o segmento J imediatamente antes. Cada J-52 complementa o J da linha anterior.');
+          jSemJ52=0;
           const url=p(line,132,208).trim();
           const isQRPix=url.length>5||loteForma==='47';
           if(isQRPix){vSJ52pix(ctx,line);recs.push({ln,desc:`Seg. J52-PIX · QR Code · Lote: ${p(line,4,7)} · Seq: ${String(sr).padStart(5,'0')}`,ind:2,ok:true});}
           else{vSJ52(ctx,line);recs.push({ln,desc:`Seg. J52 · Sacado/Cedente · Lote: ${p(line,4,7)} · Seq: ${String(sr).padStart(5,'0')}`,ind:2,ok:true});}
         } else {
           vSJ(ctx,line,loteForma);chkDataPgto(ctx,line,'Data de Pagamento (145–152)',145,152);
+          jSemJ52=ln;
           somaLote+=parseInt(p(line,153,167),10)||0;
           recs.push({ln,desc:`Seg. J — ${loteForma==='47'?'PIX QR':'Boleto'} · Lote: ${p(line,4,7)} · Seq: ${String(sr).padStart(5,'0')} · Benef: ${p(line,62,91).trim()}`,ind:2,ok:true});
         }
@@ -677,6 +686,7 @@ function validate(lines){
     }
   });
 
+  if(jSemJ52)msgJSemJ52(jSemJ52);
   if(!hdrFound)addI(0,'ERROR','ARQUIVO','Header do arquivo (tipo 0) não encontrado — deve ser a primeira linha.');
   if(!trlFound)addI(0,'ERROR','ARQUIVO','Trailer do arquivo (tipo 9) não encontrado — deve ser a última linha.');
   if(lotsOpen>0)addI(0,'ERROR','ARQUIVO',`${lotsOpen} lote(s) sem trailer correspondente.`);
