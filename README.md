@@ -32,6 +32,24 @@ nome, logo e cor; use os existentes como modelo) e inclua o `<script>`
 correspondente em `Preenchedor_SRB.html`. O banco do template é identificado
 pelo campo `CodOficial` (ou `BancoCompensacao`) do próprio arquivo.
 
+## Analisador de Retorno (Santander)
+
+`Retorno_CNAB240_Santander.html` lê um arquivo de retorno do Santander
+(Pagamento a Fornecedores) e diz se ele é:
+
+- **retorno de crítica** (o "pré-retorno"): o banco só aceitou ou recusou os
+  registros. Ocorrências BD/BE (agendado), B1–B8 (bloqueado), BF (excluído)
+  ou erros. Nada foi pago ainda;
+- **retorno de movimento** (o definitivo): o banco informa o resultado do
+  pagamento. Só a ocorrência 00 ou 03 confirma o pagamento; 01/02 e ZA indicam
+  que não foi pago ou foi devolvido.
+
+O header não diferencia os dois (posição 143 = 2 em ambos); a decisão vem das
+ocorrências de cada registro (posições 231–240), do segmento Z (autenticação)
+e do aviso de débito no trailer de lote. Base: manual Santander V11.7, itens
+2.6 e 5, p. 4 e nota G020. A página mostra o status de cada pagamento e exporta
+um CSV para a baixa. O arquivo é lido só no navegador.
+
 ## Manuais oficiais
 
 `docs/cnab/catalogo.js` lista o manual oficial de cada banco (e o padrão

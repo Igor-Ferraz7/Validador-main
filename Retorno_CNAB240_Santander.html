@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-banco="033">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analisador de Retorno CNAB240 — Pagamento a Fornecedores · Banco Santander 033</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bk:#EC0000;--bkl:#FF1A1A;
+  --bg:#FBF2F2;--cd:#FFFFFF;--cd2:#FFF5F5;
+  --br:#F2D5D5;--br2:#E8AAAA;
+  --tx:#1A0505;--txd:#7A5555;--txm:#3D1515;
+  --ok:#1A7A3C;--okb:rgba(26,122,60,.09);
+  --wa:#C07B00;--wab:rgba(192,123,0,.09);
+  --er:#C4202A;--erb:rgba(196,32,42,.09);
+  --in:#0068A5;--inb:rgba(0,104,165,.09);
+  --mu:#6B5B5B;--mub:rgba(107,91,91,.09);
+  --mono:'Space Mono',monospace;--sans:'Outfit',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--tx);font-family:var(--mono);min-height:100vh;overflow-x:hidden;}
+header{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 32px;min-height:64px;background:#fff;border-bottom:3px solid var(--bk);box-shadow:0 2px 8px rgba(0,0,0,.06);flex-wrap:wrap;}
+.logo{display:flex;align-items:center;gap:16px;}
+.lb{background:var(--bk);color:#fff;font-family:var(--sans);font-weight:800;font-size:14px;padding:6px 12px;border-radius:6px;display:flex;align-items:center;gap:6px;}
+.lt h1{font-family:var(--sans);font-weight:700;font-size:15px;line-height:1.1;}
+.lt p{font-size:10px;color:var(--txd);letter-spacing:.07em;text-transform:uppercase;margin-top:2px;}
+.htag{font-size:10px;color:var(--txd);border:1px solid var(--br);padding:4px 10px;border-radius:100px;letter-spacing:.06em;background:var(--bg);}
+.bank-logo{width:28px;height:28px;object-fit:contain;background:white;padding:3px;border-radius:6px;flex-shrink:0;}
+.bank-logo-large{width:60px;height:60px;margin-bottom:16px;background:white;padding:8px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.05);}
+.wrap{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:40px 24px;}
+.dz{border:2px dashed var(--br2);border-radius:16px;padding:48px 32px;text-align:center;cursor:pointer;transition:all .2s;background:var(--cd);box-shadow:0 1px 4px rgba(0,0,0,.04);}
+.dz:hover,.dz.over{border-color:var(--bk);box-shadow:0 0 0 4px rgba(236,0,0,.08);}
+.dz h2{font-family:var(--sans);font-weight:700;font-size:20px;margin-bottom:8px;}
+.dz p{font-size:12px;color:var(--txd);line-height:1.7;}
+.dz p strong{color:var(--bk);}
+#fi{display:none;}
+.bup{display:inline-flex;align-items:center;gap:8px;margin-top:20px;padding:11px 24px;background:var(--bk);color:#fff;border:none;border-radius:8px;font-family:var(--mono);font-weight:700;font-size:12px;cursor:pointer;}
+.bup:hover{background:var(--bkl);}
+#res{display:none;margin-top:28px;}
+.fb{display:flex;align-items:center;flex-wrap:wrap;gap:6px 16px;background:var(--cd);border:1px solid var(--br);border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:11px;}
+.fb .fn{font-weight:700;}.fb .fm{color:var(--txd);}
+.vd{border-radius:12px;padding:20px 24px;display:flex;align-items:flex-start;gap:16px;margin-bottom:20px;border:1px solid;}
+.vd.ok{background:var(--okb);border-color:rgba(26,122,60,.3);}
+.vd.wa{background:var(--wab);border-color:rgba(192,123,0,.35);}
+.vd.er{background:var(--erb);border-color:rgba(196,32,42,.3);}
+.vd .vi{font-size:30px;line-height:1;}
+.vd .vk{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--txd);margin-bottom:4px;}
+.vd strong{display:block;font-family:var(--sans);font-weight:800;font-size:19px;margin-bottom:6px;}
+.vd.ok strong{color:var(--ok);}.vd.wa strong{color:var(--wa);}.vd.er strong{color:var(--er);}
+.vd p{font-size:11.5px;color:var(--txm);line-height:1.6;}
+.box{background:var(--cd);border:1px solid var(--br);border-radius:12px;padding:16px 18px;margin-bottom:20px;}
+.box h3{font-family:var(--sans);font-weight:700;font-size:13px;margin-bottom:10px;}
+.evl{list-style:none;display:flex;flex-direction:column;gap:8px;}
+.evl li{display:grid;grid-template-columns:18px 1fr;gap:8px;font-size:11px;line-height:1.55;color:var(--txm);}
+.evl .eic{font-weight:700;}
+.evl .eic.mov{color:var(--ok);}.evl .eic.cri{color:var(--wa);}.evl .eic.neu{color:var(--txd);}
+.evl .ref{display:block;font-size:9.5px;color:var(--txd);margin-top:1px;}
+.sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:20px;}
+.sc{background:var(--cd);border:1px solid var(--br);border-radius:12px;padding:16px 18px;position:relative;overflow:hidden;}
+.sc::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.sc.ok::after{background:var(--ok);}.sc.in::after{background:var(--in);}.sc.wa::after{background:var(--wa);}.sc.er::after{background:var(--er);}
+.sl{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--txd);margin-bottom:8px;}
+.sv{font-family:var(--sans);font-weight:800;font-size:30px;line-height:1;}
+.sc.ok .sv{color:var(--ok);}.sc.in .sv{color:var(--in);}.sc.wa .sv{color:var(--wa);}.sc.er .sv{color:var(--er);}
+.ss{font-size:10.5px;color:var(--txm);margin-top:6px;}
+.flb{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;align-items:center;}
+.btn{padding:5px 13px;border-radius:100px;border:1px solid var(--br);background:var(--cd);font-family:var(--mono);font-size:10px;color:var(--txd);cursor:pointer;}
+.btn:hover{border-color:var(--bk);color:var(--bk);}
+.btn.act{background:var(--bk);border-color:var(--bk);color:#fff;}
+.bcsv{margin-left:auto;padding:6px 14px;border-radius:6px;border:1px solid var(--br);background:var(--cd);font-family:var(--mono);font-size:10px;color:var(--txm);cursor:pointer;}
+.bcsv:hover{border-color:var(--bk);color:var(--bk);}
+.tw{overflow-x:auto;background:var(--cd);border:1px solid var(--br);border-radius:12px;margin-bottom:20px;}
+table{border-collapse:collapse;width:100%;font-size:10.5px;}
+th{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--txd);text-align:left;padding:10px 10px;border-bottom:1px solid var(--br);background:var(--cd2);white-space:nowrap;}
+td{padding:9px 10px;border-bottom:1px solid var(--br);vertical-align:top;color:var(--txm);}
+tr:last-child td{border-bottom:none;}
+td.n{text-align:right;white-space:nowrap;}
+td.nw{white-space:nowrap;}
+.sub{display:block;font-size:9.5px;color:var(--txd);margin-top:2px;}
+.pill{display:inline-block;font-size:9px;font-weight:700;padding:3px 9px;border-radius:100px;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;}
+.pill.ok{background:var(--okb);color:var(--ok);}.pill.in{background:var(--inb);color:var(--in);}
+.pill.wa{background:var(--wab);color:var(--wa);}.pill.er{background:var(--erb);color:var(--er);}.pill.mu{background:var(--mub);color:var(--mu);}
+.oc{display:block;white-space:nowrap;}
+.oc b{display:inline-block;min-width:22px;}
+.oc span{white-space:normal;}
+.aut{font-size:9.5px;word-break:break-all;max-width:220px;display:block;}
+.empty{text-align:center;padding:28px 0;color:var(--txd);font-size:11px;}
+.warn{background:var(--wab);border:1px solid rgba(192,123,0,.3);border-radius:8px;padding:10px 14px;font-size:11px;color:var(--txm);margin-bottom:16px;line-height:1.6;}
+details.guia{background:var(--cd);border:1px solid var(--br);border-radius:12px;padding:14px 18px;margin-top:28px;font-size:11.5px;line-height:1.7;color:var(--txm);}
+details.guia summary{cursor:pointer;font-family:var(--sans);font-weight:700;font-size:13px;color:var(--tx);}
+details.guia h4{font-family:var(--sans);font-size:12px;margin:14px 0 4px;color:var(--tx);}
+details.guia table{margin-top:6px;font-size:10.5px;}
+details.guia .tw{margin:6px 0 0;}
+details.guia p{margin-top:6px;}
+.muted{color:var(--txd);}
+@media(max-width:640px){
+  header{padding:10px 16px;}.wrap{padding:20px 16px;}
+  .dz{padding:32px 16px;}
+  .vd{padding:16px;}.vd strong{font-size:16px;}
+  .sv{font-size:24px;}
+  .bcsv{margin-left:0;}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">
+    <div class="lb">
+      <img src="logos/Banco%20Santander%20Brasil%20S.A/santander-fundo-vermelho.svg" class="bank-logo" alt="Santander">
+      Santander
+    </div>
+    <div class="lt">
+      <h1>Analisador de Retorno CNAB240</h1>
+      <p>Pagamento a Fornecedores · Banco Santander</p>
+    </div>
+  </div>
+  <span class="htag">Banco 033 · Crítica × Movimento · Manual V11.7</span>
+</header>
+
+<div class="wrap">
+  <div class="dz" id="dz">
+    <img src="logos/Banco%20Santander%20Brasil%20S.A/santander-fundo-vermelho.svg" class="bank-logo-large" alt="Logo Santander">
+    <h2>Arraste o arquivo de retorno do Santander aqui</h2>
+    <p>Diz se o arquivo é um <strong>retorno de crítica</strong> (pré-retorno: o banco só aceitou ou recusou os registros)<br>
+    ou um <strong>retorno de movimento</strong> (definitivo: o banco informa o que foi pago), e o status de cada pagamento.<br>
+    O arquivo é lido só no seu navegador; nada é enviado.</p>
+    <button class="bup" type="button" id="bsel">↑ Selecionar arquivo</button>
+    <input type="file" id="fi" accept=".ret,.RET,.txt,.TXT,.rem,.REM,.dat,.DAT">
+  </div>
+
+  <div id="res">
+    <div class="fb" id="fbar"></div>
+    <div id="warns"></div>
+    <div class="vd" id="verd"></div>
+    <div class="box"><h3>Por que essa conclusão</h3><ul class="evl" id="evid"></ul></div>
+    <div class="sg" id="stats"></div>
+    <div class="flb" id="filt"></div>
+    <div class="tw"><table><thead><tr>
+      <th>Status</th><th>Lote · Seq</th><th>Tipo</th><th>Favorecido / Beneficiário</th><th>Seu número</th>
+      <th>Data pgto</th><th>Valor</th><th>Ocorrências do banco</th><th>Nosso nº · Autenticação</th>
+    </tr></thead><tbody id="tbody"></tbody></table></div>
+    <div class="box"><h3>Lotes</h3><div class="tw" style="margin:0"><table><thead><tr>
+      <th>Lote</th><th>Serviço · Forma</th><th>Pagamentos</th><th>Soma no trailer</th><th>Aviso de débito</th><th>Ocorrências do lote</th>
+    </tr></thead><tbody id="tlotes"></tbody></table></div></div>
+  </div>
+
+  <details class="guia" id="guia">
+    <summary>Como o Santander diferencia o pré-retorno do retorno definitivo</summary>
+    <p>O manual do Santander (Pagamento a Fornecedores, layout CNAB 240, V11.7) não usa o termo “pré-retorno”. Ele fala em dois arquivos de retorno:</p>
+    <h4>Retorno de crítica (o “pré-retorno”)</h4>
+    <p>Gerado no processamento da remessa. Diz se cada registro foi <b>acatado ou rejeitado</b>. Um pagamento acatado ainda não foi pago: está agendado para a data informada. É um serviço contratado; sem ele, o banco mostra as críticas num relatório do Internet Banking. <span class="muted">(Manual, item 2.6, p. 7; item 5, p. 61)</span></p>
+    <h4>Retorno de movimento (o definitivo)</h4>
+    <p>Gerado depois da data de pagamento. Informa <b>pagamento, devolução ou cancelamento</b> do compromisso. Só ocorrência <b>00</b> (crédito ou débito efetivado) ou <b>03</b> (débito autorizado pela agência, efetuado) confirma que o pagamento saiu. <span class="muted">(Manual, item 5, p. 61; FEBRABAN 240 v10.11, nota G059: “00 … indica que o pagamento foi confirmado”)</span></p>
+    <h4>O que não ajuda a diferenciar</h4>
+    <p>O header de arquivo não tem campo para isso: “Código Remessa/Retorno” (posição 143) vale <b>2</b> nos dois tipos <span class="muted">(Manual, 3.1, p. 8)</span>. A diferença está nas ocorrências de cada registro (posições 231–240).</p>
+    <h4>Sinais extras de retorno de movimento</h4>
+    <p>Segmento Z: autenticação bancária gerada na efetivação do pagamento e enviada no retorno de movimento, se o convênio estiver parametrizado para isso <span class="muted">(Manual, p. 4)</span>. Número do aviso de débito no trailer de lote (posições 60–65), que identifica o débito dos pagamentos efetivados <span class="muted">(nota G020, p. 46)</span>. A falta do segmento Z não indica crítica: ele é opcional.</p>
+    <div class="tw"><table><thead><tr><th>Ocorrência</th><th>Significado</th><th>Vem no</th><th>Pode dar baixa?</th></tr></thead><tbody>
+      <tr><td class="nw"><b>00</b>, <b>03</b></td><td>Crédito/débito efetivado · débito autorizado pela agência, efetuado</td><td>Movimento</td><td><span class="pill ok">Sim</span></td></tr>
+      <tr><td class="nw"><b>BD</b>, <b>BE</b></td><td>Inclusão / alteração efetuada com sucesso (agendado)</td><td>Crítica</td><td><span class="pill wa">Não, aguarde o movimento</span></td></tr>
+      <tr><td class="nw"><b>B1</b>, <b>B3</b>, <b>B4</b>, <b>B8</b></td><td>Bloqueado (pendente de autorização, pelo cliente, pela captura de título, pela validação de tributos)</td><td>Crítica</td><td><span class="pill wa">Não</span></td></tr>
+      <tr><td class="nw"><b>BF</b></td><td>Exclusão efetuada com sucesso</td><td>Crítica</td><td><span class="pill er">Não</span></td></tr>
+      <tr><td class="nw"><b>01</b>, <b>02</b></td><td>Insuficiência de fundos · cancelado pelo pagador/credor</td><td>Movimento</td><td><span class="pill er">Não</span></td></tr>
+      <tr><td class="nw"><b>ZA</b> (+ Z0–Z9)</td><td>Transferência devolvida (com o motivo)</td><td>Movimento</td><td><span class="pill er">Não, foi devolvido</span></td></tr>
+      <tr><td class="nw">demais (AA…ZY, HA…)</td><td>Erro: registro ou lote rejeitado</td><td>Crítica, em geral</td><td><span class="pill er">Não</span></td></tr>
+    </tbody></table></div>
+  </details>
+</div>
+
+<script>
+/* Analisador de retorno CNAB240 Santander (Pagamento a Fornecedores, V11.7).
+ * Classifica o arquivo em retorno de crítica (pré-retorno) ou de movimento
+ * (definitivo) pelas ocorrências de cada registro (posições 231–240), e
+ * mostra o status de cada pagamento. Referências: manual Santander V11.7,
+ * itens 2.6 (p. 7), 3.1 (p. 8), item 5 (p. 61), segmento Z (p. 4), G020 (p. 46). */
+
+const p=(l,a,b)=>l.substring(a-1,b);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const num=s=>{const n=parseInt(s,10);return isNaN(n)?0:n;};
+const brl=c=>(c/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const dt=s=>/^\d{8}$/.test(s)&&!/^0+$/.test(s)?`${s.slice(0,2)}/${s.slice(2,4)}/${s.slice(4)}`:'';
+const hr=s=>/^\d{6}$/.test(s)?`${s.slice(0,2)}:${s.slice(2,4)}:${s.slice(4)}`:'';
+
+/* Códigos de ocorrência para retorno — manual Santander V11.7, item 5 (p. 61–64). */
+const OCOR={
+  '00':'Crédito ou Débito Efetivado','01':'Insuficiência de Fundos - Débito Não Efetuado','02':'Crédito ou Débito Cancelado pelo Pagador/Credor','03':'Débito Autorizado pela Agência - Efetuado',
+  'AA':'Controle Inválido','AB':'Tipo de Operação Inválido','AC':'Tipo de Serviço Inválido','AD':'Forma de Lançamento Inválida','AE':'Tipo/Número de Inscrição Inválido','AF':'Código de Convênio Inválido',
+  'AG':'Agência/Conta Corrente/DV Inválido','AH':'Número Sequencial do Registro no Lote Inválido','AI':'Código de Segmento de Detalhe Inválido','AJ':'Tipo de Movimento Inválido',
+  'AK':'Código da Câmara de Compensação do Banco do Favorecido/Depositário Inválido','AL':'Código do Banco do Favorecido, Instituição de Pagamento ou Depositário Inválido',
+  'AM':'Agência Mantenedora da Conta Corrente do Favorecido Inválida','AN':'Conta Corrente/DV/Conta de Pagamento do Favorecido Inválido','AO':'Nome do Favorecido não Informado',
+  'AP':'Data Lançamento Inválida/Vencimento Inválido/Data de Pagamento não permitida','AQ':'Tipo/Quantidade da Moeda Inválido / Layout divergente (Pix)','AR':'Valor do Lançamento Inválido/Divergente/Zerado',
+  'AS':'Aviso ao Favorecido - Identificação Inválida','AT':'Tipo/Número de Inscrição do Favorecido/Contribuinte Inválido ou Divergente','AU':'Logradouro do Favorecido não Informado',
+  'AV':'Número do Local do Favorecido não Informado','AW':'Cidade do Favorecido não Informada','AX':'CEP/Complemento do Favorecido Inválido','AY':'Sigla do Estado do Favorecido Inválido',
+  'AZ':'Código/Nome do Banco Depositário Inválido','BA':'Código/Nome da Agência Depositário não Informado','BB':'Número do Documento Inválido (Seu Número)','BC':'Nosso Número Inválido',
+  'BD':'Inclusão Efetuada com Sucesso','BE':'Alteração Efetuada com Sucesso','BF':'Exclusão Efetuada com Sucesso','BG':'Agência/Conta Impedida Legalmente',
+  'B1':'Bloqueado Pendente de Autorização','B3':'Bloqueado pelo cliente','B4':'Bloqueado pela captura de título da cobrança','B8':'Bloqueado pela Validação de Tributos',
+  'CA':'Código de barras - Código do Banco Inválido','CB':'Código de barras - Código da Moeda Inválido','CC':'Código de barras - Dígito Verificador Geral Inválido','CD':'Código de barras - Valor do Título Inválido',
+  'CE':'Código de barras - Campo Livre Inválido','CF':'Valor do Documento/Principal/menor que o mínimo Inválido','CH':'Valor do Desconto Inválido','CI':'Valor de Mora Inválido','CJ':'Valor da Multa Inválido',
+  'CK':'Valor do IR Inválido','CL':'Valor do ISS Inválido','CG':'Valor do Abatimento inválido','CM':'Valor do IOF Inválido','CN':'Valor de Outras Deduções Inválido','CO':'Valor de Outros Acréscimos Inválido',
+  'HA':'Lote Não Aceito','HB':'Inscrição da Empresa Inválida para o Contrato','HC':'Convênio com a Empresa Inexistente/Inválido para o Contrato','HD':'Agência/Conta Corrente da Empresa Inexistente/Inválida para o Contrato',
+  'HE':'Tipo de Serviço Inválido para o Contrato','HF':'Conta Corrente da Empresa com Saldo Insuficiente','HG':'Lote de Serviço fora de Sequência','HH':'Lote de Serviço Inválido','HI':'Arquivo não aceito',
+  'HJ':'Tipo de Registro Inválido','HL':'Versão de Layout Inválida','HU':'Data / hora de Envio Inválida',
+  'IA':'Pagamento exclusive em Cartório','IJ':'Competência ou Período de Referência ou Número da Parcela inválido','IL':'Código Pagamento / Receita não numérico ou com zeros','IM':'Município Inválido',
+  'IN':'Número Declaração Inválido','IO':'Número Etiqueta inválido','IP':'Número Notificação inválido','IQ':'Inscrição Estadual inválida','IR':'Dívida Ativa Inválida','IS':'Valor Honorários ou Outros Acréscimos inválido',
+  'IT':'Período Apuração inválido','IU':'Valor ou Percentual da Receita inválido','IV':'Número referência inválida',
+  'PA':'Pix não efetivado','PB':'Transação interrompida devido a erro no PSP do Recebedor','PC':'Número da conta transacional encerrada no PSP do Recebedor','PD':'Tipo incorreto para a conta transacional especificada',
+  'PE':'Tipo de transação não é suportado/autorizado na conta transacional especificada','PF':'CPF/CNPJ do usuário recebedor não é consistente com o titular da conta transacional especificada',
+  'PG':'CPF/CNPJ do usuário recebedor incorreto','PH':'Ordem rejeitada pelo PSP do Recebedor','PI':'ISPB do PSP do Pagador inválido ou inexistente','PK':'QR Code inválido ou vencido',
+  'PM':'Chave de pagamento ou QR Code inválido','PN':'Chave de pagamento ou QR Code não informado','SC':'Validação parcial','TA':'Lote não Aceito - Totais do Lote com Diferença',
+  'XB':'Número de Inscrição do Contribuinte Inválido','XC':'Código do Pagamento ou Competência ou Número de Inscrição Inválido','XF':'Código do Pagamento ou Competência não Numérico ou Igual a Zeros',
+  'YA':'Título Não Encontrado','YB':'Identificação Registro Opcional Inválido','YC':'Código Padrão Inválido','YD':'Código de Ocorrência Inválido','YE':'Complemento de Ocorrência Inválido','YF':'Alegação já informada',
+  'ZA':'Transferência Devolvida','ZB':'Transferência mesma titularidade não permitida','ZC':'Código pagamento Tributo inválido','ZD':'Competência Inválida','ZE':'Título Bloqueado na base',
+  'ZF':'Sistema em Contingência – Título com valor maior que referência','ZG':'Sistema em Contingência – Título vencido / Banco destino não recebe TED/Pix','ZH':'Sistema em contingência - Título indexado',
+  'ZI':'Beneficiário divergente','ZJ':'Limite de pagamentos parciais excedido','ZK':'Título já liquidado','ZT':'Valor outras entidades inválidas','ZU':'Sistema Origem Inválido',
+  'ZW':'Banco Destino não recebe essa modalidade de pagamento','ZX':'Banco Destino inoperante para essa modalidade de pagamento','ZY':'Código do Histórico de Crédito Inválido','ZV':'Autorização iniciada no Internet Banking',
+  'Z0':'Conta com bloqueio (devolução)','Z1':'Conta fechada. É necessário ativar a conta (devolução)','Z2':'Conta com movimento controlado (devolução)','Z3':'Conta cancelada (devolução)',
+  'Z4':'Registro inconsistente - Título (devolução)','Z5':'Apresentação indevida - Título (devolução)','Z6':'Dados do destinatário inválidos (devolução)','Z7':'Agência ou conta destinatária do crédito inválida (devolução)',
+  'Z8':'Divergência na titularidade (devolução)','Z9':'Conta destinatária do crédito encerrada (devolução)',
+  'C1':'COMPROR – Devolvido por outros bancos','C2':'COMPROR – Recusado','C3':'COMPROR – Rejeitado por sistema','C4':'COMPROR – Rejeitado por horário','C6':'COMPROR – Aprovado','C7':'COMPROR – Compromisso Inválido',
+  'F1':'CONFIRMING – Compromisso Liquidado','F2':'CONFIRMING – Compromisso em Negociação',
+  'O1':'Código da OCT inválido','O2':'Descrição do remetente inválida','O3':'Descrição da finalidade inválida','O4':'Código Convênio cobrança Inválido'
+};
+const PAGO=['00','03','F1'], NAO_EFET=['01','02'], DEVOL=['ZA','Z0','Z1','Z2','Z3','Z4','Z5','Z6','Z7','Z8','Z9'];
+const AGEND=['BD','BE','C6','F2'], EXCL=['BF'], BLOQ=['B1','B3','B4','B8'];
+const NAO_ERRO=new Set([...PAGO,...NAO_EFET,...DEVOL,...AGEND,...EXCL,...BLOQ]);
+const ehErro=c=>c in OCOR&&!NAO_ERRO.has(c);
+const tem=(cods,lista)=>cods.some(c=>lista.includes(c));
+
+/* Status de cada pagamento. Só "pago" permite baixa. */
+const ST={
+  pago:{rot:'Pago',cls:'ok',dica:'Efetivado pelo banco. Pode dar baixa.'},
+  agendado:{rot:'Agendado',cls:'in',dica:'Aceito pelo banco e aguardando a data. Ainda não foi pago.'},
+  bloqueado:{rot:'Bloqueado',cls:'wa',dica:'Aceito, mas bloqueado. Não será pago sem autorização/desbloqueio.'},
+  excluido:{rot:'Excluído',cls:'mu',dica:'Exclusão aceita pelo banco. Não será pago.'},
+  rejeitado:{rot:'Rejeitado',cls:'er',dica:'Recusado pelo banco. Não foi pago.'},
+  nao_efetuado:{rot:'Não efetuado',cls:'er',dica:'Débito não efetuado ou cancelado na data. Não foi pago.'},
+  devolvido:{rot:'Devolvido',cls:'er',dica:'Saiu e foi devolvido/estornado. Não conta como pago.'},
+  indefinido:{rot:'Sem ocorrência',cls:'mu',dica:'O banco não informou ocorrência reconhecida.'}
+};
+function statusDe(cods,tipoMov){
+  if(tipoMov==='3'||tem(cods,DEVOL))return 'devolvido'; // tipo de movimento 3 = estorno, só no retorno (G011)
+  if(tem(cods,PAGO))return 'pago';
+  if(tem(cods,NAO_EFET))return 'nao_efetuado';
+  if(cods.some(ehErro))return 'rejeitado';
+  if(tem(cods,BLOQ))return 'bloqueado';
+  if(tem(cods,EXCL))return 'excluido';
+  if(tem(cods,AGEND))return 'agendado';
+  return 'indefinido';
+}
+
+/* Até 5 códigos de 2 posições. "00" depois do primeiro código é preenchimento. */
+function codigos(campo){
+  const out=[];
+  for(let i=0;i<10;i+=2){
+    const c=campo.substr(i,2).trim().toUpperCase();
+    if(c.length<2||(c==='00'&&i>0))continue;
+    if(!out.includes(c))out.push(c);
+  }
+  return out;
+}
+
+const FORMA={'01':'Crédito em C/C','03':'TED','05':'Crédito em poupança','10':'OP / Recibo','11':'Contas e tributos c/ código de barras','16':'DARF','17':'GPS','20':'Caixa “Autenticação”',
+  '25':'IPVA','26':'Licenciamento','27':'DPVAT','30':'Boleto Santander','31':'Boleto outros bancos','35':'OCT','45':'Pix transferência','47':'Pix QR Code'};
+const SERVICO={'03':'Bloqueto eletrônico','10':'Dividendos','14':'Consulta de tributos','20':'Fornecedores','22':'Contas, tributos e impostos','23':'Interoperabilidade','29':'Alegação do sacado',
+  '50':'Sinistros','60':'Despesas viajante','70':'Pagamento autorizado','75':'Credenciados','80':'Representantes','90':'Benefícios','98':'Diversos'};
+
+/* Campos de cada segmento principal (manual V11.7, seções 3.2 a 3.6). */
+const SEG={
+  A:l=>({nome:p(l,44,73),docCli:p(l,74,93),data:p(l,94,101),valor:p(l,120,134),docBanco:p(l,135,154),dataReal:p(l,155,162),valorReal:p(l,163,177)}),
+  J:l=>({nome:p(l,62,91),venc:p(l,92,99),data:p(l,145,152),valor:p(l,153,167),docCli:p(l,183,202),docBanco:p(l,203,222)}),
+  N:l=>({docCli:p(l,18,37),docBanco:p(l,38,57),nome:p(l,58,87),data:p(l,88,95),valor:p(l,96,110)}),
+  O:l=>({nome:p(l,62,91),venc:p(l,92,99),data:p(l,100,107),valor:p(l,108,122),docCli:p(l,123,142),docBanco:p(l,143,162)}),
+  I:l=>({nome:p(l,33,72),valor:p(l,113,127),data:p(l,128,135),docCli:p(l,136,155),docBanco:p(l,156,175)})
+};
+
+function analisar(texto){
+  const r={hdr:null,trl:null,lotes:[],pags:[],avisos:[],nLinhas:0,foraDe240:0,dda:0};
+  let lote=null,ult=null;
+  texto.split('\n').forEach((bruta,i)=>{
+    let l=bruta.replace(/\r$/,'');
+    if(!l.trim())return;
+    const ln=i+1;r.nLinhas++;
+    if(l.length!==240)r.foraDe240++;
+    if(l.length<240)l=l.padEnd(240,' ');
+    const tr=p(l,8,8);
+    if(tr==='0'){
+      r.hdr={ln,banco:p(l,1,3),tipoInsc:p(l,18,18),insc:p(l,19,32).trim(),convenio:p(l,33,52).trim(),agencia:p(l,53,57),conta:p(l,59,70),dv:p(l,71,71),
+        empresa:p(l,73,102).trim(),remRet:p(l,143,143),data:p(l,144,151),hora:p(l,152,157),nsa:p(l,158,163),versao:p(l,164,166),cods:codigos(p(l,231,240)).filter(c=>c!=='00')};
+    } else if(tr==='1'){
+      lote={ln,num:p(l,4,7),servico:p(l,10,11),forma:p(l,12,13),cods:codigos(p(l,231,240)).filter(c=>c!=='00'),pags:[],qtd:'',soma:'',aviso:'',codsTrl:[]};
+      r.lotes.push(lote);ult=null;
+    } else if(tr==='3'){
+      if(!lote){lote={ln,num:p(l,4,7),servico:'',forma:'',cods:[],pags:[],qtd:'',soma:'',aviso:'',codsTrl:[]};r.lotes.push(lote);}
+      const seg=p(l,14,14).toUpperCase();
+      const j52=seg==='J'&&p(l,18,19)==='52';
+      const cods=codigos(p(l,231,240));
+      if(SEG[seg]&&!j52){
+        ult=Object.assign({ln,lote:lote.num,seq:p(l,9,13),seg,forma:lote.forma,tipoMov:p(l,15,15),instr:p(l,16,17),cods:cods.slice(),segs:[seg],aut:'',protocolo:''},SEG[seg](l));
+        r.pags.push(ult);lote.pags.push(ult);
+      } else if('GHY'.includes(seg)){
+        r.dda++; // captura de títulos DDA (seção 3.7): não são pagamentos
+      } else if(ult){
+        ult.segs.push(j52?'J52':seg);
+        if(seg==='Z'){ult.aut=p(l,15,78).trim();ult.protocolo=p(l,79,103).trim();}
+        cods.filter(c=>c!=='00').forEach(c=>{if(!ult.cods.includes(c))ult.cods.push(c);});
+      }
+    } else if(tr==='5'){
+      if(lote){lote.qtd=p(l,18,23);lote.soma=p(l,24,41);lote.aviso=p(l,60,65);lote.codsTrl=codigos(p(l,231,240)).filter(c=>c!=='00');}
+      ult=null;
+    } else if(tr==='9'){
+      r.trl={ln,lotes:p(l,18,23),regs:p(l,24,29)};
+    } else {
+      r.avisos.push(`Linha ${ln}: tipo de registro "${esc(tr)}" desconhecido.`);
+    }
+  });
+
+  // Pagamento sem ocorrência própria herda a rejeição do lote (ex.: HA – Lote não aceito).
+  r.lotes.forEach(lt=>{
+    const errLote=[...lt.cods,...lt.codsTrl].filter(ehErro);
+    lt.pags.forEach(pg=>{if(!pg.cods.length&&errLote.length){pg.cods=errLote.slice();pg.viaLote=true;}});
+  });
+  r.pags.forEach(pg=>{pg.st=statusDe(pg.cods,pg.tipoMov);});
+  r.veredito=veredito(r);
+  return r;
+}
+
+function veredito(r){
+  const h=r.hdr;
+  const cnt=k=>r.pags.filter(x=>x.st===k).length;
+  const mov=cnt('pago')+cnt('nao_efetuado')+cnt('devolvido');
+  const cri=cnt('agendado')+cnt('bloqueado')+cnt('excluido');
+  const rej=cnt('rejeitado');
+  const segZ=r.pags.filter(x=>x.aut).length;
+  const aviso=r.lotes.filter(l=>num(l.aviso)>0).length;
+  const dataReal=r.pags.filter(x=>x.seg==='A'&&dt(x.dataReal)).length;
+  const ev=[];
+  const v={ev};
+
+  if(!h){v.tipo='invalido';v.cls='er';v.ico='✕';v.titulo='Não parece um arquivo CNAB240';v.texto='Não encontrei o header de arquivo (registro tipo 0, posição 8).';return v;}
+  if(h.banco!=='033'){v.tipo='outro_banco';v.cls='er';v.ico='✕';v.titulo=`Arquivo de outro banco (código ${esc(h.banco)})`;v.texto='Esta ferramenta analisa só retornos do Santander (033).';return v;}
+  if(h.remRet!=='2'){v.tipo='remessa';v.cls='er';v.ico='✕';v.titulo='Este arquivo é uma remessa, não um retorno';
+    v.texto=`O header de arquivo traz "${esc(h.remRet)}" na posição 143 (1 = remessa, 2 = retorno). Retornos são os arquivos que o banco devolve.`;return v;}
+
+  ev.push({k:'neu',t:'Header de arquivo com código 2 (retorno) na posição 143. Esse campo é igual nos dois tipos de retorno e não diferencia crítica de movimento.',ref:'Manual Santander V11.7, 3.1, p. 8'});
+  if(mov)ev.push({k:'mov',t:`${mov} pagamento(s) com ocorrência de resultado do pagamento (00, 03, 01, 02 ou ZA). Esses códigos vêm no retorno de movimento.`,ref:'Manual V11.7, item 5, p. 61: “movimento (pagamento, devolução, cancelamento do compromisso)”'});
+  if(cri)ev.push({k:'cri',t:`${cri} registro(s) só acatados pelo banco (BD/BE agendado, B1–B8 bloqueado, BF excluído). Esses códigos vêm no retorno de crítica.`,ref:'Manual V11.7, item 5, p. 61: “crítica (acatamento ou rejeição do registro)”'});
+  if(rej)ev.push({k:mov?'neu':'cri',t:`${rej} registro(s) rejeitado(s) por erro. A rejeição costuma vir na crítica; em qualquer caso, não foram pagos.`,ref:'Manual V11.7, item 5, p. 61'});
+  if(segZ)ev.push({k:'mov',t:`Segmento Z (autenticação bancária) em ${segZ} pagamento(s). Ele é gerado na efetivação do pagamento.`,ref:'Manual V11.7, p. 4: autenticação “disponibilizada no arquivo retorno de movimento”'});
+  else ev.push({k:'neu',t:'Nenhum segmento Z (autenticação). Isso não indica crítica: o segmento Z depende da parametrização do convênio.',ref:'Manual V11.7, p. 4'});
+  if(aviso)ev.push({k:'mov',t:`Número do aviso de débito preenchido no trailer de ${aviso} lote(s): o banco debitou a conta pelos pagamentos efetivados.`,ref:'Manual V11.7, nota G020, p. 46'});
+  if(dataReal)ev.push({k:'neu',t:`Data real do pagamento (segmento A, 155–162) preenchida em ${dataReal} registro(s). Informação complementar, não decide sozinha.`,ref:'Manual V11.7, 3.2, p. 10'});
+  if(r.dda)ev.push({k:'neu',t:`${r.dda} registro(s) de captura de títulos DDA (segmentos G/H/Y). Não são pagamentos e não entram na classificação.`,ref:'Manual V11.7, 3.7'});
+
+  const pend=cri?` ${cri} pagamento(s) ainda aparecem como agendados, bloqueados ou excluídos: esses não foram pagos.`:'';
+  if(mov||segZ||aviso){
+    v.tipo='movimento';v.cls='ok';v.ico='✓';v.titulo='Retorno de movimento (definitivo)';
+    v.texto=`O banco informa o resultado dos pagamentos. Dê baixa só nos pagamentos com status <b>Pago</b> (ocorrência 00 ou 03).${pend}`;
+  } else if(cri){
+    v.tipo='critica';v.cls='wa';v.ico='!';v.titulo='Retorno de crítica (pré-retorno)';
+    v.texto='O banco só confirma que aceitou (ou recusou) os registros. <b>Nenhum pagamento foi efetivado ainda: não dê baixa.</b> A confirmação vem no retorno de movimento, com ocorrência 00, depois da data de pagamento.';
+  } else if(rej){
+    v.tipo='critica_rejeitada';v.cls='er';v.ico='✕';v.titulo='Retorno de crítica com registros rejeitados';
+    v.texto='Todos os pagamentos com ocorrência foram rejeitados. Nada foi pago e não há o que baixar. Corrija os erros e envie uma nova remessa.';
+  } else {
+    v.tipo='indefinido';v.cls='wa';v.ico='?';v.titulo='Não foi possível classificar';
+    v.texto=r.pags.length?'Os registros não trazem ocorrências reconhecidas (posições 231–240). Não dê baixa com base neste arquivo.':'O arquivo não tem registros de pagamento (segmentos A, J, N, O ou I).';
+  }
+  return v;
+}
+
+/* ---------- Tela ---------- */
+let atual=null,filtro='todos';
+const GRUPOS={todos:()=>true,pago:x=>x.st==='pago',agendado:x=>x.st==='agendado',bloqueado:x=>x.st==='bloqueado',
+  naopago:x=>['rejeitado','nao_efetuado','devolvido','excluido','indefinido'].includes(x.st)};
+const valorDe=x=>num(x.valorReal)>0?num(x.valorReal):num(x.valor);
+const soma=lista=>lista.reduce((s,x)=>s+valorDe(x),0);
+
+function render(r,nome,bytes){
+  atual=r;filtro='todos';
+  const h=r.hdr,v=r.veredito;
+  document.getElementById('res').style.display='block';
+  const fb=[`<span class="fn">${esc(nome)}</span>`,`<span class="fm">${bytes.toLocaleString('pt-BR')} bytes · ${r.nLinhas} linhas</span>`];
+  if(h){
+    if(h.empresa)fb.push(`<span>${esc(h.empresa)}</span>`);
+    if(h.insc)fb.push(`<span class="fm">${h.tipoInsc==='1'?'CPF':'CNPJ'} ${esc(h.insc)}</span>`);
+    if(h.convenio)fb.push(`<span class="fm">Convênio ${esc(h.convenio)}</span>`);
+    if(dt(h.data))fb.push(`<span class="fm">Gerado em ${dt(h.data)}${hr(h.hora)?' '+hr(h.hora):''}</span>`);
+    fb.push(`<span class="fm">Nº sequencial ${num(h.nsa)}</span>`);
+  }
+  document.getElementById('fbar').innerHTML=fb.join('');
+
+  const w=[...r.avisos];
+  if(r.foraDe240)w.unshift(`${r.foraDe240} linha(s) com tamanho diferente de 240 posições.`);
+  if(h&&h.cods.length)w.unshift(`Ocorrência no header de arquivo: ${h.cods.map(c=>`<b>${esc(c)}</b> ${esc(OCOR[c]||'')}`).join(', ')}.`);
+  document.getElementById('warns').innerHTML=w.length?`<div class="warn">${w.join('<br>')}</div>`:'';
+
+  const vd=document.getElementById('verd');
+  vd.className='vd '+v.cls;
+  vd.innerHTML=`<div class="vi">${v.ico}</div><div><div class="vk">Tipo do arquivo</div><strong>${v.titulo}</strong><p>${v.texto}</p></div>`;
+  const ICO={mov:'✓',cri:'!',neu:'·'};
+  document.getElementById('evid').innerHTML=v.ev.length?v.ev.map(e=>`<li><span class="eic ${e.k}">${ICO[e.k]}</span><span>${e.t}<span class="ref">${esc(e.ref)}</span></span></li>`).join(''):'<li><span class="eic neu">·</span><span>—</span></li>';
+
+  const pg=r.pags;
+  const card=(cls,rot,lista,rodape)=>`<div class="sc ${cls}"><div class="sl">${rot}</div><div class="sv">${lista.length}</div><div class="ss">${brl(soma(lista))}${rodape?' · '+rodape:''}</div></div>`;
+  document.getElementById('stats').innerHTML=pg.length?
+    card('ok','Pagos · pode dar baixa',pg.filter(GRUPOS.pago),'')+
+    card('in','Agendados',pg.filter(GRUPOS.agendado),'ainda não pagos')+
+    card('wa','Bloqueados',pg.filter(GRUPOS.bloqueado),'ainda não pagos')+
+    card('er','Não pagos',pg.filter(GRUPOS.naopago),'rejeitados, devolvidos etc.'):'';
+
+  const f=[['todos','Todos'],['pago','Pagos'],['agendado','Agendados'],['bloqueado','Bloqueados'],['naopago','Não pagos']];
+  document.getElementById('filt').innerHTML=pg.length?f.map(([k,t])=>`<button class="btn${k==='todos'?' act':''}" data-f="${k}">${t} (${pg.filter(GRUPOS[k]).length})</button>`).join('')+'<button class="bcsv" id="bcsv" type="button">⤓ Exportar CSV</button>':'';
+  document.querySelectorAll('#filt .btn').forEach(b=>b.addEventListener('click',()=>{
+    filtro=b.dataset.f;document.querySelectorAll('#filt .btn').forEach(x=>x.classList.toggle('act',x===b));tabela();
+  }));
+  const bc=document.getElementById('bcsv');if(bc)bc.addEventListener('click',()=>exportarCSV(nome));
+  tabela();
+  lotes();
+}
+
+function tabela(){
+  const lista=atual.pags.filter(GRUPOS[filtro]);
+  const tb=document.getElementById('tbody');
+  if(!lista.length){tb.innerHTML=`<tr><td colspan="9" class="empty">${atual.pags.length?'Nenhum pagamento neste filtro.':'Nenhum registro de pagamento no arquivo.'}</td></tr>`;return;}
+  tb.innerHTML=lista.map(x=>{
+    const s=ST[x.st];
+    const tipo=(FORMA[x.forma]||(x.forma?'Forma '+x.forma:''))+`<span class="sub">Seg. ${x.segs.join(' + ')}</span>`;
+    const real=x.seg==='A'&&dt(x.dataReal)?`<span class="sub">real ${dt(x.dataReal)}</span>`:'';
+    const vreal=num(x.valorReal)>0&&num(x.valorReal)!==num(x.valor)?`<span class="sub">real ${brl(num(x.valorReal))}</span>`:'';
+    const oc=x.cods.length?x.cods.map(c=>`<span class="oc"><b>${esc(c)}</b> <span>${esc(OCOR[c]||'Código não catalogado no manual')}</span></span>`).join('')+(x.viaLote?'<span class="sub">ocorrência do lote</span>':''):'<span class="muted">—</span>';
+    const aut=[x.docBanco.trim()?esc(x.docBanco.trim()):'',x.aut?`<span class="aut" title="Protocolo ${esc(x.protocolo)}">🔏 ${esc(x.aut)}</span>`:''].filter(Boolean).join('')||'<span class="muted">—</span>';
+    return `<tr><td><span class="pill ${s.cls}" title="${esc(s.dica)}">${s.rot}</span></td>
+      <td class="nw">${esc(x.lote)} · ${esc(x.seq)}<span class="sub">linha ${x.ln}</span></td>
+      <td>${tipo}</td><td>${esc(x.nome.trim())||'<span class="muted">—</span>'}</td>
+      <td>${esc(x.docCli.trim())||'<span class="muted">—</span>'}</td>
+      <td class="nw">${dt(x.data)||'<span class="muted">—</span>'}${real}</td>
+      <td class="n">${brl(num(x.valor))}${vreal}</td><td>${oc}</td><td>${aut}</td></tr>`;
+  }).join('');
+}
+
+function lotes(){
+  const tb=document.getElementById('tlotes');
+  if(!atual.lotes.length){tb.innerHTML='<tr><td colspan="6" class="empty">Nenhum lote no arquivo.</td></tr>';return;}
+  tb.innerHTML=atual.lotes.map(lt=>{
+    const cods=[...new Set([...lt.cods,...lt.codsTrl])];
+    return `<tr><td class="nw">${esc(lt.num)}<span class="sub">linha ${lt.ln}</span></td>
+      <td>${esc(SERVICO[lt.servico]||lt.servico||'—')}<span class="sub">${esc(FORMA[lt.forma]||lt.forma||'')}</span></td>
+      <td class="n">${lt.pags.length}</td><td class="n">${lt.soma?brl(num(lt.soma)):'—'}</td>
+      <td class="nw">${num(lt.aviso)>0?esc(lt.aviso):'<span class="muted">—</span>'}</td>
+      <td>${cods.length?cods.map(c=>`<span class="oc"><b>${esc(c)}</b> <span>${esc(OCOR[c]||'Código não catalogado no manual')}</span></span>`).join(''):'<span class="muted">—</span>'}</td></tr>`;
+  }).join('');
+}
+
+function exportarCSV(nome){
+  const q=s=>'"'+String(s==null?'':s).replace(/"/g,'""')+'"';
+  const cab=['status','pode_dar_baixa','lote','sequencia','linha','segmentos','forma','favorecido','seu_numero','nosso_numero','data_pagamento','valor','data_real','valor_real','ocorrencias','descricao_ocorrencias','autenticacao'];
+  const linhas=atual.pags.map(x=>[ST[x.st].rot,x.st==='pago'?'sim':'nao',x.lote,x.seq,x.ln,x.segs.join('+'),FORMA[x.forma]||x.forma,x.nome.trim(),x.docCli.trim(),x.docBanco.trim(),
+    dt(x.data),(num(x.valor)/100).toFixed(2).replace('.',','),x.seg==='A'?dt(x.dataReal):'',num(x.valorReal)>0?(num(x.valorReal)/100).toFixed(2).replace('.',','):'',
+    x.cods.join(' '),x.cods.map(c=>OCOR[c]||c).join(' | '),x.aut].map(q).join(';'));
+  const csv='﻿'+[cab.join(';'),...linhas].join('\r\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download=nome.replace(/\.[^.]*$/,'')+'_analise.csv';
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+
+function abrir(file){
+  if(!file)return;
+  const rd=new FileReader();
+  rd.onload=()=>render(analisar(rd.result),file.name,file.size);
+  rd.readAsText(file,'ISO-8859-1');
+}
+window.analisarRetorno=(texto,nome)=>{const r=analisar(texto);render(r,nome||'teste.ret',texto.length);return r;};
+
+const dz=document.getElementById('dz'),fi=document.getElementById('fi');
+dz.addEventListener('click',()=>fi.click());
+document.getElementById('bsel').addEventListener('click',e=>{e.stopPropagation();fi.click();});
+fi.addEventListener('change',()=>{abrir(fi.files[0]);fi.value='';});
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('over');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('over'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('over');abrir(e.dataTransfer.files[0]);});
+</script>
+<script src="docs/cnab/catalogo.js"></script>
+<script src="assets/docs-cnab.js" data-banco="033"></script>
+</body>
+</html>
