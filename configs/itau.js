@@ -10,7 +10,7 @@
     code: '341',
     name: 'Itaú',
     produto: 'SISPAG · Sistema de Contas a Pagar',
-    logo: 'logos/Ita%C3%BA%20Unibanco%20S.A/itau-2-laranja.svg',
+    logo: 'logos/Ita%C3%BA%20Unibanco%20S.A/logo-nova-letras-brancas.svg',
     cor: '#EC7000',
     corClara: '#FF8820',
     fields: [

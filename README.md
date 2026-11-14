@@ -50,11 +50,32 @@ e do aviso de débito no trailer de lote. Base: manual Santander V11.7, itens
 2.6 e 5, p. 4 e nota G020. A página mostra o status de cada pagamento e exporta
 um CSV para a baixa. O arquivo é lido só no navegador.
 
+## Visual
+
+Todas as páginas usam o mesmo sistema visual, em `assets/ui.css`: cores,
+tipos, botões, etiquetas, listas e tabelas. O fundo, as linhas e os destaques
+são derivados da cor do banco, então cada página assume o tom dele, no tema
+claro e no escuro (`assets/tema.js`; o botão fica no rodapé do menu). Cada página
+define só essa cor, logo depois do link para o `ui.css`:
+
+```html
+<link rel="stylesheet" href="assets/ui.css">
+<style>:root{--bk:#EC0000;--bkc:#fff;}</style>
+```
+
+`--bk` é a cor do banco e `--bkc` a cor do texto sobre ela (branco, ou
+`#16140f` quando o branco não dá contraste, como no amarelo do BB). No
+Preenchedor as duas vêm do `cor` em `configs/<banco>.js`.
+
+Para um validador novo, copie o `<head>` de um existente e inclua o link no
+menu do `index.html`. A central abre cada ferramenta por endereço próprio
+(`index.html#santander`, `#preenchedor`…) e lembra a última usada.
+
 ## Manuais oficiais
 
 `docs/cnab/catalogo.js` lista o manual oficial de cada banco (e o padrão
 FEBRABAN): versão, data, link e SHA-256. Cada validador tem o botão
-**📄 Manuais oficiais**, que abre esses links (e a cópia local, quando a página
+**Manuais oficiais**, que abre esses links (e a cópia local, quando a página
 é aberta do disco).
 
 O que mudou em cada manual desde a versão em que o validador se baseia está

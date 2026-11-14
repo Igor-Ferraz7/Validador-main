@@ -4,169 +4,229 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Central de Validadores CNAB240</title>
+<meta name="description" content="Validadores de remessa CNAB240 por banco, Preenchedor de remessa .srb e Analisador de retorno. Os arquivos são lidos só no navegador.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600&family=Mona+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" href="assets/favicon.svg">
+<script src="assets/tema.js"></script>
+<link rel="stylesheet" href="assets/ui.css">
 <style>
-  * { box-sizing: border-box; }
-  body { 
-    margin: 0; 
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-    display: flex; 
-    height: 100vh; 
-    overflow: hidden; 
-    background: #f4f6f8; 
-  }
-  
-  .sidebar { 
-    width: 280px; /* Aumentado levemente para caber logos e nomes */
-    background: #1e293b; 
-    color: #fff; 
-    display: flex; 
-    flex-direction: column; 
-    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-    z-index: 10;
-  }
-  
-  .sidebar h2 { 
-    text-align: center; 
-    padding: 20px; 
-    margin: 0; 
-    font-size: 14px; 
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    background: #0f172a;
-    border-bottom: 1px solid #334155; 
-  }
-  
-  .menu { 
-    list-style: none; 
-    padding: 0; 
-    margin: 0; 
-    flex: 1; 
-    overflow-y: auto; 
-  }
-  
-  .menu li { 
-    padding: 12px 15px; 
-    cursor: pointer; 
-    border-bottom: 1px solid #334155; 
-    transition: all 0.2s ease; 
-    display: flex; 
-    align-items: center; 
-    gap: 12px;
-    font-weight: 500;
-    font-size: 13px;
-    color: #cbd5e1;
-  }
-  
-  .menu li:hover { 
-    background: #334155; 
-    color: #fff;
-  }
-  
-  .menu li.active {
-    background: #3b82f6;
-    color: #fff;
-    border-left: 4px solid #60a5fa;
+  /* Casca da central: menu lateral + página da ferramenta num iframe.
+     Cores, tipos e raios vêm de assets/ui.css. */
+  html,body{height:100%;}
+  body{display:grid;grid-template-columns:264px minmax(0,1fr);height:100dvh;min-height:0;overflow:hidden;transition:grid-template-columns .22s var(--ease);}
+
+  .side{display:flex;flex-direction:column;min-height:0;background:var(--cd);border-right:1px solid var(--br);}
+  .side__top{display:flex;align-items:center;justify-content:space-between;gap:12px;height:64px;flex-shrink:0;padding:0 12px 0 20px;border-bottom:3px solid var(--bk);transition:border-color .2s var(--ease);}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;letter-spacing:-.005em;color:var(--tx);text-decoration:none;border-radius:var(--r-sm);}
+  .brand svg{width:28px;height:28px;flex-shrink:0;}
+  .brand rect{fill:var(--tx);}
+  .brand path{stroke:var(--cd);}
+  .side__toggle{display:none;align-items:center;justify-content:center;width:44px;height:44px;background:transparent;border:1px solid var(--br2);border-radius:var(--r-md);transition:border-color .15s var(--ease),background-color .15s var(--ease);}
+  .side__toggle:hover{border-color:var(--ac);background:var(--cd2);}
+  .side__toggle svg{width:18px;height:18px;}
+  /* recolher / expandir (telas largas) */
+  .side__mini{display:flex;align-items:center;justify-content:center;width:36px;height:36px;flex-shrink:0;background:transparent;color:var(--txd);border:1px solid transparent;border-radius:var(--r-md);transition:border-color .15s var(--ease),background-color .15s var(--ease),color .15s var(--ease),transform .1s var(--ease);}
+  .side__mini:hover{border-color:var(--br2);background:var(--cd2);color:var(--tx);}
+  .side__mini:active{transform:translateY(1px);}
+  .side__mini svg{width:18px;height:18px;}
+
+  .nav{flex:1;min-height:0;overflow-y:auto;padding:4px 12px 12px;}
+  .nav h2{padding:16px 8px 6px;font-size:13px;font-weight:500;color:var(--txd);}
+  .nav ul{list-style:none;display:flex;flex-direction:column;gap:2px;}
+  .nav a{display:flex;align-items:center;gap:12px;height:44px;padding:0 10px 0 8px;border-radius:var(--r-md);font-size:14px;font-weight:500;color:var(--txm);text-decoration:none;transition:background-color .15s var(--ease),color .15s var(--ease);}
+  .nav a:hover{background:var(--cd2);color:var(--tx);}
+  .nav a:active{background:var(--bg);}
+  .nav a[aria-current="page"]{background:var(--bg);color:var(--tx);font-weight:600;}
+  .nav img{width:28px;height:28px;object-fit:contain;border-radius:var(--r-md);flex-shrink:0;transition:transform .2s var(--ease);}
+  .nav a:hover img{transform:scale(1.06);}
+  .nav__name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .nav__code{font-family:var(--mono);font-size:12px;font-weight:400;color:var(--txd);}
+
+  .side__foot{display:flex;align-items:center;gap:12px;flex-shrink:0;padding:12px 12px 12px 20px;border-top:1px solid var(--br);}
+  .side__note{flex:1;font-size:13px;line-height:1.5;color:var(--txd);}
+
+  .content{min-width:0;min-height:0;background:var(--bg);}
+  .content iframe{display:block;width:100%;height:100%;border:0;}
+
+  /* Menu recolhido: só os logos. Vale em telas largas; no celular o menu é a folha. */
+  @media(min-width:821px){
+    body[data-menu="mini"]{grid-template-columns:64px minmax(0,1fr);}
+    [data-menu="mini"] .side__top{justify-content:center;padding:0;}
+    [data-menu="mini"] .brand{display:none;}
+    [data-menu="mini"] .nav{padding:4px 8px 12px;overflow-x:hidden;}
+    [data-menu="mini"] .nav h2{height:1px;margin:10px 8px 9px;padding:0;overflow:hidden;background:var(--br);color:transparent;font-size:0;}
+    [data-menu="mini"] .nav h2:first-child{margin-top:8px;background:transparent;}
+    [data-menu="mini"] .nav a{justify-content:center;padding:0;gap:0;}
+    [data-menu="mini"] .nav__name{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;}
+    [data-menu="mini"] .nav__code{display:none;}
+    [data-menu="mini"] .side__foot{justify-content:center;padding:12px 0;}
+    [data-menu="mini"] .side__note{display:none;}
   }
 
-  .menu li.section-label {
-    cursor: default;
-    background: #0f172a;
-    color: #64748b;
-    font-size: 10px;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    padding: 10px 15px 8px;
-    border-bottom: 1px solid #334155;
-  }
-  .menu li.section-label:hover {
-    background: #0f172a;
-    color: #64748b;
-  }
-
-  /* Estilização das Logos */
-  .bank-logo {
-    width: 24px;
-    height: 24px;
-    object-fit: contain;
-    border-radius: 4px;
-    background: white; /* Fundo branco para logos vazadas aparecerem no menu escuro */
-    padding: 2px;
-  }
-
-  .content { 
-    flex: 1; 
-    display: flex; 
-    flex-direction: column; 
-    background: #fff;
-  }
-  
-  iframe { 
-    flex: 1; 
-    border: none; 
-    width: 100%; 
-    height: 100%; 
+  @media(max-width:820px){
+    .side__mini{display:none;}
+    body{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr);}
+    .side{border-right:0;}
+    .side__top{height:56px;padding:0 8px 0 16px;}
+    .side__toggle{display:flex;}
+    .nav,.side__foot{display:none;}
+    .side[data-open] {position:fixed;inset:0;z-index:50;}
+    .side[data-open] .nav{display:block;padding:4px 8px 12px;}
+    .side[data-open] .side__foot{display:flex;}
+    .nav a{height:52px;}
   }
 </style>
 </head>
 <body>
 
-<div class="sidebar">
-  <h2>Validadores CNAB</h2>
-  <ul class="menu">
-    <li class="active" onclick="loadTab('Validador_CNAB240_BancoDoBrasil.html', this)">
-      <img src="logos/Banco%20do%20Brasil%20S.A/banco-do-brasil-com-fundo.svg" class="bank-logo" alt="BB">
-      Banco do Brasil (001)
-    </li>
-    
-    <li onclick="loadTab('Validador_CNAB240_Santander.html', this)">
-      <img src="logos/Banco%20Santander%20Brasil%20S.A/santander-fundo-vermelho.svg" class="bank-logo" alt="Santander">
-      Santander (033)
-    </li>
-    
-    <li onclick="loadTab('Validador_CNAB240_Bradesco_Multipag.html', this)">
-      <img src="logos/Bradesco%20S.A/bradesco%20com%20nome.svg" class="bank-logo" alt="Bradesco">
-      Bradesco (237)
-    </li>
-    
-    <li onclick="loadTab('Validador_CNAB240_Itau.html', this)">
-      <img src="logos/Itaú%20Unibanco%20S.A/itau-2-laranja.svg" class="bank-logo" alt="Itaú">
-      Itaú (341)
-    </li>
-    
-    <li onclick="loadTab('Validador_CNAB240_Sicredi%20-%20v2%201.html', this)">
-      <img src="logos/Sicredi/logo-svg2.svg" class="bank-logo" alt="Sicredi">
-      Sicredi (748)
-    </li>
-    
-    <li onclick="loadTab('Validador_CNAB240_Sicoob.html', this)">
-      <img src="logos/Sicoob/sicoob-vector-logo.svg" class="bank-logo" alt="Sicoob">
-      Sicoob (756)
-    </li>
+<aside class="side" id="side">
+  <div class="side__top">
+    <a class="brand" href="#bb">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7"/><path d="M9 16.5l4.5 4.5L23 11" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Central CNAB240
+    </a>
+    <button class="side__mini" id="mini" type="button" aria-expanded="true" aria-controls="nav" aria-label="Recolher menu" title="Recolher menu">
+      <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="14" height="12" rx="2.5"/><path d="M6.5 3v12"/></svg>
+    </button>
+    <button class="side__toggle" id="toggle" type="button" aria-expanded="false" aria-controls="nav" aria-label="Abrir menu">
+      <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2.5 5h13M2.5 9h13M2.5 13h13"/></svg>
+    </button>
+  </div>
 
-    <li class="section-label">Ferramentas</li>
+  <nav class="nav" id="nav" aria-label="Ferramentas da central">
+    <h2>Validadores de remessa</h2>
+    <ul>
+      <li><a href="#bb" data-cor="#F5C518" data-src="Validador_CNAB240_BancoDoBrasil.html">
+        <img src="logos/Banco%20do%20Brasil%20S.A/banco-do-brasil-com-fundo.svg" alt="">
+        <span class="nav__name">Banco do Brasil</span><span class="nav__code">001</span></a></li>
+      <li><a href="#santander" data-cor="#EC0000" data-src="Validador_CNAB240_Santander.html">
+        <img src="logos/Banco%20Santander%20Brasil%20S.A/santander-fundo-vermelho.svg" alt="">
+        <span class="nav__name">Santander</span><span class="nav__code">033</span></a></li>
+      <li><a href="#bradesco" data-cor="#CC0000" data-src="Validador_CNAB240_Bradesco_Multipag.html">
+        <img src="logos/Bradesco%20S.A/bradesco.svg" alt="">
+        <span class="nav__name">Bradesco</span><span class="nav__code">237</span></a></li>
+      <li><a href="#itau" data-cor="#EC7000" data-src="Validador_CNAB240_Itau.html">
+        <img src="logos/Ita%C3%BA%20Unibanco%20S.A/logo-nova-letras-brancas.svg" alt="">
+        <span class="nav__name">Itaú</span><span class="nav__code">341</span></a></li>
+      <li><a href="#sicredi" data-cor="#009A44" data-src="Validador_CNAB240_Sicredi%20-%20v2%201.html">
+        <img src="logos/Sicredi/logo-svg2.svg" alt="">
+        <span class="nav__name">Sicredi</span><span class="nav__code">748</span></a></li>
+      <li><a href="#sicoob" data-cor="#005A9E" data-src="Validador_CNAB240_Sicoob.html">
+        <img src="logos/Sicoob/sicoob-vector-logo.svg" alt="">
+        <span class="nav__name">Sicoob</span><span class="nav__code">756</span></a></li>
+    </ul>
 
-    <li onclick="loadTab('Preenchedor_SRB.html', this)">
-      <img src="logos/srb-icon.svg" class="bank-logo" alt="SRB">
-      Preenchedor .srb
-    </li>
+    <h2>Ferramentas</h2>
+    <ul>
+      <li><a href="#preenchedor" data-src="Preenchedor_SRB.html">
+        <img src="logos/srb-icon.svg" alt="">
+        <span class="nav__name">Preenchedor .srb</span></a></li>
+      <li><a href="#retorno-santander" data-cor="#EC0000" data-src="Retorno_CNAB240_Santander.html">
+        <img src="logos/Banco%20Santander%20Brasil%20S.A/santander-fundo-vermelho.svg" alt="">
+        <span class="nav__name">Retorno Santander</span><span class="nav__code">033</span></a></li>
+    </ul>
+  </nav>
 
-    <li onclick="loadTab('Retorno_CNAB240_Santander.html', this)">
-      <img src="logos/Banco%20Santander%20Brasil%20S.A/santander-fundo-vermelho.svg" class="bank-logo" alt="Santander">
-      Retorno Santander
-    </li>
-  </ul>
-</div>
+  <div class="side__foot" id="foot">
+    <p class="side__note">Os arquivos são lidos só no seu navegador. Nada é enviado.</p>
+  </div>
+</aside>
 
-<div class="content">
-  <iframe id="viewer" src="Validador_CNAB240_BancoDoBrasil.html" title="Validador"></iframe>
-</div>
+<main class="content">
+  <iframe id="viewer" title="Ferramenta selecionada"></iframe>
+</main>
 
 <script>
-  function loadTab(url, element) {
-    document.getElementById('viewer').src = url;
-    document.querySelectorAll('.menu li').forEach(li => li.classList.remove('active'));
-    element.classList.add('active');
+(function () {
+  var CHAVE = 'cnab.central.ultima';
+  var side = document.getElementById('side');
+  var toggle = document.getElementById('toggle');
+  var viewer = document.getElementById('viewer');
+  var links = Array.prototype.slice.call(document.querySelectorAll('#nav a[data-src]'));
+
+  function menu(aberto) {
+    if (aberto) side.setAttribute('data-open', ''); else side.removeAttribute('data-open');
+    toggle.setAttribute('aria-expanded', aberto ? 'true' : 'false');
+    toggle.setAttribute('aria-label', aberto ? 'Fechar menu' : 'Abrir menu');
   }
+
+  function linkDe(id) {
+    for (var i = 0; i < links.length; i++) if (links[i].hash === '#' + id) return links[i];
+    return null;
+  }
+
+  // Abre a ferramenta do link no iframe. Usa location.replace para o botão
+  // Voltar do navegador andar uma ferramenta por vez (o #hash já cria o histórico).
+  function abrir(a) {
+    links.forEach(function (l) { l.removeAttribute('aria-current'); });
+    a.setAttribute('aria-current', 'page');
+    var nome = a.querySelector('.nav__name').textContent;
+    viewer.title = nome;
+    document.title = nome + ' · Central CNAB240';
+    // a central assume o tom do banco aberto (o Preenchedor fica neutro)
+    document.documentElement.style.setProperty('--bk', a.getAttribute('data-cor') || '#16140f');
+    var src = a.getAttribute('data-src');
+    if (viewer.getAttribute('data-atual') !== src) {
+      viewer.setAttribute('data-atual', src);
+      try { viewer.contentWindow.location.replace(src); }
+      catch (e) { viewer.src = src; }
+    }
+    try { localStorage.setItem(CHAVE, a.hash.slice(1)); } catch (e) {}
+    menu(false);
+  }
+
+  function rota() {
+    var a = linkDe(location.hash.slice(1));
+    if (!a) {
+      var ultima = null;
+      try { ultima = localStorage.getItem(CHAVE); } catch (e) {}
+      a = linkDe(ultima) || links[0];
+    }
+    abrir(a);
+  }
+
+  toggle.addEventListener('click', function () { menu(!side.hasAttribute('data-open')); });
+
+  // Menu recolhido para só os logos (telas largas); a escolha fica salva.
+  var CHAVE_MENU = 'cnab.central.menu';
+  var mini = document.getElementById('mini');
+  function recolher(sim) {
+    if (sim) document.body.setAttribute('data-menu', 'mini'); else document.body.removeAttribute('data-menu');
+    var rotulo = sim ? 'Expandir menu' : 'Recolher menu';
+    mini.setAttribute('aria-expanded', sim ? 'false' : 'true');
+    mini.setAttribute('aria-label', rotulo);
+    mini.title = rotulo;
+    // recolhido, o nome da ferramenta aparece ao passar o mouse
+    links.forEach(function (l) {
+      if (sim) l.title = l.querySelector('.nav__name').textContent; else l.removeAttribute('title');
+    });
+  }
+  mini.addEventListener('click', function () {
+    var sim = document.body.getAttribute('data-menu') !== 'mini';
+    recolher(sim);
+    try { localStorage.setItem(CHAVE_MENU, sim ? 'mini' : 'aberto'); } catch (e) {}
+  });
+  var menuSalvo = null;
+  try { menuSalvo = localStorage.getItem(CHAVE_MENU); } catch (e) {}
+  if (menuSalvo === 'mini') recolher(true);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') menu(false); });
+  // Clicar na ferramenta já aberta só fecha o menu (o hash não muda).
+  links.forEach(function (l) { l.addEventListener('click', function () { menu(false); }); });
+  // Tema: botão no rodapé do menu; a página aberta no iframe é avisada.
+  function avisarTema() {
+    try { viewer.contentWindow.postMessage({ cnabTema: window.CnabTema.atual() }, '*'); } catch (e) {}
+  }
+  if (window.CnabTema) {
+    document.getElementById('foot').appendChild(window.CnabTema.botao());
+    window.CnabTema.aoMudar(avisarTema);
+    viewer.addEventListener('load', avisarTema);
+  }
+
+  window.addEventListener('hashchange', rota);
+  rota();
+})();
 </script>
 
 </body>

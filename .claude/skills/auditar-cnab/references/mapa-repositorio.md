@@ -5,7 +5,8 @@ comparar com o manual.
 
 ## Validadores (`Validador_CNAB240_<Banco>.html`)
 
-Página única com HTML, CSS e um `<script>` com toda a lógica. O padrão é o
+Página única com HTML e um `<script>` com toda a lógica; o visual vem de
+`assets/ui.css`, comum a todas as páginas. O padrão é o
 mesmo em todos os bancos.
 
 ### Código do banco e versão declarada

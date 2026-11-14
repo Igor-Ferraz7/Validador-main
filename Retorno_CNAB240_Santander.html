@@ -4,128 +4,33 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Analisador de Retorno CNAB240 — Pagamento a Fornecedores · Banco Santander 033</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<style>
-:root{
-  --bk:#EC0000;--bkl:#FF1A1A;
-  --bg:#FBF2F2;--cd:#FFFFFF;--cd2:#FFF5F5;
-  --br:#F2D5D5;--br2:#E8AAAA;
-  --tx:#1A0505;--txd:#7A5555;--txm:#3D1515;
-  --ok:#1A7A3C;--okb:rgba(26,122,60,.09);
-  --wa:#C07B00;--wab:rgba(192,123,0,.09);
-  --er:#C4202A;--erb:rgba(196,32,42,.09);
-  --in:#0068A5;--inb:rgba(0,104,165,.09);
-  --mu:#6B5B5B;--mub:rgba(107,91,91,.09);
-  --mono:'Space Mono',monospace;--sans:'Outfit',sans-serif;
-}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--tx);font-family:var(--mono);min-height:100vh;overflow-x:hidden;}
-header{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 32px;min-height:64px;background:#fff;border-bottom:3px solid var(--bk);box-shadow:0 2px 8px rgba(0,0,0,.06);flex-wrap:wrap;}
-.logo{display:flex;align-items:center;gap:16px;}
-.lb{background:var(--bk);color:#fff;font-family:var(--sans);font-weight:800;font-size:14px;padding:6px 12px;border-radius:6px;display:flex;align-items:center;gap:6px;}
-.lt h1{font-family:var(--sans);font-weight:700;font-size:15px;line-height:1.1;}
-.lt p{font-size:10px;color:var(--txd);letter-spacing:.07em;text-transform:uppercase;margin-top:2px;}
-.htag{font-size:10px;color:var(--txd);border:1px solid var(--br);padding:4px 10px;border-radius:100px;letter-spacing:.06em;background:var(--bg);}
-.bank-logo{width:28px;height:28px;object-fit:contain;background:white;padding:3px;border-radius:6px;flex-shrink:0;}
-.bank-logo-large{width:60px;height:60px;margin-bottom:16px;background:white;padding:8px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.05);}
-.wrap{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:40px 24px;}
-.dz{border:2px dashed var(--br2);border-radius:16px;padding:48px 32px;text-align:center;cursor:pointer;transition:all .2s;background:var(--cd);box-shadow:0 1px 4px rgba(0,0,0,.04);}
-.dz:hover,.dz.over{border-color:var(--bk);box-shadow:0 0 0 4px rgba(236,0,0,.08);}
-.dz h2{font-family:var(--sans);font-weight:700;font-size:20px;margin-bottom:8px;}
-.dz p{font-size:12px;color:var(--txd);line-height:1.7;}
-.dz p strong{color:var(--bk);}
-#fi{display:none;}
-.bup{display:inline-flex;align-items:center;gap:8px;margin-top:20px;padding:11px 24px;background:var(--bk);color:#fff;border:none;border-radius:8px;font-family:var(--mono);font-weight:700;font-size:12px;cursor:pointer;}
-.bup:hover{background:var(--bkl);}
-#res{display:none;margin-top:28px;}
-.fb{display:flex;align-items:center;flex-wrap:wrap;gap:6px 16px;background:var(--cd);border:1px solid var(--br);border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:11px;}
-.fb .fn{font-weight:700;}.fb .fm{color:var(--txd);}
-.vd{border-radius:12px;padding:20px 24px;display:flex;align-items:flex-start;gap:16px;margin-bottom:20px;border:1px solid;}
-.vd.ok{background:var(--okb);border-color:rgba(26,122,60,.3);}
-.vd.wa{background:var(--wab);border-color:rgba(192,123,0,.35);}
-.vd.er{background:var(--erb);border-color:rgba(196,32,42,.3);}
-.vd .vi{font-size:30px;line-height:1;}
-.vd .vk{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--txd);margin-bottom:4px;}
-.vd strong{display:block;font-family:var(--sans);font-weight:800;font-size:19px;margin-bottom:6px;}
-.vd.ok strong{color:var(--ok);}.vd.wa strong{color:var(--wa);}.vd.er strong{color:var(--er);}
-.vd p{font-size:11.5px;color:var(--txm);line-height:1.6;}
-.box{background:var(--cd);border:1px solid var(--br);border-radius:12px;padding:16px 18px;margin-bottom:20px;}
-.box h3{font-family:var(--sans);font-weight:700;font-size:13px;margin-bottom:10px;}
-.evl{list-style:none;display:flex;flex-direction:column;gap:8px;}
-.evl li{display:grid;grid-template-columns:18px 1fr;gap:8px;font-size:11px;line-height:1.55;color:var(--txm);}
-.evl .eic{font-weight:700;}
-.evl .eic.mov{color:var(--ok);}.evl .eic.cri{color:var(--wa);}.evl .eic.neu{color:var(--txd);}
-.evl .ref{display:block;font-size:9.5px;color:var(--txd);margin-top:1px;}
-.sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:20px;}
-.sc{background:var(--cd);border:1px solid var(--br);border-radius:12px;padding:16px 18px;position:relative;overflow:hidden;}
-.sc::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
-.sc.ok::after{background:var(--ok);}.sc.in::after{background:var(--in);}.sc.wa::after{background:var(--wa);}.sc.er::after{background:var(--er);}
-.sl{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--txd);margin-bottom:8px;}
-.sv{font-family:var(--sans);font-weight:800;font-size:30px;line-height:1;}
-.sc.ok .sv{color:var(--ok);}.sc.in .sv{color:var(--in);}.sc.wa .sv{color:var(--wa);}.sc.er .sv{color:var(--er);}
-.ss{font-size:10.5px;color:var(--txm);margin-top:6px;}
-.flb{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;align-items:center;}
-.btn{padding:5px 13px;border-radius:100px;border:1px solid var(--br);background:var(--cd);font-family:var(--mono);font-size:10px;color:var(--txd);cursor:pointer;}
-.btn:hover{border-color:var(--bk);color:var(--bk);}
-.btn.act{background:var(--bk);border-color:var(--bk);color:#fff;}
-.bcsv{margin-left:auto;padding:6px 14px;border-radius:6px;border:1px solid var(--br);background:var(--cd);font-family:var(--mono);font-size:10px;color:var(--txm);cursor:pointer;}
-.bcsv:hover{border-color:var(--bk);color:var(--bk);}
-.tw{overflow-x:auto;background:var(--cd);border:1px solid var(--br);border-radius:12px;margin-bottom:20px;}
-table{border-collapse:collapse;width:100%;font-size:10.5px;}
-th{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--txd);text-align:left;padding:10px 10px;border-bottom:1px solid var(--br);background:var(--cd2);white-space:nowrap;}
-td{padding:9px 10px;border-bottom:1px solid var(--br);vertical-align:top;color:var(--txm);}
-tr:last-child td{border-bottom:none;}
-td.n{text-align:right;white-space:nowrap;}
-td.nw{white-space:nowrap;}
-.sub{display:block;font-size:9.5px;color:var(--txd);margin-top:2px;}
-.pill{display:inline-block;font-size:9px;font-weight:700;padding:3px 9px;border-radius:100px;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;}
-.pill.ok{background:var(--okb);color:var(--ok);}.pill.in{background:var(--inb);color:var(--in);}
-.pill.wa{background:var(--wab);color:var(--wa);}.pill.er{background:var(--erb);color:var(--er);}.pill.mu{background:var(--mub);color:var(--mu);}
-.oc{display:block;white-space:nowrap;}
-.oc b{display:inline-block;min-width:22px;}
-.oc span{white-space:normal;}
-.aut{font-size:9.5px;word-break:break-all;max-width:220px;display:block;}
-.empty{text-align:center;padding:28px 0;color:var(--txd);font-size:11px;}
-.warn{background:var(--wab);border:1px solid rgba(192,123,0,.3);border-radius:8px;padding:10px 14px;font-size:11px;color:var(--txm);margin-bottom:16px;line-height:1.6;}
-details.guia{background:var(--cd);border:1px solid var(--br);border-radius:12px;padding:14px 18px;margin-top:28px;font-size:11.5px;line-height:1.7;color:var(--txm);}
-details.guia summary{cursor:pointer;font-family:var(--sans);font-weight:700;font-size:13px;color:var(--tx);}
-details.guia h4{font-family:var(--sans);font-size:12px;margin:14px 0 4px;color:var(--tx);}
-details.guia table{margin-top:6px;font-size:10.5px;}
-details.guia .tw{margin:6px 0 0;}
-details.guia p{margin-top:6px;}
-.muted{color:var(--txd);}
-@media(max-width:640px){
-  header{padding:10px 16px;}.wrap{padding:20px 16px;}
-  .dz{padding:32px 16px;}
-  .vd{padding:16px;}.vd strong{font-size:16px;}
-  .sv{font-size:24px;}
-  .bcsv{margin-left:0;}
-}
-</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600&family=Mona+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" href="assets/favicon.svg">
+<script src="assets/tema.js"></script>
+<link rel="stylesheet" href="assets/ui.css">
+<style>:root{--bk:#EC0000;--bkc:#fff;}</style>
 </head>
 <body>
 <header>
   <div class="logo">
-    <div class="lb">
-      <img src="logos/Banco%20Santander%20Brasil%20S.A/santander-fundo-vermelho.svg" class="bank-logo" alt="Santander">
-      Santander
-    </div>
+    <img src="logos/Banco%20Santander%20Brasil%20S.A/santander-fundo-vermelho.svg" class="bank-logo" alt="">
     <div class="lt">
-      <h1>Analisador de Retorno CNAB240</h1>
-      <p>Pagamento a Fornecedores · Banco Santander</p>
+      <h1>Analisador de retorno CNAB240 <span class="muted">Santander</span></h1>
+      <p>Pagamento a Fornecedores · crítica × movimento</p>
     </div>
   </div>
-  <span class="htag">Banco 033 · Crítica × Movimento · Manual V11.7</span>
+  <span class="htag">Banco 033 · Manual V11.7</span>
 </header>
 
 <div class="wrap">
   <div class="dz" id="dz">
-    <img src="logos/Banco%20Santander%20Brasil%20S.A/santander-fundo-vermelho.svg" class="bank-logo-large" alt="Logo Santander">
+    <img src="logos/Banco%20Santander%20Brasil%20S.A/santander-fundo-vermelho.svg" class="bank-logo-large" alt="">
     <h2>Arraste o arquivo de retorno do Santander aqui</h2>
-    <p>Diz se o arquivo é um <strong>retorno de crítica</strong> (pré-retorno: o banco só aceitou ou recusou os registros)<br>
-    ou um <strong>retorno de movimento</strong> (definitivo: o banco informa o que foi pago), e o status de cada pagamento.<br>
+    <p>Diz se o arquivo é um <strong>retorno de crítica</strong> (pré-retorno: o banco só aceitou ou recusou os registros) ou um <strong>retorno de movimento</strong> (definitivo: o banco informa o que foi pago), e o status de cada pagamento.<br>
     O arquivo é lido só no seu navegador; nada é enviado.</p>
-    <button class="bup" type="button" id="bsel">↑ Selecionar arquivo</button>
+    <button class="bup" type="button" id="bsel"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 10.5V2.5M4.5 6 8 2.5 11.5 6M2.5 10.5v2a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-2"/></svg>Selecionar arquivo</button>
     <input type="file" id="fi" accept=".ret,.RET,.txt,.TXT,.rem,.REM,.dat,.DAT">
   </div>
 
@@ -140,7 +45,7 @@ details.guia p{margin-top:6px;}
       <th>Status</th><th>Lote · Seq</th><th>Tipo</th><th>Favorecido / Beneficiário</th><th>Seu número</th>
       <th>Data pgto</th><th>Valor</th><th>Ocorrências do banco</th><th>Nosso nº · Autenticação</th>
     </tr></thead><tbody id="tbody"></tbody></table></div>
-    <div class="box"><h3>Lotes</h3><div class="tw" style="margin:0"><table><thead><tr>
+    <div class="box"><h3>Lotes</h3><div class="tw"><table><thead><tr>
       <th>Lote</th><th>Serviço · Forma</th><th>Pagamentos</th><th>Soma no trailer</th><th>Aviso de débito</th><th>Ocorrências do lote</th>
     </tr></thead><tbody id="tlotes"></tbody></table></div></div>
   </div>
@@ -410,7 +315,7 @@ function render(r,nome,bytes){
     card('er','Não pagos',pg.filter(GRUPOS.naopago),'rejeitados, devolvidos etc.'):'';
 
   const f=[['todos','Todos'],['pago','Pagos'],['agendado','Agendados'],['bloqueado','Bloqueados'],['naopago','Não pagos']];
-  document.getElementById('filt').innerHTML=pg.length?f.map(([k,t])=>`<button class="btn${k==='todos'?' act':''}" data-f="${k}">${t} (${pg.filter(GRUPOS[k]).length})</button>`).join('')+'<button class="bcsv" id="bcsv" type="button">⤓ Exportar CSV</button>':'';
+  document.getElementById('filt').innerHTML=pg.length?f.map(([k,t])=>`<button class="btn${k==='todos'?' act':''}" data-f="${k}">${t} (${pg.filter(GRUPOS[k]).length})</button>`).join('')+'<button class="bcsv" id="bcsv" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2.5v8M4.5 7 8 10.5 11.5 7M2.5 10.5v2a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-2"/></svg>Exportar CSV</button>':'';
   document.querySelectorAll('#filt .btn').forEach(b=>b.addEventListener('click',()=>{
     filtro=b.dataset.f;document.querySelectorAll('#filt .btn').forEach(x=>x.classList.toggle('act',x===b));tabela();
   }));
@@ -429,7 +334,7 @@ function tabela(){
     const real=x.seg==='A'&&dt(x.dataReal)?`<span class="sub">real ${dt(x.dataReal)}</span>`:'';
     const vreal=num(x.valorReal)>0&&num(x.valorReal)!==num(x.valor)?`<span class="sub">real ${brl(num(x.valorReal))}</span>`:'';
     const oc=x.cods.length?x.cods.map(c=>`<span class="oc"><b>${esc(c)}</b> <span>${esc(OCOR[c]||'Código não catalogado no manual')}</span></span>`).join('')+(x.viaLote?'<span class="sub">ocorrência do lote</span>':''):'<span class="muted">—</span>';
-    const aut=[x.docBanco.trim()?esc(x.docBanco.trim()):'',x.aut?`<span class="aut" title="Protocolo ${esc(x.protocolo)}">🔏 ${esc(x.aut)}</span>`:''].filter(Boolean).join('')||'<span class="muted">—</span>';
+    const aut=[x.docBanco.trim()?esc(x.docBanco.trim()):'',x.aut?`<span class="aut" title="Protocolo ${esc(x.protocolo)}">${esc(x.aut)}</span>`:''].filter(Boolean).join('')||'<span class="muted">—</span>';
     return `<tr><td><span class="pill ${s.cls}" title="${esc(s.dica)}">${s.rot}</span></td>
       <td class="nw">${esc(x.lote)} · ${esc(x.seq)}<span class="sub">linha ${x.ln}</span></td>
       <td>${tipo}</td><td>${esc(x.nome.trim())||'<span class="muted">—</span>'}</td>
