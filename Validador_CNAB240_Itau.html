@@ -4,193 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Validador CNAB240 — SISPAG Itaú · Banco 341</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<style>
-:root{
-  --bk:#EC7000;--bkl:#FF8820;
-  --bg:#FDF5EE;--cd:#FFFFFF;--cd2:#FFF8F2;
-  --br:#F2D9C0;--br2:#E8C09A;
-  --tx:#2A1200;--txd:#5A3A1A;--txm:#3A1800;
-  --ok:#145C2A;--okb:rgba(20,92,42,.10);--okm:rgba(20,92,42,.22);
-  --wa:#8A5200;--wab:rgba(138,82,0,.10);--wam:rgba(138,82,0,.22);
-  --er:#A01020;--erb:rgba(160,16,32,.10);--erm:rgba(160,16,32,.22);
-  --in:#004E8A;--inb:rgba(0,78,138,.10);
-  --mono:'Space Mono',monospace;--sans:'Outfit',sans-serif;
-}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--tx);font-family:var(--mono);min-height:100vh;overflow-x:hidden;}
-body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 40% at 110% -10%,rgba(236,112,0,.06),transparent 60%),radial-gradient(ellipse 60% 50% at -10% 110%,rgba(236,112,0,.04),transparent 60%);pointer-events:none;z-index:0;}
-header{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:64px;background:#fff;border-bottom:3px solid var(--bk);box-shadow:0 2px 8px rgba(0,0,0,.06);}
-.logo{display:flex;align-items:center;gap:16px;}
-.lb{background:var(--bk);color:#fff;font-family:var(--sans);font-weight:800;font-size:14px;padding:6px 14px;border-radius:6px;display:flex;align-items:center;gap:4px;}
-.lt h1{font-family:var(--sans);font-weight:700;font-size:15px;line-height:1.1;}
-.lt p{font-size:11px;color:var(--txd);letter-spacing:.07em;text-transform:uppercase;margin-top:2px;}
-.htag{font-size:11px;color:var(--txd);border:1px solid var(--br);padding:4px 10px;border-radius:100px;letter-spacing:.06em;background:var(--bg);}
-.wrap{position:relative;z-index:1;max-width:1140px;margin:0 auto;padding:40px 24px;}
-.dz{border:2px dashed var(--br2);border-radius:16px;padding:56px 40px;text-align:center;cursor:pointer;transition:all .2s;background:var(--cd);position:relative;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.04);}
-.dz::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 50% 100%,rgba(236,112,0,.05),transparent);pointer-events:none;}
-.dz:hover,.dz.over{border-color:var(--bk);box-shadow:0 0 0 4px rgba(236,112,0,.08);}
-.dz.over{transform:scale(1.004);}
-.di{font-size:42px;margin-bottom:16px;display:block;opacity:.6;}
-.bank-logo{width:28px;height:28px;object-fit:contain;background:white;padding:3px;border-radius:6px;flex-shrink:0;}
-.bank-logo-large{width:60px;height:60px;margin-bottom:16px;background:white;padding:8px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.05);}
-.dz h2{font-family:var(--sans);font-weight:700;font-size:20px;margin-bottom:8px;}
-.dz p{font-size:13px;color:var(--txd);line-height:1.7;}
-.dz p strong{color:var(--bk);font-weight:700;}
-#fi{display:none;}
-.bup{display:inline-flex;align-items:center;gap:8px;margin-top:24px;padding:11px 24px;background:var(--bk);color:#fff;border:none;border-radius:8px;font-family:var(--mono);font-weight:700;font-size:13px;cursor:pointer;transition:background .15s;}
-.bup:hover{background:var(--bkl);}
-#pb{display:none;margin-top:20px;}
-.pt{height:4px;background:var(--br);border-radius:2px;overflow:hidden;}
-.pf{height:100%;background:linear-gradient(90deg,var(--bk),var(--bkl));border-radius:2px;width:0%;transition:width .3s;}
-#sum{display:none;margin-top:32px;}
-.sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:28px;}
-.sc{background:var(--cd);border:1px solid var(--br);border-radius:12px;padding:18px 20px;position:relative;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04);}
-.sc::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
-.sc.ok::after{background:var(--ok);}.sc.er::after{background:var(--er);}.sc.wa::after{background:var(--wa);}.sc.in::after{background:var(--in);}
-.sl{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--txd);margin-bottom:8px;font-weight:600;}
-.sv{font-family:var(--sans);font-weight:800;font-size:36px;line-height:1;}
-.sc.ok .sv{color:var(--ok);}.sc.er .sv{color:var(--er);}.sc.wa .sv{color:var(--wa);}.sc.in .sv{color:var(--in);}
-.ss{font-size:12px;color:var(--txd);margin-top:4px;font-weight:500;}
-.fb{display:flex;align-items:center;gap:10px;background:var(--cd);border:1px solid var(--br);border-radius:10px;padding:12px 16px;margin-bottom:24px;font-size:13px;box-shadow:0 1px 3px rgba(0,0,0,.04);}
-.fb .dot{width:9px;height:9px;border-radius:50%;background:var(--ok);}.fb .dot.er{background:var(--er);}
-.fb .fn{font-weight:700;color:var(--txm);}.fb .fm{color:var(--txd);}
-.vd{border-radius:12px;padding:20px 24px;display:flex;align-items:center;gap:16px;margin-bottom:28px;border:2px solid;}
-.vd.vok{background:var(--okb);border-color:rgba(20,92,42,.4);}
-.vd.ver{background:var(--erb);border-color:rgba(160,16,32,.4);}
-.vd.vwa{background:var(--wab);border-color:rgba(138,82,0,.4);}
-.vi{font-size:30px;}
-.vt strong{display:block;font-family:var(--sans);font-weight:700;font-size:17px;margin-bottom:3px;}
-.vd.vok .vt strong{color:var(--ok);}.vd.ver .vt strong{color:var(--er);}.vd.vwa .vt strong{color:var(--wa);}
-.vt p{font-size:13px;color:var(--txm);font-weight:500;}
-.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
-.st{font-family:var(--sans);font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px;color:var(--txm);}
-.badge{background:var(--cd2);border:1px solid var(--br2);border-radius:100px;padding:2px 10px;font-size:12px;color:var(--txm);font-weight:700;}
-.flb{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
-.btn{padding:6px 15px;border-radius:100px;border:1.5px solid var(--br2);background:var(--cd);font-family:var(--mono);font-size:12px;color:var(--txd);cursor:pointer;transition:all .15s;font-weight:600;}
-.btn:hover{border-color:var(--bk);color:var(--bk);}
-.btn.act{background:var(--bk);border-color:var(--bk);color:#fff;}
-.btn.be.act{background:var(--er);border-color:var(--er);color:#fff;}
-.btn.bw.act{background:var(--wa);border-color:var(--wa);color:#fff;}
-.btn.bo.act{background:var(--ok);border-color:var(--ok);color:#fff;}
-.tabs{display:flex;border-bottom:2px solid var(--br);margin-bottom:20px;}
-.tb{padding:10px 18px;font-family:var(--mono);font-size:13px;font-weight:600;color:var(--txd);background:transparent;border:none;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .15s;}
-.tb:hover{color:var(--bk);}.tb.act{color:var(--bk);border-bottom-color:var(--bk);}
-.tp{display:none;}.tp.act{display:block;}
-
-/* ═══ OCCURRENCE LIST — bigger, bolder, more contrast ═══ */
-#el{display:flex;flex-direction:column;gap:8px;}
-.ei{background:var(--cd);border:1.5px solid var(--br);border-radius:10px;padding:14px 16px;display:grid;grid-template-columns:70px 76px auto 1fr;align-items:start;gap:12px;transition:border-color .15s;}
-.ei:hover{border-color:var(--br2);}
-.ei.ei-er{border-left:4px solid var(--er);background:#fff8f8;}
-.ei.ei-wa{border-left:4px solid var(--wa);background:#fffbf4;}
-.ei.ei-ok{border-left:4px solid var(--ok);}
-.eln{font-weight:700;color:var(--txm);font-size:13px;}
-.esv{font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;}
-.sER{background:#FFD6D8;color:#7A000A;border:1px solid #F5A0A5;}
-.sWA{background:#FFE8BA;color:#5A3300;border:1px solid #E8C070;}
-.sOK{background:#C8EDD8;color:#0A4020;border:1px solid #80C8A0;}
-.esg{font-size:11px;color:var(--txd);text-transform:uppercase;letter-spacing:.05em;padding-top:2px;font-weight:600;}
-.emg{color:var(--txm);line-height:1.6;font-size:13px;font-weight:500;}
-
-.rtree{display:flex;flex-direction:column;gap:4px;}
-.ri{display:flex;align-items:center;gap:10px;padding:9px 14px;background:var(--cd);border:1px solid var(--br);border-radius:7px;font-size:12px;color:var(--txm);}
-.ri.i1{margin-left:24px;}.ri.i2{margin-left:48px;}
-.rd{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-.rd.ok{background:var(--ok);}.rd.er{background:var(--er);}
-.rs{font-size:10px;padding:2px 9px;border-radius:100px;font-weight:700;}
-.rso{background:#C8EDD8;color:#0A4020;}.rse{background:#FFD6D8;color:#7A000A;}
-.empty{text-align:center;padding:48px 0;color:var(--txd);font-size:13px;}
-.empty .bi{font-size:40px;display:block;margin-bottom:12px;}
-.empty strong{display:block;color:var(--bk);font-size:15px;margin-bottom:6px;font-family:var(--sans);}
-.bcp{padding:6px 14px;background:var(--cd2);border:1.5px solid var(--br2);border-radius:6px;font-family:var(--mono);font-size:12px;color:var(--txm);cursor:pointer;transition:all .15s;font-weight:600;}
-.bcp:hover{border-color:var(--bk);color:var(--bk);}
-.brs{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;background:transparent;border:1.5px solid var(--br2);border-radius:6px;font-family:var(--mono);font-size:12px;color:var(--txd);cursor:pointer;transition:all .15s;margin-left:auto;font-weight:600;}
-.brs:hover{border-color:var(--bk);color:var(--bk);}
-.ibox{background:var(--okb);border:1.5px solid rgba(20,92,42,.3);border-radius:8px;padding:14px 18px;font-size:13px;color:var(--txm);margin-bottom:20px;line-height:1.8;font-weight:500;}
-.ibox strong{color:var(--ok);}
-
-/* ═══ FIELD INSPECTION ═══════════════════════════════════════ */
-.fpw{display:flex;flex-direction:column;gap:6px;}
-.okr{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--cd);border:1px solid var(--br);border-left:3px solid var(--ok);border-radius:8px;padding:8px 14px 8px 12px;font-size:12px;transition:background .12s;}
-.okr:hover{background:var(--cd2);}
-.okdot{width:7px;height:7px;border-radius:50%;background:var(--ok);flex-shrink:0;}
-.oln{font-size:11px;color:var(--txd);min-width:40px;font-weight:600;}
-.osg{font-size:10px;padding:2px 8px;border-radius:100px;background:var(--cd2);border:1px solid var(--br2);color:var(--txm);white-space:nowrap;text-transform:uppercase;letter-spacing:.04em;flex-shrink:0;font-weight:600;}
-.onm{flex:1;color:var(--txm);min-width:100px;font-weight:600;}
-.ops{font-size:10px;font-family:var(--mono);color:var(--txd);background:var(--cd2);padding:2px 7px;border-radius:3px;white-space:nowrap;flex-shrink:0;}
-.ovw{display:flex;align-items:center;gap:5px;flex-shrink:0;}
-.ovl{font-family:var(--mono);font-size:11px;color:var(--ok);background:var(--okb);padding:2px 8px;border-radius:4px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700;}
-.ock{color:var(--ok);font-size:13px;font-weight:700;}
-
-/* compare card */
-.fcc{background:var(--cd);border:1px solid var(--br);border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04);}
-.fcc.fcer{border-left:4px solid var(--er);}.fcc.fcwa{border-left:4px solid var(--wa);}
-.fch{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:12px 16px;border-bottom:1px solid var(--br);background:var(--cd2);}
-.fcsvtag{font-size:11px;font-weight:700;padding:4px 11px;border-radius:100px;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;flex-shrink:0;}
-.fcsvtag.er{background:#FFD6D8;color:#7A000A;border:1px solid #F5A0A5;}
-.fcsvtag.wa{background:#FFE8BA;color:#5A3300;border:1px solid #E8C070;}
-.fcnm{font-family:var(--sans);font-weight:700;font-size:14px;color:var(--txm);flex:1;min-width:140px;}
-.fcps{font-size:11px;font-family:var(--mono);color:var(--txd);background:var(--cd);border:1px solid var(--br);padding:2px 8px;border-radius:4px;white-space:nowrap;font-weight:600;}
-.fcmt{font-size:11px;color:var(--txd);margin-left:auto;white-space:nowrap;font-weight:600;}
-.fcbody{padding:16px 18px 14px;}
-.tsec{display:inline-flex;flex-direction:column;gap:0;overflow-x:auto;max-width:100%;}
-.trow{display:flex;align-items:stretch;}
-.tlbl{width:100px;min-width:100px;flex-shrink:0;font-size:11px;display:flex;align-items:center;padding-right:8px;font-family:var(--sans);letter-spacing:.02em;white-space:nowrap;font-weight:600;}
-.tlbl.lp{color:var(--txd);font-size:9px;font-family:var(--mono);}
-.tlbl.la{color:var(--er);font-weight:700;}
-.tlbl.lm{color:var(--ok);font-weight:700;}
-.tcells{display:flex;gap:2px;flex-wrap:nowrap;}
-.tpc{width:26px;min-width:26px;font-size:8px;font-family:var(--mono);color:var(--txd);text-align:center;padding:2px 0 4px;user-select:none;line-height:1.2;}
-.tc{width:26px;min-width:26px;height:30px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:12px;font-weight:700;border-radius:4px;border:1px solid transparent;}
-.tc.ts{background:var(--cd2);border-color:var(--br2);color:var(--txm);}
-.tc.td{background:#FFD6D8;border-color:#E08090;color:#7A000A;}
-.tc.tfs{background:var(--okb);border-color:rgba(20,92,42,.25);color:var(--txm);}
-.tc.tfd{background:var(--okm);border-color:var(--ok);color:#0A4020;}
-.tc.tsp{font-size:0;position:relative;}.tc.tsp::after{content:'·';font-size:14px;opacity:.3;}
-.tc.ttr{background:transparent;border:none;color:var(--txd);font-size:16px;letter-spacing:-2px;}
-.tgap{height:5px;}
-.tleg{font-size:11px;color:var(--txd);margin-top:6px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-weight:600;}
-.tlegdot{display:inline-block;width:11px;height:11px;border-radius:2px;vertical-align:middle;margin-right:3px;}
-
-/* text compare */
-.tcw{display:grid;grid-template-columns:1fr 26px 1fr;gap:0;align-items:start;}
-.tcc{display:flex;flex-direction:column;gap:5px;}
-.tclbl{font-size:11px;text-transform:uppercase;letter-spacing:.07em;font-family:var(--sans);font-weight:700;padding-bottom:2px;}
-.tclbl.la{color:var(--er);}.tclbl.lm{color:var(--ok);}.tclbl.lk{color:var(--txd);}
-.tcv{font-family:var(--mono);font-size:12px;padding:10px 12px;border-radius:6px;line-height:1.5;word-break:break-all;font-weight:600;}
-.tvat{background:#FFD6D8;color:#7A000A;border:1px solid #E08090;}
-.tvfi{background:var(--okb);color:#0A4020;border:1px solid rgba(20,92,42,.3);}
-.tvok{background:var(--cd2);color:var(--txm);border:1px solid var(--br2);}
-.tvds{background:var(--inb);color:var(--in);border:1px solid rgba(0,78,138,.2);font-size:12px;font-family:var(--sans);}
-.tvem{color:var(--txd);font-style:italic;background:var(--cd2);border:1px dashed var(--br);}
-.tcarr{display:flex;align-items:center;justify-content:center;color:var(--txd);font-size:20px;padding:0 2px;}
-.fcrule{padding:11px 16px;background:var(--cd2);border-top:1px solid var(--br);font-size:12px;color:var(--txm);line-height:1.7;display:flex;align-items:flex-start;gap:8px;font-weight:600;}
-.fcri{flex-shrink:0;font-size:14px;margin-top:1px;}.fcrt{flex:1;}
-.smore{text-align:center;padding:16px;}
-.smore button{padding:8px 20px;border:1.5px solid var(--br2);border-radius:6px;background:var(--cd);font-family:var(--mono);font-size:12px;color:var(--txd);cursor:pointer;transition:all .15s;font-weight:600;}
-.smore button:hover{border-color:var(--bk);color:var(--bk);}
-.fltex{margin-left:auto;font-size:12px;color:var(--txd);display:flex;align-items:center;gap:8px;font-weight:600;}
-.fltex label{display:flex;align-items:center;gap:5px;cursor:pointer;user-select:none;}
-
-@media(max-width:640px){
-  .ei{grid-template-columns:1fr 1fr;}.emg{grid-column:1/-1;}
-  .sg{grid-template-columns:1fr 1fr;}
-  header{padding:0 16px;}.wrap{padding:20px 14px;}
-  .tlbl{width:76px;min-width:76px;}.tc,.tpc{width:22px;min-width:22px;}
-  .tc{font-size:11px;}.tcw{grid-template-columns:1fr;}.tcarr{display:none;}
-}
-</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600&family=Mona+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" href="assets/favicon.svg">
+<script src="assets/tema.js"></script>
+<link rel="stylesheet" href="assets/ui.css">
+<style>:root{--bk:#EC7000;--bkc:#16140f;}</style>
 </head>
 <body>
 <header>
   <div class="logo">
-    <div class="lb">
-        <img src="logos/Ita%C3%BA%20Unibanco%20S.A/itau-2-laranja.svg" class="bank-logo" alt="Itaú">
-        itaú
-    </div>
+    <img src="logos/Ita%C3%BA%20Unibanco%20S.A/logo-nova-letras-brancas.svg" class="bank-logo" alt="">
     <div class="lt">
-      <h1>Validador CNAB240</h1>
+      <h1>Validador CNAB240 <span class="muted">Itaú</span></h1>
       <p>SISPAG · Sistema de Contas a Pagar</p>
     </div>
   </div>
@@ -199,25 +26,27 @@ header{position:relative;z-index:10;display:flex;align-items:center;justify-cont
 
 <div class="wrap">
   <div class="dz" id="dz" onclick="document.getElementById('fi').click()">
-    <img src="logos/Ita%C3%BA%20Unibanco%20S.A/itau-2-laranja.svg" class="bank-logo-large" alt="Logo Itaú">
+    <img src="logos/Ita%C3%BA%20Unibanco%20S.A/logo-nova-letras-brancas.svg" class="bank-logo-large" alt="">
     <h2>Arraste o arquivo CNAB240 aqui</h2>
     <p>Suporta arquivos <strong>.REM</strong> e <strong>.TXT</strong> de remessa SISPAG Itaú<br>
     Codificação ASCII (DOS/Windows) · Linhas de <strong>240 bytes</strong> + CRLF · Banco <strong>341</strong></p>
-    <button class="bup" onclick="event.stopPropagation();document.getElementById('fi').click()">↑ Selecionar arquivo</button>
+    <button class="bup" type="button" onclick="event.stopPropagation();document.getElementById('fi').click()"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 10.5V2.5M4.5 6 8 2.5 11.5 6M2.5 10.5v2a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-2"/></svg>Selecionar arquivo</button>
     <input type="file" id="fi" accept=".rem,.REM,.txt,.TXT">
   </div>
   <div id="pb">
     <div class="pt"><div class="pf" id="pf"></div></div>
-    <p style="font-size:13px;color:var(--txd);margin-top:8px;text-align:center">Analisando estrutura CNAB240 Itaú SISPAG...</p>
+    <p>Analisando estrutura CNAB240 Itaú SISPAG...</p>
   </div>
   <div id="sum">
     <div class="fb">
       <div class="dot" id="ds"></div>
       <span class="fn" id="fn">—</span><span class="fm" id="fm">—</span>
-      <button class="brs" onclick="rst()">↺ Novo arquivo</button>
+      <button class="brs" onclick="rst()">Novo arquivo</button>
     </div>
-    <div class="vd" id="vb"><span class="vi" id="vi">—</span><div class="vt"><strong id="vtt">—</strong><p id="vts">—</p></div></div>
-    <div class="sg" id="sg"></div>
+    <div class="resumo">
+      <div class="vd" id="vb"><span class="vi" id="vi">—</span><div class="vt"><strong id="vtt">—</strong><p id="vts">—</p></div></div>
+      <div class="sg" id="sg"></div>
+    </div>
     <div class="tabs">
       <button class="tb act" onclick="swT('oc',this)">Ocorrências</button>
       <button class="tb" onclick="swT('st',this)">Estrutura</button>
@@ -226,7 +55,7 @@ header{position:relative;z-index:10;display:flex;align-items:center;justify-cont
     <div class="tp act" id="tab-oc">
       <div class="sh">
         <span class="st">Lista de Ocorrências <span class="badge" id="ecb">0</span></span>
-        <button class="bcp" onclick="cpR()">⎘ Copiar relatório</button>
+        <button class="bcp" onclick="cpR()">Copiar relatório</button>
       </div>
       <div class="flb">
         <button class="btn act" onclick="sf('ALL',this)">Todos</button>
@@ -244,8 +73,8 @@ header{position:relative;z-index:10;display:flex;align-items:center;justify-cont
       <div class="ibox">
         <strong>Como usar a Inspeção de Campos:</strong><br>
         Cada campo exibe duas fitas CNAB empilhadas:
-        a fita <span style="color:var(--er);font-weight:700">📄 atual</span> mostra os bytes exatos do seu arquivo;
-        a fita <span style="color:var(--ok);font-weight:700">✓ manual</span> mostra como deve ficar segundo o manual Itaú v086.
+        a fita <span style="color:var(--er);font-weight:700">atual</span> mostra os bytes exatos do seu arquivo;
+        a fita <span style="color:var(--ok);font-weight:700">manual</span> mostra como deve ficar segundo o manual Itaú v086.
         Células <span style="display:inline-block;width:11px;height:11px;background:#FFD6D8;border:1px solid #E08090;border-radius:2px;vertical-align:middle"></span> são bytes errados no arquivo;
         células <span style="display:inline-block;width:11px;height:11px;background:var(--okm);border:1px solid var(--ok);border-radius:2px;vertical-align:middle"></span> são a correção exata.
         Campos ✓ OK ficam compactos. Para campos longos é exibida uma comparação de texto.<br>
@@ -715,7 +544,7 @@ function renderRes(file,lines,res){
   ].map(x=>`<div class="sc ${x.c}"><div class="sl">${x.l}</div><div class="sv">${x.v}</div><div class="ss">${x.s}</div></div>`).join('');
   $('ecb').textContent=allIssues.length;
   renderOcc(allIssues);
-  $('rt').innerHTML=res.recs.map(r=>`<div class="ri${r.ind?' i'+r.ind:''}"><div class="rd ${r.ok?'ok':'er'}"></div><span style="flex:1;color:var(--txm);font-size:13px">${r.desc}</span><span class="rs ${r.ok?'rso':'rse'}">${r.ok?'OK':'ERR'}</span></div>`).join('');
+  $('rt').innerHTML=res.recs.map(r=>`<div class="ri${r.ind?' i'+r.ind:''}"><div class="rd ${r.ok?'ok':'er'}"></div><span style="flex:1;color:var(--txm);font-size:13px">${r.desc}</span><span class="rs ${r.ok?'rso':'rse'}">${r.ok?'OK':'Erro'}</span></div>`).join('');
 }
 
 function renderOcc(issues){
@@ -736,12 +565,12 @@ function buildTape(found,fix,posIni){
     const fxd=fix?esc(fix).replace(/ /g,'·'):null;
     return`<div class="tcw">
       <div class="tcc">
-        <div class="tclbl la">📄 COMO ESTÁ NO ARQUIVO  pos ${posIni}–${posIni+fw-1}</div>
+        <div class="tclbl la">Como está no arquivo · pos ${posIni}–${posIni+fw-1}</div>
         <div class="tcv ${found.trim().length===0?'tvem':'tvat'}">${found.trim().length===0?'(campo vazio — apenas espaços)':fd}</div>
       </div>
       <div class="tcarr">→</div>
       <div class="tcc">
-        <div class="tclbl lm">✓ COMO DEVE FICAR (manual)</div>
+        <div class="tclbl lm">Como deve ficar (manual)</div>
         <div class="tcv ${fxd?'tvfi':'tvds'}">${fxd||'(ver regra no rodapé do cartão)'}</div>
       </div>
     </div>`;
@@ -757,7 +586,7 @@ function buildTape(found,fix,posIni){
   const legend=hasDiff
     ?`<div class="tleg"><span><span class="tlegdot" style="background:#FFD6D8;border:1px solid #E08090"></span>byte errado (arquivo)</span><span><span class="tlegdot" style="background:var(--okm);border:1px solid var(--ok)"></span>byte correto (manual)</span><span><span class="tlegdot" style="background:var(--cd2);border:1px solid var(--br2)"></span>byte OK</span>${trunc?'<span>⋯ campo truncado para exibição</span>':''}</div>`
     :`<div class="tleg">${trunc?'⋯ campo truncado · ':''}Todos os bytes estão corretos ✓</div>`;
-  return`<div class="tsec"><div class="trow"><span class="tlbl lp">pos</span><div class="tcells">${mkPos()}</div></div><div class="trow"><span class="tlbl la">📄 atual</span><div class="tcells">${mkRow(fn,true)}</div></div><div class="tgap"></div><div class="trow"><span class="tlbl lm">✓ manual</span><div class="tcells">${mkRow(fx,false)}</div></div>${legend}</div>`;
+  return`<div class="tsec"><div class="trow"><span class="tlbl lp">pos</span><div class="tcells">${mkPos()}</div></div><div class="trow"><span class="tlbl la">Atual</span><div class="tcells">${mkRow(fn,true)}</div></div><div class="tgap"></div><div class="trow"><span class="tlbl lm">Manual</span><div class="tcells">${mkRow(fx,false)}</div></div>${legend}</div>`;
 }
 
 function renderOkRow(r){
@@ -789,7 +618,7 @@ function renderFP(rows){
 
 function cpR(){
   const txt=allIssues.map(i=>`[${i.sev}] Ln ${i.line||0} | ${i.seg} | ${i.msg}`).join('\n');
-  navigator.clipboard.writeText(txt).then(()=>{const b=document.querySelector('.bcp');b.textContent='✓ Copiado';setTimeout(()=>b.textContent='⎘ Copiar relatório',2000);});
+  navigator.clipboard.writeText(txt).then(()=>{const b=document.querySelector('.bcp');b.textContent='Copiado';setTimeout(()=>b.textContent='Copiar relatório',2000);});
 }
 </script>
 <script src="docs/cnab/catalogo.js"></script>

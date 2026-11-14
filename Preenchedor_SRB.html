@@ -4,119 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Preenchedor de Remessa .srb</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<style>
-:root{
-  /* --bk/--bkl = cor do banco do template escolhido (definida no script) */
-  --bk:#EC0000;--bkl:#FF1A1A;
-  --bg:#F5F6F8;--cd:#FFFFFF;--cd2:#F8F9FB;
-  --br:#E2E5EA;--br2:#C9CED6;
-  --tx:#14181F;--txd:#5F6773;--txm:#2A303A;
-  --ok:#1A7A3C;--okb:rgba(26,122,60,.09);--okm:rgba(26,122,60,.30);
-  --wa:#C07B00;--wab:rgba(192,123,0,.10);--wam:rgba(192,123,0,.30);
-  --er:#C4202A;--erb:rgba(196,32,42,.10);--erm:rgba(196,32,42,.35);
-  --in:#0068A5;--inb:rgba(0,104,165,.09);
-  --mono:'Space Mono',monospace;--sans:'Outfit',sans-serif;
-}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--tx);font-family:var(--mono);min-height:100vh;overflow-x:hidden;}
-body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 40% at 110% -10%,color-mix(in srgb,var(--bk) 6%,transparent),transparent 60%),radial-gradient(ellipse 60% 50% at -10% 110%,color-mix(in srgb,var(--bk) 4%,transparent),transparent 60%);pointer-events:none;z-index:0;}
-
-header{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:64px;background:#fff;border-bottom:3px solid var(--bk);box-shadow:0 2px 8px rgba(0,0,0,.06);}
-.logo{display:flex;align-items:center;gap:16px;}
-.lb{background:var(--bk);color:#fff;font-family:var(--sans);font-weight:800;font-size:14px;padding:6px 12px;border-radius:6px;display:flex;align-items:center;gap:8px;}
-.bank-logo{width:24px;height:24px;object-fit:contain;background:#fff;padding:2px;border-radius:4px;}
-.lt h1{font-family:var(--sans);font-weight:700;font-size:15px;line-height:1.1;}
-.lt p{font-size:10px;color:var(--txd);letter-spacing:.07em;text-transform:uppercase;margin-top:2px;}
-.htag{font-size:10px;color:var(--txd);border:1px solid var(--br);padding:4px 10px;border-radius:100px;letter-spacing:.06em;background:var(--bg);}
-
-.wrap{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:32px 24px 80px;}
-
-.bankrow{display:flex;align-items:center;gap:12px;margin-bottom:20px;font-size:12px;color:var(--txm);}
-.bankrow select{font-family:var(--mono);font-size:12px;padding:8px 12px;border:1px solid var(--br2);border-radius:8px;background:#fff;color:var(--tx);cursor:pointer;}
-.bankrow label{font-weight:700;letter-spacing:.04em;text-transform:uppercase;font-size:10px;color:var(--txd);}
-
-.fb{display:flex;align-items:center;gap:10px;background:var(--cd);border:1px solid var(--br);border-radius:10px;padding:12px 16px;margin-bottom:22px;font-size:11px;box-shadow:0 1px 3px rgba(0,0,0,.04);}
-.fb .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);flex-shrink:0;}
-.fb .fn{font-weight:700;}
-.fb .fm{color:var(--txd);}
-
-.sec-title{font-family:var(--sans);font-weight:700;font-size:14px;margin:26px 0 12px;display:flex;align-items:center;gap:8px;}
-.sec-title .pill{font-family:var(--mono);font-size:10px;font-weight:700;background:var(--bkl);color:#fff;border-radius:100px;padding:2px 9px;}
-
-.thead,.trow{display:grid;grid-template-columns:1fr 1.5fr;gap:18px;align-items:start;}
-.thead{padding:0 4px 8px;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--txd);font-weight:700;}
-.trow{background:var(--cd);border:1px solid var(--br);border-radius:12px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.03);position:relative;}
-.trow.row-er{border-color:var(--erm);background:linear-gradient(0deg,var(--erb),var(--erb)),var(--cd);}
-.trow.row-derived{background:var(--cd2);}
-
-.vhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;}
-.vhead .lbl{font-family:var(--sans);font-weight:700;font-size:13px;color:var(--txm);}
-.obs{font-size:10px;color:var(--txd);line-height:1.5;margin-top:6px;}
-.tag-novalid{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--wa);background:var(--wab);border:1px solid var(--wam);border-radius:100px;padding:2px 8px;}
-.tag-derived{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--in);background:var(--inb);border:1px solid rgba(0,104,165,.3);border-radius:100px;padding:2px 8px;}
-
-.fld label{display:block;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--txd);margin-bottom:4px;font-weight:700;}
-.fld input{width:100%;font-family:var(--mono);font-size:13px;padding:9px 11px;border:1px solid var(--br2);border-radius:8px;background:#fff;color:var(--tx);transition:border-color .15s,box-shadow .15s;}
-.fld input:focus{outline:none;border-color:var(--bk);box-shadow:0 0 0 3px color-mix(in srgb,var(--bk) 12%,transparent);}
-.fld input.err{border-color:var(--er);box-shadow:0 0 0 3px var(--erb);}
-.fld input.okv{border-color:var(--okm);}
-.fld input:disabled{background:var(--bg);color:var(--txd);cursor:not-allowed;}
-
-.count{font-size:10px;color:var(--txd);margin-top:5px;}
-.count b{color:var(--txm);}
-.preview{font-size:11px;margin-top:6px;color:var(--in);word-break:break-all;line-height:1.5;}
-.preview .arrow{color:var(--txd);}
-.preview code{font-family:var(--mono);background:var(--inb);padding:1px 6px;border-radius:4px;color:var(--txm);font-weight:700;}
-.msg{font-size:10.5px;margin-top:6px;line-height:1.5;}
-.msg.er{color:var(--er);font-weight:700;}
-.msg.wa{color:var(--wa);}
-.msg.ok{color:var(--ok);}
-.msg.in{color:var(--in);}
-.derived-val{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--in);padding:7px 0;}
-.derived-val .empty{font-size:12px;color:var(--txd);font-weight:400;}
-
-.summary{margin-top:8px;background:var(--cd);border:1px solid var(--br);border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04);}
-.summary .srow{display:grid;grid-template-columns:1.2fr 1.4fr 80px;gap:12px;padding:10px 16px;font-size:11.5px;border-top:1px solid var(--br);align-items:center;}
-.summary .srow.head{background:var(--cd2);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--txd);font-weight:700;border-top:none;}
-.summary .srow .tk{font-weight:700;color:var(--txm);word-break:break-all;}
-.summary .srow .vv{color:var(--in);word-break:break-all;}
-.summary .srow .vv.empty{color:var(--txd);font-style:italic;}
-.summary .srow .nn{text-align:right;color:var(--txd);}
-.summary .srow .nn b{color:var(--bk);}
-
-.actions{display:flex;align-items:center;gap:16px;margin-top:24px;flex-wrap:wrap;}
-.btn-gen{display:inline-flex;align-items:center;gap:9px;padding:13px 28px;background:var(--bk);color:#fff;border:none;border-radius:9px;font-family:var(--mono);font-weight:700;font-size:13px;cursor:pointer;transition:background .15s,opacity .15s;}
-.btn-gen:hover:not(:disabled){background:var(--bkl);}
-.btn-gen:disabled{opacity:.45;cursor:not-allowed;}
-.gen-note{font-size:11px;color:var(--txd);}
-.gen-note.blocked{color:var(--er);font-weight:700;}
-
-.hidden{display:none !important;}
-.banner{display:flex;gap:10px;align-items:flex-start;background:var(--erb);border:1px solid var(--erm);border-radius:10px;padding:12px 16px;margin-bottom:18px;font-size:11.5px;color:var(--txm);line-height:1.5;}
-.banner.ok{background:var(--okb);border-color:var(--okm);}
-.banner .ic{font-weight:800;color:var(--er);}
-.banner.ok .ic{color:var(--ok);}
-
-@media(max-width:820px){
-  .thead{display:none;}
-  .trow{grid-template-columns:1fr;gap:12px;}
-  .summary .srow{grid-template-columns:1fr;gap:4px;}
-  .summary .srow .nn{text-align:left;}
-}
-</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600&family=Mona+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" href="assets/favicon.svg">
+<script src="assets/tema.js"></script>
+<link rel="stylesheet" href="assets/ui.css">
+<style>:root{--bk:#16140f;--bkc:#fff;}</style>
 </head>
 <body>
 
 <header>
   <div class="logo">
     <!-- logo, nome e textos do banco: preenchidos pelo script conforme o template -->
-    <div class="lb">
-      <img id="hLogo" src="" class="bank-logo" alt="" hidden>
-      <span id="hBanco">—</span>
-    </div>
+    <img id="hLogo" src="" class="bank-logo" alt="" hidden>
     <div class="lt">
-      <h1>Preenchedor de Remessa .srb</h1>
+      <h1>Preenchedor de remessa .srb <span class="muted" id="hBanco"></span></h1>
       <p id="hProduto">Templates estruturais · Substituição de placeholders</p>
     </div>
   </div>
@@ -128,7 +31,7 @@ header{position:relative;z-index:10;display:flex;align-items:center;justify-cont
   <div class="bankrow">
     <label for="bankSel">Banco</label>
     <select id="bankSel"></select>
-    <span class="fm" style="color:var(--txd)">O template do banco já vem configurado — é só preencher os dados do cliente.</span>
+    <span>O template do banco já vem configurado — é só preencher os dados do cliente.</span>
   </div>
 
   <!-- TEMPLATE CARREGADO -->
@@ -154,7 +57,7 @@ header{position:relative;z-index:10;display:flex;align-items:center;justify-cont
     <div class="summary" id="summary"></div>
 
     <div class="actions">
-      <button class="btn-gen" id="btnGen" disabled>⤓ Gerar .srb</button>
+      <button class="btn-gen" id="btnGen" type="button" disabled><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2.5v8M4.5 7 8 10.5 11.5 7M2.5 10.5v2a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-2"/></svg>Gerar .srb</button>
       <span class="gen-note" id="genNote"></span>
     </div>
   </div>
@@ -693,6 +596,18 @@ function templateBinary(tpl){
   return tpl.lines.join(eol) + (tpl.finalNewline ? eol : '');
 }
 
+// Contraste (WCAG) entre uma cor #RRGGBB e o branco.
+function contrasteComBranco(hex){
+  var m = /^#?([0-9a-f]{6})$/i.exec(String(hex).trim());
+  if(!m) return 21;
+  var n = parseInt(m[1], 16);
+  var lum = [n >> 16 & 255, n >> 8 & 255, n & 255].map(function(v){
+    v /= 255;
+    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  });
+  return 1.05 / (0.2126 * lum[0] + 0.7152 * lum[1] + 0.0722 * lum[2] + 0.05);
+}
+
 // Identidade do banco do template: cabeçalho, cor de destaque e botão de manuais.
 function aplicarBanco(code){
   var c = CONFIGS[code] || {};
@@ -705,6 +620,8 @@ function aplicarBanco(code){
   if(c.cor){
     document.documentElement.style.setProperty('--bk', c.cor);
     document.documentElement.style.setProperty('--bkl', c.corClara || c.cor);
+    // texto sobre a cor do banco: branco, ou a tinta quando o branco não dá contraste (4.5:1)
+    document.documentElement.style.setProperty('--bkc', contrasteComBranco(c.cor) >= 4.5 ? '#fff' : '#16140f');
   }
   document.documentElement.setAttribute('data-banco', code);
   document.title = 'Preenchedor de Remessa .srb — ' + nome + ' ' + code;

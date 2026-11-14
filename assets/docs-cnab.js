@@ -11,7 +11,7 @@
  * Lista os manuais do banco (e o padrão FEBRABAN) a partir do catálogo, com
  * link para o site oficial e, quando a página é aberta do disco, para a cópia
  * local baixada por tools/baixar-docs.ps1 (os PDFs não são publicados).
- * Usa as variáveis de cor da página (--bk, --br, ...).
+ * Usa as variáveis e o botão secundário de assets/ui.css.
  */
 (function () {
   var script = document.currentScript;
@@ -57,30 +57,33 @@
     return html + '<div class="cnabdoc-f">Catálogo atualizado em ' + esc(cat.atualizadoEm) + '</div>';
   }
 
+  // O botão usa o desenho do botão secundário de assets/ui.css (.cnabdoc-btn).
   var css =
-    '.cnabdoc-wrap{position:relative;display:flex;align-items:center;gap:10px;}' +
-    '.cnabdoc-btn{font-family:var(--mono,monospace);font-size:11px;font-weight:700;cursor:pointer;' +
-      'padding:6px 12px;border-radius:100px;border:1px solid var(--bk,#333);background:#fff;color:var(--bk,#333);' +
-      'display:inline-flex;align-items:center;gap:6px;transition:background .15s,color .15s;}' +
+    '.cnabdoc-wrap{position:relative;display:flex;align-items:center;gap:16px;}' +
     '.cnabdoc-btn[hidden]{display:none;}' +
-    '.cnabdoc-btn:hover,.cnabdoc-btn[aria-expanded="true"]{background:var(--bk,#333);color:#fff;}' +
-    '.cnabdoc-pop{position:absolute;right:0;top:calc(100% + 10px);z-index:1000;width:440px;max-width:calc(100vw - 32px);' +
-      'max-height:70vh;overflow:auto;background:var(--cd,#fff);color:var(--tx,#111);border:1px solid var(--br,#ddd);' +
-      'border-top:3px solid var(--bk,#333);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.14);padding:14px 16px;' +
-      'font-family:var(--mono,monospace);font-size:11px;line-height:1.5;text-align:left;}' +
+    '.cnabdoc-pop{position:absolute;right:0;top:calc(100% + 8px);z-index:1000;width:440px;max-width:calc(100vw - 32px);' +
+      'max-height:70vh;overflow:auto;background:var(--cd,#fff);color:var(--tx,#111);border:1px solid var(--br2,#ccc);' +
+      'border-radius:8px;box-shadow:0 12px 32px rgba(22,20,15,.12);padding:16px 20px;' +
+      'font-size:13px;line-height:1.5;text-align:left;}' +
     '.cnabdoc-pop[hidden]{display:none;}' +
-    '.cnabdoc-h{font-family:var(--sans,sans-serif);font-weight:700;font-size:13px;margin-bottom:4px;}' +
-    '.cnabdoc-b{color:var(--txd,#666);margin-bottom:10px;}' +
-    '.cnabdoc-s{margin:12px 0 4px;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--txd,#666);font-weight:700;}' +
+    '.cnabdoc-h{font-weight:600;font-size:15px;margin-bottom:4px;}' +
+    '.cnabdoc-b{color:var(--txd,#666);margin-bottom:12px;}' +
+    '.cnabdoc-b b{color:var(--tx,#111);font-weight:600;}' +
+    '.cnabdoc-s{margin:16px 0 4px;font-size:13px;color:var(--txd,#666);font-weight:500;}' +
     '.cnabdoc-pop ul{list-style:none;margin:0;padding:0;}' +
-    '.cnabdoc-pop li{padding:10px 0;border-top:1px solid var(--br,#ddd);}' +
-    '.cnabdoc-t{font-weight:700;}' +
+    '.cnabdoc-pop li{padding:12px 0;border-top:1px solid var(--br,#ddd);}' +
+    '.cnabdoc-t{font-weight:600;font-size:14px;}' +
     '.cnabdoc-m{color:var(--txd,#666);}' +
-    '.cnabdoc-o{color:var(--txd,#666);font-style:italic;margin-top:2px;}' +
-    '.cnabdoc-l{display:flex;gap:14px;margin-top:6px;}' +
-    '.cnabdoc-l a{color:var(--bk,#333);font-weight:700;text-decoration:none;}' +
-    '.cnabdoc-l a:hover{text-decoration:underline;}' +
-    '.cnabdoc-f{margin-top:10px;padding-top:8px;border-top:1px solid var(--br,#ddd);color:var(--txd,#666);font-size:10px;}';
+    '.cnabdoc-o{color:var(--txd,#666);margin-top:2px;}' +
+    '.cnabdoc-l{display:flex;gap:16px;margin-top:6px;}' +
+    '.cnabdoc-l a{color:var(--tx,#111);font-weight:500;text-decoration:underline;text-decoration-color:var(--br2,#ccc);' +
+      'text-underline-offset:3px;transition:text-decoration-color .15s;}' +
+    '.cnabdoc-l a:hover{text-decoration-color:currentColor;}' +
+    '.cnabdoc-f{margin-top:4px;padding-top:12px;border-top:1px solid var(--br,#ddd);color:var(--txd,#666);font-size:12px;}';
+
+  var ICONE = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" ' +
+    'stroke-linejoin="round" aria-hidden="true"><path d="M9.5 1.5h-5a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1v-9l-3-3Z"/>' +
+    '<path d="M9.5 1.5v3h3M6 8.5h4M6 11h4"/></svg>';
 
   function setOpen(open) {
     pop.hidden = !open;
@@ -103,7 +106,7 @@
     btn.setAttribute('aria-haspopup', 'true');
     btn.setAttribute('aria-expanded', 'false');
     btn.setAttribute('aria-controls', 'cnabdoc-pop');
-    btn.textContent = '📄 Manuais oficiais';
+    btn.innerHTML = ICONE + 'Manuais oficiais';
     pop = document.createElement('div');
     pop.id = 'cnabdoc-pop';
     pop.className = 'cnabdoc-pop';
@@ -112,8 +115,8 @@
     var htag = header.querySelector('.htag');
     if (htag) header.insertBefore(wrap, htag);
     else header.appendChild(wrap);
-    wrap.appendChild(btn);
     if (htag) wrap.appendChild(htag);
+    wrap.appendChild(btn);
     wrap.appendChild(pop);
 
     btn.addEventListener('click', function (e) { e.stopPropagation(); setOpen(pop.hidden); });
