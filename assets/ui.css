@@ -298,15 +298,17 @@ details.guia .tw{margin:16px 0 8px;}
 /* ───── Preenchedor ───── */
 /* Faixa do banco: para qual banco a remessa está sendo gerada + troca de banco.
    Os botões de manuais e de tema são anexados ao <header> pelos scripts. */
-header.hero{justify-content:flex-start;gap:12px 20px;padding-top:20px;padding-bottom:20px;background:var(--bk);color:var(--bkc);border-bottom:none;}
-header.hero :focus-visible{outline-color:var(--bkc);}
+/* Texto sempre branco; o degradê escurece o tom do banco para dar leitura
+   mesmo em cores claras (ex.: laranja do Itaú). */
+header.hero{justify-content:flex-start;gap:12px 20px;padding-top:20px;padding-bottom:20px;background:linear-gradient(135deg,color-mix(in srgb,var(--bk) 92%,#000),color-mix(in srgb,var(--bk) 72%,#000));color:#fff;border-bottom:none;}
+header.hero :focus-visible{outline-color:#fff;}
 .hlogo{display:flex;align-items:center;justify-content:center;width:56px;height:56px;flex-shrink:0;background:#fff;border-radius:var(--r-lg);overflow:hidden;}
 .hlogo img{width:100%;height:100%;object-fit:contain;}
 .hlogo img[hidden]{display:none;}
 .ht{min-width:0;margin-right:auto;}
-.ht .hk{font-size:13px;opacity:.85;}
+.ht .hk{font-size:13px;font-weight:500;}
 .ht h1{font-weight:600;font-size:26px;line-height:1.2;letter-spacing:-.015em;}
-.ht .hp{font-size:13px;opacity:.9;}
+.ht .hp{font-size:13px;font-weight:500;}
 
 .bsw{position:relative;}
 .bsw-btn{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 16px 0 20px;background:var(--cd);color:var(--tx);border:1px solid transparent;border-radius:var(--r-md);font-weight:600;font-size:14px;transition:background-color .15s var(--ease),transform .1s var(--ease);}
