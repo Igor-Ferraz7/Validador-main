@@ -14,25 +14,22 @@
 </head>
 <body>
 
-<header>
-  <div class="logo">
-    <!-- logo, nome e textos do banco: preenchidos pelo script conforme o template -->
-    <img id="hLogo" src="" class="bank-logo" alt="" hidden>
-    <div class="lt">
-      <h1>Preenchedor de remessa .srb <span class="muted" id="hBanco"></span></h1>
-      <p id="hProduto">Templates estruturais · Substituição de placeholders</p>
-    </div>
+<!-- Faixa do banco: diz para qual banco a remessa está sendo gerada e traz o
+     botão de troca. Logo, nome e produto são preenchidos pelo script. -->
+<header class="hero">
+  <span class="hlogo"><img id="hLogo" src="" alt="" hidden></span>
+  <div class="ht">
+    <p class="hk">Preenchedor de remessa .srb · gerando para</p>
+    <h1 id="hBanco">—</h1>
+    <p class="hp" id="hProduto"></p>
   </div>
-  <span class="htag" id="hTag">Tokens &lt;Campo_InsertIA&gt; · Sem padding</span>
+  <div class="bsw" id="bankSw">
+    <button type="button" class="bsw-btn" id="bankBtn" aria-haspopup="true" aria-expanded="false" aria-controls="bankMenu">Trocar banco<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.5 8 10.5l4-4"/></svg></button>
+    <div class="bsw-menu" id="bankMenu" hidden></div>
+  </div>
 </header>
 
 <div class="wrap">
-
-  <div class="bankrow">
-    <label for="bankSel">Banco</label>
-    <select id="bankSel"></select>
-    <span>O template do banco já vem configurado — é só preencher os dados do cliente.</span>
-  </div>
 
   <!-- TEMPLATE CARREGADO -->
   <div class="fb hidden" id="fb">
@@ -44,21 +41,14 @@
   <!-- BANNERS -->
   <div id="bannerArea"></div>
 
-  <!-- TOKENS -->
+  <!-- CAMPOS (um cartão por grupo) + barra fixa de progresso -->
   <div id="panel" class="hidden">
-    <div class="sec-title">Placeholders detectados <span class="pill" id="tkCount">0</span></div>
-    <div class="thead">
-      <div>Placeholder</div>
-      <div>Valor do cliente</div>
-    </div>
     <div id="rows"></div>
 
-    <div class="sec-title">Resumo da geração</div>
-    <div class="summary" id="summary"></div>
-
-    <div class="actions">
-      <button class="btn-gen" id="btnGen" type="button" disabled><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2.5v8M4.5 7 8 10.5 11.5 7M2.5 10.5v2a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-2"/></svg>Gerar .srb</button>
+    <div class="genbar">
+      <div class="gprog"><span id="progTxt"></span><i><b id="progBar"></b></i></div>
       <span class="gen-note" id="genNote"></span>
+      <button class="btn-gen" id="btnGen" type="button" disabled><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2.5v8M4.5 7 8 10.5 11.5 7M2.5 10.5v2a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-2"/></svg>Gerar .srb</button>
     </div>
   </div>
 
@@ -191,6 +181,10 @@ function detectTokens(text){
   for(li=0; li<lines.length; li++){
     var line = lines[li];
     if(line.indexOf('_InsertIA>') === -1) continue;
+    // guarda a primeira linha de cada token (usada na prévia da tela)
+    var m0 = line.match(/<\w+_InsertIA>/);
+    var k0 = m0 ? m0[0].slice(1,-1) : '';
+    if(counts[k0] && counts[k0].line === undefined) counts[k0].line = line.replace(/\r$/,'');
     var parts = line.split('|');
     if(parts.length < 13) continue;
     var ini = parseInt(parts[3],10), fim = parseInt(parts[4],10);
@@ -233,15 +227,46 @@ function orderedTokens(){
   return list;
 }
 
+// Grupo visual do campo. A config pode definir "grupo"; sem isso, os dados de
+// identificação vão em "Titular" e os demais em "Conta bancária".
+var GRUPO_TITULAR = { Inscricao_InsertIA:1, TipoInscricao_InsertIA:1, NomeEmpresa_InsertIA:1 };
+function grupoDe(token, cfg){
+  if(cfg && cfg.grupo) return cfg.grupo;
+  if(!cfg) return 'Outros campos';
+  return GRUPO_TITULAR[token] ? 'Titular' : 'Conta bancária';
+}
+// Colunas ocupadas na grade (de 6), proporcionais ao tamanho do campo no arquivo.
+function spanDe(row){
+  if(row.minWidth >= 25) return 6;
+  if(row.isDerived || row.minWidth >= 14) return 3;
+  return 2;
+}
+
+// Valor normalizado a partir do que está digitado, sem efeitos colaterais.
+function normOnly(row){
+  var raw = row.el.valInput.value;
+  var normName = row.cfg ? row.cfg.normalizer : 'trim';
+  if(normName === 'account') return normAccount(raw).value;
+  return (NORMALIZERS[normName] || NORMALIZERS.trim)(raw);
+}
+
+// Prévia: a primeira linha do template que usa o token, já com o valor no
+// lugar. Enquanto não há valor, mostra o próprio token.
+function previewHtml(row, val){
+  var i = row.line.indexOf(row.ph);
+  if(i < 0) return '';
+  return 'no arquivo: ' + esc(row.line.slice(0, i)) +
+    (val === '' ? '<mark class="pend">' + esc(row.ph) + '</mark>' : '<mark>' + esc(val) + '</mark>') +
+    esc(row.line.slice(i + row.ph.length));
+}
+
 function buildRows(){
   var rowsEl = document.getElementById('rows');
   rowsEl.innerHTML = '';
   state.rows = [];
+  var grids = {};   // grupo -> elemento .grid do cartão
 
-  var tokens = orderedTokens();
-  document.getElementById('tkCount').textContent = String(tokens.length);
-
-  tokens.forEach(function(token){
+  orderedTokens().forEach(function(token){
     var info = state.detected[token];
     var cfg = fieldCfgFor(token);
     var isDerived = !!(cfg && cfg.derived);
@@ -249,6 +274,8 @@ function buildRows(){
 
     var row = {
       token: token,
+      ph: '<' + token + '>',   // token substituído (fixo: só informativo na tela)
+      line: info.line || '',   // primeira linha do template que usa o token
       minWidth: info.minWidth,
       count: info.count,
       cfg: cfg,
@@ -260,68 +287,54 @@ function buildRows(){
       dvMoved: false,     // DV foi movido automaticamente para o campo DV
       dvNote: '',         // aviso informativo (recalculado em recompute)
       conflictMsg: '',    // conflito conta×DV (recalculado em recompute)
-      phErr: '',          // erro do placeholder (recalculado em recompute)
       touched: false,
       valid: false,
       el: {}
     };
 
-    // --- DOM da linha ---
+    // --- cartão do grupo ---
+    var grupo = grupoDe(token, cfg);
+    if(!grids[grupo]){
+      var card = document.createElement('div');
+      card.className = 'grp-card';
+      card.innerHTML = '<div class="grp-title">' + esc(grupo) + '</div><div class="fgrid"></div>';
+      rowsEl.appendChild(card);
+      grids[grupo] = card.querySelector('.fgrid');
+    }
+
+    // --- DOM do campo ---
     var rootEl = document.createElement('div');
-    rootEl.className = 'trow' + (isDerived ? ' row-derived' : '');
+    rootEl.className = 'fld s' + spanDe(row);
 
     var label = cfg ? cfg.label : token;
     var obs   = cfg ? (cfg.obs || '') : '';
-    var maxBadge = 'máx ' + info.minWidth + ' posição(ões) no arquivo';
-    var tag = !cfg ? '<span class="tag-novalid">sem validação</span>'
-            : (isDerived ? '<span class="tag-derived">derivado</span>' : '');
+    var id    = 'f_' + token;
+    var tag   = !cfg ? '<span class="tag-novalid">sem validação</span>' : '';
 
-    // coluna 1 — PLACEHOLDER
-    var phHtml =
-      '<div class="fld">' +
-        '<label>Token a substituir</label>' +
-        '<input type="text" class="ph-input" spellcheck="false" value="' + esc('<'+token+'>') + '">' +
-        '<div class="count ph-count"></div>' +
-        '<div class="msg er ph-msg"></div>' +
+    rootEl.innerHTML =
+      '<label class="lbl" for="' + id + '">' + esc(label) + tag + '</label>' +
+      (hasInput
+        ? '<input type="text" id="' + id + '" class="val-input" spellcheck="false" autocomplete="off">'
+        : '<div class="fauto derived-val"></div>') +
+      '<div class="msg val-msg"></div>' +
+      (obs && hasInput ? '<div class="obs">' + esc(obs) + '</div>' : '') +
+      '<div class="tokinfo">' +
+        '<div>substitui ' + esc(row.ph) + ' · ' + info.count + '× · até ' + info.minWidth + ' caractere' + (info.minWidth === 1 ? '' : 's') + '</div>' +
+        '<div class="pv"></div>' +
       '</div>';
-
-    // coluna 2 — VALOR DO CLIENTE
-    var vhead = '<div class="vhead"><span class="lbl">' + esc(label) + '</span>' + tag + '</div>';
-    var hint  = '<div class="obs">' + (obs ? esc(obs) + ' · ' : '') + maxBadge + '</div>';
-    var valHtml;
-    if(!hasInput){
-      valHtml =
-        '<div class="fld">' + vhead +
-          '<div class="derived-val"><span class="empty">aguardando…</span></div>' +
-          '<div class="msg val-msg"></div>' + hint +
-        '</div>';
-    } else {
-      valHtml =
-        '<div class="fld">' + vhead +
-          '<input type="text" class="val-input" spellcheck="false" placeholder="digite ou cole o valor">' +
-          '<div class="preview prev"></div>' +
-          '<div class="msg val-msg"></div>' + hint +
-        '</div>';
-    }
-
-    rootEl.innerHTML = phHtml + valHtml;
-    rowsEl.appendChild(rootEl);
+    grids[grupo].appendChild(rootEl);
 
     row.el.root    = rootEl;
-    row.el.phInput = rootEl.querySelector('.ph-input');
-    row.el.phCount = rootEl.querySelector('.ph-count');
-    row.el.phMsg   = rootEl.querySelector('.ph-msg');
     row.el.valInput= rootEl.querySelector('.val-input');
-    row.el.prev    = rootEl.querySelector('.prev');
     row.el.valMsg  = rootEl.querySelector('.val-msg');
     row.el.derived = rootEl.querySelector('.derived-val');
+    row.el.pv      = rootEl.querySelector('.pv');
 
-    // eventos
-    row.el.phInput.addEventListener('input', function(){
-      recountPlaceholder(row);
-      recompute();
-    });
     if(row.el.valInput){
+      // enquanto digita: só a prévia; a validação roda ao sair do campo
+      row.el.valInput.addEventListener('input', function(){
+        row.el.pv.innerHTML = previewHtml(row, normOnly(row));
+      });
       row.el.valInput.addEventListener('blur', function(){
         row.touched = true;
         normalizeRow(row);
@@ -330,34 +343,12 @@ function buildRows(){
     }
 
     state.rows = state.rows.concat([row]);
-    recountPlaceholder(row);
   });
 
   recompute();
 }
 
 /* ===================== Recálculo / validação ===================== */
-function recountPlaceholder(row){
-  var ph = row.el.phInput.value;
-  row.count = countOcc(state.originalBinary, ph);
-  row.el.phCount.innerHTML = '<b>' + row.count + '</b> ocorrência' + (row.count===1?'':'s') + ' no arquivo';
-}
-
-// Erro do placeholder editado. Exigir o formato <Nome_InsertIA> e proibir
-// duplicatas garante que só tokens sejam alterados na saída e que cada
-// token detectado seja substituído exatamente uma vez.
-function placeholderError(row){
-  var ph = row.el.phInput.value;
-  if(!/^<\w+_InsertIA>$/.test(ph)) return 'Formato inválido: use <Nome_InsertIA>.';
-  if(row.count === 0) return 'Placeholder não encontrado no arquivo (0 ocorrências).';
-  for(var i=0;i<state.rows.length;i++){
-    var o = state.rows[i];
-    if(o !== row && o.el.phInput.value === ph){
-      return 'Placeholder duplicado: também usado em "' + (o.cfg ? o.cfg.label : o.token) + '".';
-    }
-  }
-  return '';
-}
 
 function byteLen(s){ return new TextEncoder().encode(s).length; }
 
@@ -413,7 +404,7 @@ function validateRow(row){
   // são posições em bytes, então medimos o valor já codificado.
   var bl = byteLen(v);
   if(bl > row.minWidth){
-    return { valid:false, level:'er', msg:'Máximo de ' + row.minWidth + ' posição(ões); o valor normalizado ocupa ' + bl +
+    return { valid:false, level:'er', msg:'Máximo de ' + row.minWidth + (row.minWidth === 1 ? ' caractere' : ' caracteres') + '; o valor informado tem ' + bl +
       (bl > v.length ? ' (caracteres acentuados/especiais ocupam mais de 1 byte).' : '.') };
   }
 
@@ -448,35 +439,29 @@ function validateRow(row){
 }
 
 function updateRowDisplay(row, res){
-  // preview do valor final (campos com input)
-  if(row.hasInput && row.el.prev){
-    if((row.raw || '').length === 0 && row.norm === ''){
-      row.el.prev.innerHTML = '';
-    } else {
-      var pv = '<span class="arrow">→ será inserido:</span> <code>' + (row.norm === '' ? '(vazio)' : esc(row.norm)) + '</code>';
-      if(row.detectedDv) pv += ' <span class="arrow">· DV detectado:</span> <code>' + esc(row.detectedDv) + '</code>';
-      row.el.prev.innerHTML = pv;
-    }
-  }
-  // derivados
+  // prévia da linha no arquivo gerado
+  row.el.pv.innerHTML = previewHtml(row, row.norm || '');
+
+  // campo calculado automaticamente
   if(row.isDerived && row.el.derived){
     if(row.norm === ''){
-      row.el.derived.innerHTML = '<span class="empty">aguardando…</span>';
+      row.el.derived.textContent = 'Preenchido automaticamente a partir do CPF/CNPJ.';
     } else {
-      row.el.derived.textContent = row.norm;
+      var oQue = '';
+      if(row.cfg.deriveKind === 'tipoInscricao') oQue = row.norm === '1' ? 'CPF — ' : 'CNPJ — ';
+      row.el.derived.innerHTML = '<strong>' + esc(row.norm) + '</strong> ' + oQue + 'preenchido automaticamente';
     }
   }
-  // mensagem de validação do valor (+ aviso de DV, se houver)
+
+  // mensagem de validação (+ aviso de DV, se houver). Campo vazio ainda não
+  // tocado e campo calculado não mostram mensagem: a dica já explica.
+  var texto = res.msg;
+  if(res.level === 'in' || (row.isDerived && res.level !== 'er')) texto = '';
+  else if(res.level === 'ok') texto = res.msg === 'OK.' ? '' : '✓ ' + res.msg;
   var msgEl = row.el.valMsg;
-  if(msgEl){
-    msgEl.className = 'msg ' + res.level + ' val-msg';
-    msgEl.innerHTML = (row.dvNote ? '<span class="msg in" style="display:block;margin-top:0">' + esc(row.dvNote) + '</span>' : '') + esc(res.msg);
-  }
-  // erro do placeholder (coluna 1)
-  row.el.phMsg.textContent = row.phErr;
-  row.el.phInput.classList.toggle('err', !!row.phErr);
-  // estados visuais
-  row.el.root.classList.toggle('row-er', res.level === 'er' || !!row.phErr);
+  msgEl.className = 'msg ' + res.level + ' val-msg';
+  msgEl.innerHTML = (row.dvNote ? '<span class="msg in" style="display:block;margin-top:0">' + esc(row.dvNote) + '</span>' : '') + esc(texto);
+
   if(row.el.valInput){
     row.el.valInput.classList.toggle('err', res.level === 'er');
     row.el.valInput.classList.toggle('okv', res.level === 'ok');
@@ -514,48 +499,36 @@ function recompute(){
     }
   });
 
-  // 3) valida placeholder + valor de cada linha e atualiza UI
-  var allValid = state.rows.length > 0;
+  // 3) valida o valor de cada campo e atualiza a tela
+  var prontos = 0, faltam = [];
   state.rows.forEach(function(r){
-    r.phErr = placeholderError(r);
     var res = validateRow(r);
-    r.valid = res.valid && !r.phErr;
+    r.valid = res.valid;
     updateRowDisplay(r, res);
-    if(!r.valid) allValid = false;
+    if(r.valid) prontos++;
+    else if(!r.isDerived) faltam.push(r.cfg ? r.cfg.label : r.token);   // o calculado se resolve sozinho
   });
 
-  updateSummary();
+  // 4) barra de progresso e botão
+  var total = state.rows.length;
+  var allValid = total > 0 && prontos === total;
+  document.getElementById('progTxt').textContent = prontos + ' de ' + total + ' campos prontos';
+  document.getElementById('progBar').style.width = (total ? Math.round(prontos * 100 / total) : 0) + '%';
+  document.getElementById('btnGen').disabled = !allValid;
 
-  var btn = document.getElementById('btnGen');
   var note = document.getElementById('genNote');
-  btn.disabled = !allValid;
-  if(state.rows.length === 0){
+  if(total === 0){
     note.textContent = '';
   } else if(allValid){
     note.className = 'gen-note';
     note.textContent = 'Tudo certo — pronto para gerar.';
   } else {
+    var nomes = faltam.slice(0, 3).join(', ') + (faltam.length > 3 ? ' e mais ' + (faltam.length - 3) : '');
     note.className = 'gen-note blocked';
-    note.textContent = 'Geração bloqueada: existem campos pendentes ou inválidos.';
+    note.textContent = faltam.length ? 'Falta' + (faltam.length > 1 ? 'm' : '') + ': ' + nomes : '';
   }
 }
 
-function updateSummary(){
-  var el = document.getElementById('summary');
-  var html = '<div class="srow head"><div>Token / Placeholder</div><div>Valor normalizado</div><div class="nn">Subst.</div></div>';
-  state.rows.forEach(function(r){
-    var ph = r.el.phInput.value;
-    var val = r.norm;
-    var valCls = val === '' ? 'vv empty' : 'vv';
-    var valTxt = val === '' ? '(pendente)' : esc(val);
-    html += '<div class="srow">' +
-      '<div class="tk">' + esc(ph) + '</div>' +
-      '<div class="' + valCls + '">' + valTxt + '</div>' +
-      '<div class="nn"><b>' + r.count + '</b></div>' +
-    '</div>';
-  });
-  el.innerHTML = html;
-}
 
 /* ===================== Geração / download ===================== */
 function outName(name){
@@ -571,7 +544,7 @@ function generate(){
 
   // substitui placeholders mais longos primeiro (evita sobreposição de substrings)
   var subs = state.rows.map(function(r){
-    return { ph: r.el.phInput.value, val: valueToBinary(r.norm || '') };
+    return { ph: r.ph, val: valueToBinary(r.norm || '') };
   }).filter(function(s){ return s.ph; })
     .sort(function(a,b){ return b.ph.length - a.ph.length; });
 
@@ -614,9 +587,8 @@ function aplicarBanco(code){
   var nome = c.name || ('Banco ' + code);
   var logo = document.getElementById('hLogo');
   if(c.logo){ logo.src = c.logo; logo.alt = nome; logo.hidden = false; } else { logo.hidden = true; }
-  document.getElementById('hBanco').textContent = nome;
-  document.getElementById('hProduto').textContent = c.produto || 'Templates estruturais · Substituição de placeholders';
-  document.getElementById('hTag').textContent = 'Banco ' + code + ' · Tokens <Campo_InsertIA> · Sem padding';
+  document.getElementById('hBanco').textContent = nome + ' (' + code + ')';
+  document.getElementById('hProduto').textContent = c.produto || '';
   if(c.cor){
     document.documentElement.style.setProperty('--bk', c.cor);
     document.documentElement.style.setProperty('--bkl', c.corClara || c.cor);
@@ -686,7 +658,9 @@ function showBanners(){
 (function init(){
   // Um item por template embutido, em ordem alfabética de banco. O nome do
   // arquivo só aparece se o banco tiver mais de um template.
-  var sel = document.getElementById('bankSel');
+  var sw = document.getElementById('bankSw');
+  var btn = document.getElementById('bankBtn');
+  var menu = document.getElementById('bankMenu');
   var perBank = {};
   var nomeBanco = function(t){ return CONFIGS[t.bank] ? CONFIGS[t.bank].name : 'Banco ' + t.bank; };
   TEMPLATES.forEach(function(t){ perBank[t.bank] = (perBank[t.bank] || 0) + 1; });
@@ -694,18 +668,40 @@ function showBanners(){
     return nomeBanco(TEMPLATES[a]).localeCompare(nomeBanco(TEMPLATES[b]), 'pt-BR') ||
       TEMPLATES[a].fileName.localeCompare(TEMPLATES[b].fileName);
   });
+  function abrir(open){
+    menu.hidden = !open;
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+  function marcar(i){
+    [].forEach.call(menu.children, function(it){
+      var on = it.getAttribute('data-i') === String(i);
+      it.classList.toggle('on', on);
+      if(on) it.setAttribute('aria-current', 'true'); else it.removeAttribute('aria-current');
+    });
+  }
   ordem.forEach(function(i){
-    var t = TEMPLATES[i];
-    var opt = document.createElement('option');
-    opt.value = String(i);
-    opt.textContent = nomeBanco(t) + ' (' + t.bank + ')' + (perBank[t.bank] > 1 ? ' — ' + t.fileName : '');
-    sel.appendChild(opt);
+    var t = TEMPLATES[i], c = CONFIGS[t.bank] || {};
+    var detalhe = t.bank + (c.produto ? ' · ' + c.produto.split(' · ')[0] : '') + (perBank[t.bank] > 1 ? ' · ' + t.fileName : '');
+    var it = document.createElement('button');
+    it.type = 'button';
+    it.className = 'bsw-item';
+    it.setAttribute('data-i', String(i));
+    it.innerHTML = '<span class="mlogo">' + (c.logo ? '<img src="' + c.logo + '" alt="">' : '') + '</span>' +
+      '<span class="mt"><strong>' + esc(nomeBanco(t)) + '</strong><small>' + esc(detalhe) + '</small></span>';
+    it.addEventListener('click', function(){
+      abrir(false);
+      btn.focus();
+      marcar(i);
+      loadTemplate(t);
+      // Lembra o último template escolhido neste navegador (conveniência; pode faltar).
+      try { localStorage.setItem('srb.template', t.fileName); } catch(e){}
+    });
+    menu.appendChild(it);
   });
-  // Lembra o último template escolhido neste navegador (conveniência; pode faltar).
-  sel.addEventListener('change', function(){
-    loadTemplate(TEMPLATES[+sel.value]);
-    try { localStorage.setItem('srb.template', TEMPLATES[+sel.value].fileName); } catch(e){}
-  });
+  btn.addEventListener('click', function(){ abrir(menu.hidden); });
+  // captura: fecha mesmo quando outro componente interrompe a propagação do clique
+  document.addEventListener('click', function(e){ if(!sw.contains(e.target)) abrir(false); }, true);
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape') abrir(false); });
   document.getElementById('btnGen').addEventListener('click', generate);
 
   if(TEMPLATES.length){
@@ -713,10 +709,10 @@ function showBanners(){
     try { salvo = localStorage.getItem('srb.template'); } catch(e){}
     var inicial = ordem.filter(function(i){ return TEMPLATES[i].fileName === salvo; })[0];
     if(inicial === undefined) inicial = ordem[0];
-    sel.value = String(inicial);
+    marcar(inicial);
     loadTemplate(TEMPLATES[inicial]);
   } else {
-    sel.disabled = true;
+    btn.disabled = true;
     document.getElementById('bannerArea').innerHTML =
       '<div class="banner"><span class="ic">!</span><div>Nenhum template configurado. Adicione o arquivo em <code>Placeholders/</code> e rode <code>tools/gerar-templates.ps1</code>.</div></div>';
   }
