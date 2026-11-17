@@ -43,9 +43,9 @@
 
   function htmlDoBanco(banco) {
     var html = '<div class="cnabdoc-h">Manuais oficiais · ' + esc(banco.nome) + ' (' + esc(banco.codigo) + ')</div>';
-    // A versão-base só faz sentido na página do próprio validador.
-    var naPaginaDoValidador = banco.validador &&
-      decodeURIComponent(location.pathname).slice(-banco.validador.length) === banco.validador;
+    // A versão-base só faz sentido no validador de remessa, que carrega as
+    // regras do banco em window.CNAB_REMESSA (validadores/<codigo>-<banco>.js).
+    var naPaginaDoValidador = !!(window.CNAB_REMESSA && window.CNAB_REMESSA[banco.codigo]);
     if (banco.baseDoValidador && naPaginaDoValidador) {
       html += '<div class="cnabdoc-b">Este validador segue: <b>' + esc(banco.baseDoValidador) + '</b></div>';
     }
@@ -90,13 +90,19 @@
     btn.setAttribute('aria-expanded', open ? 'true' : 'false');
   }
 
-  // Cria botão e popover uma única vez, à direita do cabeçalho, junto da .htag.
+  // Cria botão e popover à direita do cabeçalho, junto da .htag; ou dentro de
+  // um elemento [data-manuais], quando a página tem um lugar próprio para ele.
+  var estilo = false;
   function criar() {
-    var header = document.querySelector('header');
+    var alvo = document.querySelector('[data-manuais]');
+    var header = alvo || document.querySelector('header');
     if (!header) return false;
-    var st = document.createElement('style');
-    st.textContent = css;
-    document.head.appendChild(st);
+    if (!estilo) {
+      var st = document.createElement('style');
+      st.textContent = css;
+      document.head.appendChild(st);
+      estilo = true;
+    }
 
     wrap = document.createElement('div');
     wrap.className = 'cnabdoc-wrap';
@@ -112,7 +118,7 @@
     pop.className = 'cnabdoc-pop';
     pop.hidden = true;
 
-    var htag = header.querySelector('.htag');
+    var htag = alvo ? null : header.querySelector('.htag');
     if (htag) header.insertBefore(wrap, htag);
     else header.appendChild(wrap);
     if (htag) wrap.appendChild(htag);
@@ -121,14 +127,18 @@
 
     btn.addEventListener('click', function (e) { e.stopPropagation(); setOpen(pop.hidden); });
     pop.addEventListener('click', function (e) { e.stopPropagation(); });
-    document.addEventListener('click', function () { setOpen(false); });
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setOpen(false); });
+    if (!criar.ouvindo) {
+      document.addEventListener('click', function () { if (pop) setOpen(false); });
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && pop) setOpen(false); });
+      criar.ouvindo = true;
+    }
     return true;
   }
 
-  /* Mostra os manuais do banco informado; sem manuais catalogados, esconde o botão. */
+  /* Mostra os manuais do banco informado; sem manuais catalogados, esconde o botão.
+     Se a página redesenhou o lugar do botão, ele é criado de novo. */
   function montar(codigo) {
-    if (!btn && !criar()) return;
+    if ((!btn || !document.contains(wrap)) && !criar()) return;
     var banco = null;
     for (var i = 0; i < cat.bancos.length; i++) if (cat.bancos[i].codigo === codigo) banco = cat.bancos[i];
     setOpen(false);

@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Validador de remessa CNAB240</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600&family=Mona+Sans:wght@300..800&display=swap" rel="stylesheet">
+<link rel="icon" href="assets/favicon.svg">
+<script src="assets/tema.js"></script>
+<link rel="stylesheet" href="assets/ui.css">
+<style>
+/* Validador de remessa, um para todos os bancos.
+   Cores, tema e tom do banco vêm de assets/ui.css (--bk, --cd, --tx…);
+   aqui fica só o desenho desta página. Classes com prefixo vr- para não
+   colidir com as do ui.css. */
+:root{--bkc:#fff;}
+body{font-size:16px;}
+.vr{max-width:1200px;margin:0 auto;padding:0 16px 48px;}
+.vr [hidden]{display:none !important;}
+.vr-lbl{display:flex;align-items:center;gap:10px;font:650 13px/1.2 var(--sans);letter-spacing:.06em;text-transform:uppercase;}
+.vr-lbl img{width:26px;height:26px;border-radius:7px;object-fit:cover;flex-shrink:0;}
+.vr-pl{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:38px;padding:0 18px;border-radius:999px;font-size:14px;font-weight:500;border:1px solid var(--tx);background:transparent;color:var(--tx);white-space:nowrap;transition:transform .15s var(--ease),background-color .15s;}
+.vr-pl:hover{background:color-mix(in srgb,var(--tx) 6%,transparent);}
+.vr-pl:active{transform:scale(.98);}
+.vr-pl--dark{background:var(--tx);color:var(--bg);}
+.vr-pl--dark:hover{background:var(--tx);}
+.vr-pl svg{width:14px;height:14px;}
+.vr-view{animation:vr-entra .4s var(--ease) both;}
+@keyframes vr-entra{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* aberta fora da central */
+.vr-solo{display:none;align-items:center;justify-content:space-between;gap:12px;max-width:1200px;margin:12px auto 0;padding:0 16px;}
+html:not(.na-central) .vr-solo{display:flex;}
+.vr-solo a{font-weight:500;color:var(--tx);text-decoration:none;}
+
+/* ───── 1. importar ───── */
+.vr-intro{text-align:center;padding:56px 0 28px;}
+.vr-intro .vr-lbl{justify-content:center;color:var(--txd);}
+.vr-intro h1{font:800 clamp(32px,4vw,44px)/1.05 var(--sans);letter-spacing:-.03em;margin:16px 0 12px;}
+.vr-intro p{font-size:17px;color:var(--txm);max-width:600px;margin:0 auto;}
+.vr-drop{position:relative;max-width:880px;margin:0 auto;border-radius:24px;background:var(--cd);padding:10px;transition:background-color .45s var(--ease),color .45s var(--ease);}
+.vr-drop__in{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:260px;padding:32px;border:2px dashed var(--br2);border-radius:18px;text-align:center;cursor:pointer;transition:border-color .2s,background-color .2s;}
+.vr-drop__in:hover,.vr-drop.over .vr-drop__in{border-color:var(--tx);background:var(--cd2);}
+.vr-drop__ico{width:56px;height:56px;border-radius:16px;background:var(--tx);color:var(--bg);display:grid;place-items:center;margin-bottom:8px;transition:transform .3s var(--ease);}
+.vr-drop__in:hover .vr-drop__ico,.vr-drop.over .vr-drop__ico{transform:translateY(-4px);}
+.vr-drop__ico svg{width:24px;height:24px;}
+.vr-drop__in b{font:700 22px/1.2 var(--sans);letter-spacing:-.015em;}
+.vr-drop__in span{color:var(--txd);}
+.vr-drop__in u{color:var(--tx);text-underline-offset:3px;}
+.vr-drop__in small{font:400 13px var(--mono);color:var(--txd);margin-top:6px;}
+.vr-passos{display:none;min-height:260px;padding:36px 44px;border-radius:18px;flex-direction:column;justify-content:center;gap:16px;}
+.vr-drop.lendo .vr-drop__in{display:none;}
+.vr-drop.lendo .vr-passos{display:flex;}
+.vr-passo{display:grid;grid-template-columns:28px minmax(0,1fr);gap:14px;align-items:start;opacity:.35;transition:opacity .25s;}
+.vr-passo.on,.vr-passo.ok,.vr-passo.x{opacity:1;}
+.vr-passo i{width:28px;height:28px;border-radius:50%;border:2px solid currentColor;display:grid;place-items:center;font-style:normal;}
+.vr-passo.on i{border-right-color:transparent;animation:vr-gira .7s linear infinite;}
+.vr-passo.ok i{background:currentColor;}
+.vr-passo.ok i::after{content:'';width:10px;height:6px;border:2px solid var(--vr-fundo,var(--cd));border-top:0;border-right:0;transform:rotate(-45deg) translate(1px,-1px);}
+.vr-passo.x i::after{content:'!';font:700 15px/1 var(--sans);}
+@keyframes vr-gira{to{transform:rotate(360deg)}}
+.vr-passo b{display:block;font:650 18px/1.3 var(--sans);}
+.vr-passo span{display:block;font:400 14px/1.5 var(--mono);opacity:.8;min-height:21px;overflow-wrap:anywhere;}
+.vr-drop.erro{color:var(--er);}
+.vr-acoes{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;}
+.vr-acoes .vr-pl{border-color:currentColor;color:inherit;}
+.vr-bancos{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:8px;max-width:880px;margin:18px auto 0;color:var(--txd);font-size:14px;}
+.vr-bancos p{width:100%;text-align:center;margin-bottom:2px;}
+.vr-chip{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 14px 0 5px;border-radius:999px;background:var(--cd);color:var(--tx);font-size:14px;font-weight:500;}
+.vr-chip img{width:26px;height:26px;border-radius:50%;object-fit:cover;}
+
+/* ───── 2. resumo ───── */
+.vr-file{display:flex;align-items:center;flex-wrap:wrap;gap:10px 14px;margin-top:24px;padding:10px 10px 10px 18px;border-radius:16px;background:var(--cd);}
+.vr-file>svg{width:22px;height:22px;flex-shrink:0;}
+.vr-file code{font:500 14px var(--mono);overflow-wrap:anywhere;}
+.vr-file .vr-meta{color:var(--txd);font-size:14px;}
+.vr-ident{display:inline-flex;align-items:center;gap:8px;min-height:30px;padding:3px 12px 3px 4px;border-radius:999px;font-size:13px;font-weight:600;}
+.vr-ident img{width:22px;height:22px;border-radius:50%;object-fit:cover;}
+.vr-file__r{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-left:auto;}
+.vr-file .cnabdoc-btn{height:38px;border-radius:999px;}
+.vr-troca{position:relative;}
+.vr-troca__menu{position:absolute;right:0;top:calc(100% + 8px);z-index:30;width:260px;background:var(--cd);border:1px solid var(--br2);border-radius:16px;padding:6px;box-shadow:0 16px 40px rgba(0,0,0,.16);}
+.vr-troca__menu button{display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;border:0;border-radius:10px;background:none;text-align:left;font-size:14px;}
+.vr-troca__menu button:hover,.vr-troca__menu button[aria-current]{background:var(--cd2);}
+.vr-troca__menu img{width:24px;height:24px;border-radius:6px;object-fit:cover;}
+.vr-troca__menu small{margin-left:auto;font:400 12px var(--mono);color:var(--txd);}
+.vr-nota{margin-top:10px;padding:10px 14px;border-radius:12px;background:var(--inb);color:var(--tx);font-size:14px;}
+.vr-nota a{color:inherit;font-weight:600;}
+.vr-hero{text-align:center;padding:44px 0 32px;}
+.vr-hero h1{font:800 clamp(30px,4.4vw,52px)/1.05 var(--sans);letter-spacing:-.03em;margin:0 auto 12px;max-width:900px;}
+.vr-hero p{font-size:17px;color:var(--txm);}
+
+.vr-bento{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px;}
+.vr-card{position:relative;border-radius:20px;padding:24px;overflow:hidden;}
+.vr-card>.vr-lbl{margin-bottom:16px;padding-right:44px;}
+.vr-lead{font:600 22px/1.25 var(--sans);letter-spacing:-.01em;max-width:520px;}
+.vr-lead small{display:block;font:400 14px/1.4 var(--sans);opacity:.85;margin-top:4px;letter-spacing:0;}
+.vr-go{position:absolute;top:20px;right:20px;width:38px;height:38px;border:0;border-radius:11px;background:#fff;color:#16140f;display:grid;place-items:center;box-shadow:0 2px 0 rgba(0,0,0,.14);transition:transform .2s var(--ease);}
+.vr-go:hover{transform:translateX(3px);}
+.vr-go svg{width:15px;height:15px;}
+.vr-janela{background:var(--cd);color:var(--tx);border-radius:16px;box-shadow:0 20px 44px rgba(0,0,0,.22);}
+.vr-janela__bar{display:flex;align-items:center;gap:8px;padding:10px 12px;font:400 13px var(--mono);color:var(--txd);border-bottom:1px solid var(--br);min-width:0;}
+.vr-janela__bar>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.vr-janela__bar i{width:8px;height:8px;border-radius:50%;background:var(--br2);flex-shrink:0;}
+.vr-c-main{grid-column:span 7;grid-row:span 2;display:flex;flex-direction:column;min-height:460px;}
+.vr-c-main .vr-janela{margin-top:auto;transform:translateY(40px);margin-bottom:-16px;padding:6px;}
+.vr-er{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center;width:100%;padding:12px;border:0;border-bottom:1px solid var(--br);background:none;text-align:left;border-radius:10px;transition:background-color .15s;}
+.vr-er:hover{background:var(--cd2);}
+.vr-er:last-child{border-bottom:0;margin-bottom:46px;}
+.vr-er b{font:500 13px var(--mono);background:var(--erb);color:var(--er);border-radius:8px;padding:6px 8px;white-space:nowrap;}
+.vr-er span{font-size:15px;font-weight:500;min-width:0;}
+.vr-er span small{display:block;font:400 12px var(--mono);color:var(--txd);margin-top:2px;}
+.vr-er code{font:500 13px var(--mono);color:var(--er);white-space:nowrap;max-width:16ch;overflow:hidden;text-overflow:ellipsis;}
+.vr-er--mais span{color:var(--txd);}
+.vr-er--ok b{background:var(--okb);color:var(--ok);}
+
+.vr-c-nums{grid-column:span 5;background:var(--cd);container:vr-nums/inline-size;}
+.vr-nums{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
+.vr-nums div{background:var(--cd2);border:1px solid var(--br);border-radius:12px;padding:14px 16px;min-width:0;}
+.vr-nums div:last-child{grid-column:1/-1;}
+.vr-nums small{display:block;font-size:13px;color:var(--txd);}
+.vr-nums b{font:750 30px/1.15 var(--sans);letter-spacing:-.03em;font-variant-numeric:tabular-nums;}
+.vr-nums div:last-child b{font-size:26px;}
+@container vr-nums (max-width:400px){
+  .vr-nums{grid-template-columns:minmax(0,1fr);gap:6px;}
+  .vr-nums div{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:10px 14px;}
+  .vr-nums small{font-size:14px;}
+  .vr-nums b,.vr-nums div:last-child b{font-size:22px;line-height:1.3;}
+}
+.vr-c-warn{grid-column:span 5;color:#16140f;}
+.vr-wl{display:grid;gap:8px;}
+.vr-wl button{display:block;width:100%;text-align:left;border:0;background:rgba(255,255,255,.72);color:#16140f;border-radius:12px;padding:12px 14px;font-size:15px;font-weight:500;transition:background-color .15s;}
+.vr-wl button:hover{background:#fff;}
+.vr-wl small{display:block;font:400 12px var(--mono);color:#45443f;margin-top:2px;}
+.vr-wl small span{white-space:nowrap;}
+.vr-wl p{font-size:15px;}
+.vr-c-ok{grid-column:span 12;color:#fff;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:32px;align-items:center;}
+.vr-big{font:800 clamp(40px,5vw,60px)/1 var(--sans);letter-spacing:-.035em;}
+.vr-big span{display:block;font:500 16px/1.4 var(--sans);letter-spacing:0;opacity:.88;margin-top:8px;}
+.vr-bar{display:flex;height:44px;border-radius:10px;overflow:hidden;gap:3px;}
+.vr-bar i{display:block;background:#fff;min-width:3px;}
+.vr-legend{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:12px;font-size:14px;opacity:.92;}
+.vr-legend span{display:inline-flex;align-items:center;gap:6px;}
+.vr-legend i{width:10px;height:10px;border-radius:3px;background:#fff;}
+.vr [data-servicos]{margin-top:48px;}
+
+/* ───── 3. apontamentos ───── */
+.vr-det{margin-top:24px;border-radius:24px;padding:24px;}
+.vr-det__top{display:flex;flex-wrap:wrap;align-items:flex-start;gap:16px 24px;margin-bottom:24px;}
+.vr-det__top>div{flex:1;min-width:240px;}
+.vr-det__top h2{font:800 clamp(28px,4vw,42px)/1.05 var(--sans);letter-spacing:-.03em;margin:14px 0 6px;}
+.vr-det__top p{font-size:16px;opacity:.9;overflow-wrap:anywhere;}
+.vr-det__acoes{display:flex;gap:8px;flex-wrap:wrap;}
+.vr-btb{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 16px 0 12px;border:0;border-radius:12px;background:#fff;color:#16140f;font-size:15px;font-weight:500;box-shadow:0 2px 0 rgba(0,0,0,.14);transition:transform .2s var(--ease);}
+.vr-btb:hover{transform:translateY(-1px);}
+.vr-btb svg{width:15px;height:15px;}
+.vr-det .vr-janela{padding:0 6px 6px;container:vr-janela/inline-size;}
+.vr-det .vr-janela__bar{padding:12px 14px;}
+.vr-abas{display:flex;flex-wrap:wrap;gap:4px;margin-left:auto;font-family:var(--sans);}
+.vr-abas button{height:32px;padding:0 12px;border:0;border-radius:999px;background:none;font-size:14px;font-weight:500;color:var(--txd);}
+.vr-abas button:hover{color:var(--tx);}
+.vr-abas button[aria-pressed="true"]{background:var(--tx);color:var(--cd);}
+.vr-abas em{font-style:normal;opacity:.6;margin-left:4px;}
+.vr-sec{padding:26px 26px 8px;}
+.vr-sec__h{display:flex;align-items:baseline;justify-content:space-between;gap:16px 24px;flex-wrap:wrap;padding-bottom:16px;border-bottom:1.5px solid var(--tx);}
+.vr-sec__h h3{font:750 28px/1 var(--sans);letter-spacing:-.025em;}
+.vr-sec__h p{color:var(--txd);font-size:15px;}
+.vr-vazio{padding:40px 0;text-align:center;color:var(--txd);}
+.vr-mais{display:block;margin:20px auto 12px;}
+
+.vr-oc{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;padding:26px 0;border-bottom:1px solid var(--br);transition:background-color .6s,box-shadow .6s;}
+.vr-oc:last-of-type{border-bottom:0;}
+.vr-oc>*{min-width:0;}
+.vr-oc.foco{background:color-mix(in srgb,var(--er) 7%,transparent);box-shadow:0 0 0 12px color-mix(in srgb,var(--er) 7%,transparent);border-radius:4px;}
+.vr-oc__n small{display:block;font-size:13px;color:var(--txd);}
+.vr-oc__n b{font:300 60px/1 var(--sans);letter-spacing:-.04em;font-variant-numeric:tabular-nums;}
+.vr-oc__n b.arq{font-size:22px;font-weight:600;letter-spacing:-.01em;}
+.vr-oc.aviso .vr-oc__n b{color:var(--txd);}
+.vr-oc__m h4{font:650 19px/1.35 var(--sans);letter-spacing:-.01em;margin-bottom:10px;overflow-wrap:anywhere;}
+.vr-tag{display:inline-block;font-size:13px;font-weight:500;padding:3px 10px;border-radius:999px;background:var(--cd2);border:1px solid var(--br);color:var(--txm);margin:0 6px 10px 0;}
+.vr-oc__m p{color:var(--txm);max-width:62ch;font-size:15px;}
+.vr-oc__d{background:var(--cd2);border:1px solid var(--br);border-radius:16px;padding:16px;}
+.vr-oc__d dl{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin-bottom:12px;}
+.vr-oc__d dt{font-size:13px;color:var(--txd);margin-bottom:2px;}
+.vr-oc__d dd{font:500 14px var(--mono);overflow-wrap:anywhere;white-space:pre-wrap;}
+.vr-oc__d .bad{color:var(--er);}
+.vr-oc.aviso .vr-oc__d .bad{color:var(--wa);}
+.vr-oc__d .fix{color:var(--ok);}
+.vr-raw{font:400 13px/1.6 var(--mono);color:var(--txd);background:var(--cd);border:1px solid var(--br);border-radius:10px;padding:8px 12px;overflow-x:auto;white-space:pre;scrollbar-width:thin;}
+.vr-raw mark{background:var(--erb);color:var(--er);border-radius:4px;padding:1px 2px;outline:1px solid var(--erm);}
+.vr-oc.aviso .vr-raw mark{background:var(--wab);color:var(--wa);outline-color:var(--wam);}
+.vr-raw small{display:block;font-size:11px;color:var(--txd);}
+/* fita byte a byte: Atual × Manual */
+.vr-fita{margin-top:10px;overflow-x:auto;scrollbar-width:thin;}
+.vr-fita table{border-collapse:separate;border-spacing:2px;font:500 12px var(--mono);}
+.vr-fita th{font-weight:500;color:var(--txd);text-align:right;padding-right:6px;font-family:var(--sans);font-size:12px;white-space:nowrap;}
+.vr-fita td{min-width:18px;height:22px;text-align:center;border-radius:4px;background:var(--cd);border:1px solid var(--br);padding:0 2px;}
+.vr-fita tr.pos td{background:none;border:0;color:var(--txd);font-size:10px;height:auto;}
+.vr-fita td.dif{background:var(--erb);border-color:var(--er);color:var(--er);}
+.vr-fita tr.man td.dif{background:var(--okb);border-color:var(--ok);color:var(--ok);}
+.vr-fita td.sp::after{content:'·';opacity:.45;}
+
+/* campos e estrutura: linhas densas */
+.vr-filtro{display:flex;flex-wrap:wrap;gap:6px;margin:16px 0 4px;}
+.vr-filtro button{height:32px;padding:0 12px;border:1px solid var(--br2);border-radius:999px;background:none;font-size:13px;font-weight:500;color:var(--txm);}
+.vr-filtro button[aria-pressed="true"]{border-color:var(--tx);color:var(--tx);background:var(--cd2);}
+.vr-cp{display:grid;grid-template-columns:56px minmax(0,1.3fr) 92px minmax(0,1fr) 72px;gap:6px 14px;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--br);font-size:14px;}
+.vr-cp>*{min-width:0;}
+.vr-cp code{font:400 13px var(--mono);overflow-wrap:anywhere;white-space:pre-wrap;}
+.vr-cp .ln{font:500 13px var(--mono);color:var(--txd);}
+.vr-cp .esp{color:var(--txd);font-size:13px;}
+.vr-st{justify-self:end;font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;}
+.vr-st.ERROR{background:var(--erb);color:var(--er);}
+.vr-st.WARN{background:var(--wab);color:var(--wa);}
+.vr-st.OK{background:var(--okb);color:var(--ok);}
+.vr-rec{display:flex;align-items:baseline;gap:12px;padding:8px 0;border-bottom:1px solid var(--br);font-size:14px;}
+.vr-rec .ln{font:500 12px var(--mono);color:var(--txd);min-width:48px;}
+.vr-rec i{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--ok);transform:translateY(-1px);}
+.vr-rec.er i{background:var(--er);}
+.vr-rec.i1{padding-left:20px;}
+.vr-rec.i2{padding-left:40px;}
+.vr-rec span{min-width:0;overflow-wrap:anywhere;color:var(--txm);}
+.vr-regras{margin:16px 0 0;padding:12px 14px;border-radius:12px;background:var(--cd2);border:1px solid var(--br);font-size:14px;color:var(--txm);line-height:1.6;}
+
+/* janela estreita (celular): uma coluna */
+@container vr-janela (max-width:559px){
+  .vr-det .vr-janela__bar{flex-wrap:wrap;}
+  .vr-abas{margin-left:0;width:100%;}
+  .vr-sec{padding:20px 12px 4px;}
+  .vr-oc__n{display:flex;align-items:baseline;gap:8px;}
+  .vr-oc__n b{font-size:40px;}
+  .vr-cp{grid-template-columns:48px minmax(0,1fr) auto;}
+  .vr-cp .esp{grid-column:2/-1;}
+  .vr-cp .pos{display:none;}
+}
+/* janela média: número | texto, o técnico embaixo */
+@container vr-janela (min-width:560px){
+  .vr-oc{grid-template-columns:84px minmax(0,1fr);gap:14px 28px;}
+  .vr-oc__n b{font-size:44px;}
+  .vr-oc__d{grid-column:2;}
+  .vr-oc__d dl{grid-template-columns:repeat(3,minmax(0,1fr));}
+}
+/* janela larga: três colunas */
+@container vr-janela (min-width:980px){
+  .vr-oc{grid-template-columns:120px minmax(0,1fr) minmax(360px,.95fr);gap:32px;}
+  .vr-oc__n b{font-size:60px;}
+  .vr-oc__d{grid-column:auto;}
+  .vr-oc__d dl{grid-template-columns:repeat(2,minmax(0,1fr));}
+}
+
+@media(max-width:1000px){
+  .vr-c-main{grid-column:span 12;grid-row:auto;min-height:0;}
+  .vr-c-main .vr-janela{margin-top:24px;}
+  .vr-c-nums,.vr-c-warn{grid-column:span 6;}
+  .vr-c-ok{grid-template-columns:1fr;gap:20px;}
+}
+@media(max-width:700px){
+  .vr-c-nums,.vr-c-warn{grid-column:span 12;}
+}
+@media(max-width:640px){
+  .vr-intro{padding-top:36px;}
+  .vr-drop__in{min-height:210px;padding:24px 16px;}
+  .vr-passos{padding:24px 16px;}
+  .vr-er{grid-template-columns:auto minmax(0,1fr);}
+  .vr-er code{display:none;}
+  .vr-file__r{margin-left:0;width:100%;}
+  .vr-det{padding:18px 12px 12px;}
+  .vr-troca__menu{right:auto;left:0;}
+}
+@media(prefers-reduced-motion:reduce){.vr *{animation:none !important;transition:none !important;}}
+</style>
+</head>
+<body>
+
+<div class="vr-solo"><a href="index.html">← Central CNAB240</a><span id="soloTema"></span></div>
+
+<main class="vr">
+
+  <!-- 1. importar -->
+  <section class="vr-view" id="v-inicio">
+    <div class="vr-intro">
+      <span class="vr-lbl">Validador CNAB 240 · remessa</span>
+      <h1>Validar remessa</h1>
+      <p>O banco é identificado pelo código nas posições 001–003 do header de arquivo.</p>
+    </div>
+    <div class="vr-drop" id="drop">
+      <div class="vr-drop__in" id="dropIn" role="button" tabindex="0" aria-label="Escolher arquivo de remessa">
+        <span class="vr-drop__ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg></span>
+        <b>Arraste o arquivo para cá</b>
+        <span>ou <u>escolha no computador</u></span>
+        <small>.rem · .txt · .ret · linhas de 240 posições</small>
+      </div>
+      <div class="vr-passos" id="passos" aria-live="polite"></div>
+    </div>
+    <div class="vr-bancos" id="bancos"><p>Bancos com validador de remessa. O arquivo é lido só no seu navegador.</p></div>
+  </section>
+
+  <!-- 2. resumo -->
+  <section class="vr-view" id="v-resumo" hidden>
+    <div class="vr-file" id="file"></div>
+    <div id="notas"></div>
+    <div class="vr-hero"><h1 id="titulo"></h1><p id="subtitulo"></p></div>
+    <div class="vr-bento" id="bento">
+      <article class="vr-card vr-c-main" id="cMain"></article>
+      <article class="vr-card vr-c-nums"><div class="vr-lbl">Em números</div><div class="vr-nums" id="nums"></div></article>
+      <article class="vr-card vr-c-warn" id="cWarn"></article>
+      <article class="vr-card vr-c-ok" id="cOk"></article>
+    </div>
+    <div data-servicos></div>
+  </section>
+
+  <!-- 3. apontamentos -->
+  <section class="vr-view" id="v-detalhe" hidden>
+    <div class="vr-det" id="det"></div>
+  </section>
+</main>
+
+<input type="file" id="arquivo" accept=".rem,.REM,.txt,.TXT,.ret,.RET" hidden>
+
+<!-- Regras de cada banco. Banco novo: crie validadores/<codigo>-<banco>.js e inclua aqui. -->
+<script src="validadores/001-bb.js"></script>
+<script src="validadores/033-santander.js"></script>
+<script src="validadores/237-bradesco.js"></script>
+<script src="validadores/341-itau.js"></script>
+<script src="validadores/748-sicredi.js"></script>
+<script src="validadores/756-sicoob.js"></script>
+
+<script>
+/* Tela do validador de remessa. As regras ficam em validadores/*.js; aqui só
+   se reconhece o banco, chama validar(linhas) e se mostra o resultado. */
+(function () {
+  var V = window.CNAB_REMESSA || {};
+  var CODIGOS = Object.keys(V).sort();
+  // Bancos que a central conhece mas que ainda não têm validador de remessa.
+  var SEM_VALIDADOR = { '097': 'Credisis', '104': 'Caixa' };
+  var POR_PAGINA = 40;
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  var p = function (l, a, b) { return l.substring(a - 1, b); };
+  var SETA = '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5"/></svg>';
+  var VOLTA = '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 7H3M6.5 3.5L3 7l3.5 3.5"/></svg>';
+  var COPIA = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M11 5V3.5A1.5 1.5 0 0 0 9.5 2h-6A1.5 1.5 0 0 0 2 3.5v6A1.5 1.5 0 0 0 3.5 11H5"/></svg>';
+  var ARQ = '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M5 2.5h8l4 4v13H5z"/><path d="M13 2.5v4h4"/></svg>';
+
+  var atual = null;      // { texto, nome, bytes, linhas, codigo, forcado, res }
+  var preferido = null;  // banco escolhido na central (#banco=033), usado se o header não disser
+
+  /* ---------- telas ---------- */
+  function mostrar(id) {
+    ['v-inicio', 'v-resumo', 'v-detalhe'].forEach(function (v) { $(v).hidden = v !== id; });
+    window.scrollTo(0, 0);
+  }
+  function corDoBanco(cod) {
+    var b = cod && V[cod];
+    document.documentElement.style.setProperty('--bk', b ? b.cor : '#16140f');
+    document.documentElement.style.setProperty('--bkc', b ? b.tinta : '#fff');
+    if (b) document.documentElement.setAttribute('data-banco', cod); else document.documentElement.removeAttribute('data-banco');
+    document.title = b ? 'Validador de remessa CNAB240 — ' + b.nome + ' ' + cod : 'Validador de remessa CNAB240';
+  }
+  function inicio() {
+    var d = $('drop');
+    d.className = 'vr-drop'; d.style.background = ''; d.style.color = ''; d.style.removeProperty('--vr-fundo');
+    $('passos').innerHTML = '';
+    $('arquivo').value = '';
+    atual = null;
+    corDoBanco(null);
+    mostrar('v-inicio');
+  }
+
+  /* ---------- importar ---------- */
+  $('bancos').insertAdjacentHTML('beforeend', CODIGOS.map(function (c) {
+    return '<span class="vr-chip"><img src="' + V[c].logo + '" alt="">' + esc(V[c].nome) + '</span>';
+  }).join(''));
+  var drop = $('drop'), dropIn = $('dropIn');
+  dropIn.addEventListener('click', function () { $('arquivo').click(); });
+  dropIn.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('arquivo').click(); } });
+  ['dragenter', 'dragover'].forEach(function (t) { drop.addEventListener(t, function (e) { e.preventDefault(); drop.classList.add('over'); }); });
+  ['dragleave', 'drop'].forEach(function (t) { drop.addEventListener(t, function (e) { e.preventDefault(); drop.classList.remove('over'); }); });
+  drop.addEventListener('drop', function (e) { if (e.dataTransfer.files[0]) abrirArquivo(e.dataTransfer.files[0]); });
+  $('arquivo').addEventListener('change', function () { if (this.files[0]) abrirArquivo(this.files[0]); });
+
+  function abrirArquivo(f) {
+    var ext = f.name.split('.').pop().toLowerCase();
+    if (['rem', 'txt', 'ret'].indexOf(ext) < 0) {
+      falhar('Arquivo não aceito', f.name + ': use .REM, .TXT ou .RET.');
+      return;
+    }
+    var r = new FileReader();
+    r.onload = function () { ler(String(r.result), f.name, f.size); };
+    r.readAsText(f, 'ISO-8859-1');
+  }
+
+  /* passos da leitura, só para o tempo de um piscar: o trabalho é instantâneo */
+  function passos(lista) {
+    drop.className = 'vr-drop lendo';
+    $('passos').innerHTML = lista.map(function (t) { return '<div class="vr-passo"><i></i><div><b>' + esc(t) + '</b><span></span></div></div>'; }).join('');
+  }
+  function passo(i, estado, detalhe, titulo) {
+    var s = $('passos').children[i];
+    s.className = 'vr-passo ' + estado;
+    if (titulo) s.querySelector('b').textContent = titulo;
+    if (detalhe != null) s.querySelector('span').textContent = detalhe;
+  }
+  function espera(ms) { return new Promise(function (ok) { setTimeout(ok, ms); }); }
+
+  function falhar(titulo, detalhe, acoes) {
+    passos([titulo]);
+    drop.classList.add('erro');
+    passo(0, 'x', detalhe);
+    if (acoes) $('passos').insertAdjacentHTML('beforeend', '<div class="vr-acoes">' + acoes + '</div>');
+    var t = $('outroArq'); if (t) t.onclick = function () { inicio(); $('arquivo').click(); };
+  }
+
+  function ler(texto, nome, bytes) {
+    var linhas = texto.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n').filter(function (l) { return l.length > 0; });
+    var h = linhas[0] || '';
+    var cod = h.substring(0, 3);
+    var codigo = V[cod] ? cod : null;
+    var forcado = false;
+    if (!codigo && preferido && V[preferido]) { codigo = preferido; forcado = true; }
+
+    passos(['Lendo o arquivo', 'Procurando o banco no header', 'Conferindo o layout']);
+    passo(0, 'on', nome);
+    return espera(220).then(function () {
+      passo(0, 'ok', linhas.length + ' linhas · ' + h.length + ' posições na primeira');
+      passo(1, 'on', 'header de arquivo, posições 001–003');
+      return espera(260);
+    }).then(function () {
+      if (!codigo) {
+        drop.classList.add('erro');
+        var semVal = SEM_VALIDADOR[cod];
+        passo(1, 'x', semVal
+          ? cod + ' = ' + semVal + ': ainda não há validador de remessa para esse banco.'
+          : (/^\d{3}$/.test(cod) ? 'código ' + cod + ': não é um dos bancos com validador.' : 'a primeira linha não começa com um código de banco.'),
+          semVal ? 'Banco sem validador' : 'Banco não reconhecido');
+        $('passos').children[2].remove();
+        $('passos').insertAdjacentHTML('beforeend', '<div class="vr-acoes">' +
+          (semVal ? '<a class="vr-pl" href="index.html#preenchedor" target="_top">Preenchedor .srb</a><a class="vr-pl" href="index.html#retorno" target="_top">Analisador de retorno</a>' : '') +
+          '<span class="vr-troca"><button class="vr-pl" type="button" id="validarComo" aria-haspopup="true" aria-expanded="false">Validar como…</button></span>' +
+          '<button class="vr-pl" type="button" id="outroArq">Outro arquivo</button></div>');
+        $('outroArq').onclick = function () { inicio(); $('arquivo').click(); };
+        menuBancos($('validarComo'), null, function (c) { validar({ texto: texto, nome: nome, bytes: bytes, linhas: linhas, codigo: c, forcado: true }); });
+        return Promise.reject('sem banco');
+      }
+      var b = V[codigo];
+      drop.style.background = b.cor; drop.style.color = b.tinta; drop.style.setProperty('--vr-fundo', b.cor);
+      corDoBanco(codigo);
+      passo(1, 'ok', forcado ? 'header diz "' + cod + '"; validando como ' + b.nome + ', escolhido na central' : 'posições 001–003 = ' + codigo + ' → ' + b.nome);
+      passo(2, 'on', b.produto);
+      return espera(240);
+    }).then(function () {
+      passo(2, 'ok');
+      return espera(200);
+    }).then(function () {
+      validar({ texto: texto, nome: nome, bytes: bytes, linhas: linhas, codigo: codigo, forcado: forcado });
+    }).catch(function (e) { if (e !== 'sem banco') throw e; });
+  }
+
+  /* ---------- validar e montar o resumo ---------- */
+  function validar(a) {
+    a.res = V[a.codigo].validar(a.linhas);
+    atual = a;
+    corDoBanco(a.codigo);
+    resumo();
+  }
+
+  var semPrefixo = function (msg) { return String(msg).replace(/^\[[^\]]*\]\s*/, ''); };
+  // A ocorrência aponta para o campo conferido (mesma linha, mesmo nome entre colchetes).
+  function campoDa(o) {
+    if (o._campo !== undefined) return o._campo;
+    var m = /^\[([^\]]+)\]/.exec(o.msg || '');
+    var f = null;
+    if (m) for (var i = 0; i < atual.res.fr.length; i++) {
+      var x = atual.res.fr[i];
+      if (x.ln === o.line && x.campo === m[1]) { f = x; break; }
+    }
+    o._campo = f;
+    return f;
+  }
+  var vis = function (s) { return String(s).replace(/ /g, '·'); };
+
+  function contar() {
+    var r = atual.res;
+    return {
+      erros: r.iss.filter(function (i) { return i.sev === 'ERROR'; }),
+      avisos: r.iss.filter(function (i) { return i.sev === 'WARN'; }),
+      oks: r.iss.filter(function (i) { return i.sev === 'OK'; })
+    };
+  }
+
+  function resumo() {
+    var b = V[atual.codigo], c = contar(), ls = atual.linhas;
+    var corAviso = atual.codigo === '001' ? '#ffe7a6' : '#ffd54a';  // não confundir com o amarelo do BB
+    var corOk = atual.codigo === '748' ? '#14532d' : '#0e8a4f';     // nem com o verde do Sicredi
+
+    // barra do arquivo
+    $('file').innerHTML = ARQ + '<code>' + esc(atual.nome) + '</code><span class="vr-meta">' + ls.length + ' linhas · ' + (atual.bytes / 1024).toFixed(1) + ' KB</span>' +
+      '<span class="vr-ident" style="background:' + b.cor + ';color:' + b.tinta + '"><img src="' + b.logo + '" alt="">' + esc(b.nome) + ' ' + atual.codigo + (atual.forcado ? ', escolhido à mão' : ', pelo header') + '</span>' +
+      '<div class="vr-file__r"><span data-manuais></span><span class="vr-troca"><button class="vr-pl" type="button" id="trocar" aria-haspopup="true" aria-expanded="false">Trocar banco</button></span>' +
+      '<button class="vr-pl vr-pl--dark" type="button" id="outro">Validar outro arquivo</button></div>';
+    $('outro').onclick = function () { inicio(); $('arquivo').click(); };
+    menuBancos($('trocar'), atual.codigo, function (cod) { validar({ texto: atual.texto, nome: atual.nome, bytes: atual.bytes, linhas: atual.linhas, codigo: cod, forcado: true }); });
+    if (window.CnabDocs) window.CnabDocs.montar(atual.codigo);
+
+    // avisos sobre o arquivo
+    var notas = [];
+    var h = ls[0] || '';
+    if (p(h, 143, 143) === '2') notas.push('O header indica arquivo de <b>retorno</b> (posição 143 = 2). Para saber o que foi pago, use o <a href="index.html#retorno" target="_top">Analisador de retorno</a>.');
+    if (atual.forcado && h.substring(0, 3) !== atual.codigo) notas.push('O header diz banco "' + esc(h.substring(0, 3)) + '". O arquivo foi validado com as regras do ' + esc(b.nome) + ', escolhido à mão.');
+    $('notas').innerHTML = notas.map(function (n) { return '<div class="vr-nota">' + n + '</div>'; }).join('');
+
+    // manchete
+    var ne = c.erros.length, nw = c.avisos.length;
+    var plural = function (n, um, varios) { return n + ' ' + (n === 1 ? um : varios); };
+    $('titulo').textContent = b.nome + ': ' + (ne ? plural(ne, 'erro', 'erros') : 'sem erros') + (nw ? ', ' + plural(nw, 'aviso', 'avisos') : (ne ? '' : ' nem avisos')) + '.';
+    $('subtitulo').textContent = ne ? 'Arquivo com erros: não enviar ao banco.' : nw ? 'Pode ser enviado. Confira os avisos antes.' : 'Estrutura conforme o layout ' + b.versao.split(' · ').slice(0, 2).join(' · ') + '.';
+
+    // cartão do banco (erros)
+    var m = $('cMain');
+    m.style.background = b.cor; m.style.color = b.tinta;
+    var mostra = c.erros.slice(0, 4);
+    m.innerHTML = '<div class="vr-lbl"><img src="' + b.logo + '" alt="">' + esc(b.nome) + ' · ' + atual.codigo + '</div>' +
+      '<button class="vr-go" type="button" data-abrir="ERROR" aria-label="Ver os apontamentos">' + SETA + '</button>' +
+      '<p class="vr-lead">' + (ne ? plural(ne, 'erro de layout', 'erros de layout') : 'Nenhum erro de layout') + '<small>' + esc(b.produto) + '</small></p>' +
+      '<div class="vr-janela"><div class="vr-janela__bar"><i></i><i></i><i></i><span>' + esc(atual.nome) + '</span></div>' +
+      (ne ? mostra.map(function (o) {
+        var f = campoDa(o);
+        return '<button class="vr-er" type="button" data-foco="' + atual.res.iss.indexOf(o) + '"><b>' + (o.line ? 'L' + o.line : 'ARQ') + '</b><span>' + esc(semPrefixo(o.msg)) +
+          '<small>' + esc(o.seg || '') + (f ? ' · col. ' + f.pi + '–' + f.pf : '') + '</small></span><code>' + (f ? esc(vis(f.enc)) : '') + '</code></button>';
+      }).join('') + (ne > mostra.length ? '<button class="vr-er vr-er--mais" type="button" data-abrir="ERROR"><b>+' + (ne - mostra.length) + '</b><span>Ver todos os erros</span><code></code></button>' : '')
+        : '<div class="vr-er vr-er--ok"><b>OK</b><span>Nenhum erro encontrado<small>' + plural(c.oks.length, 'verificação passou', 'verificações passaram') + '</small></span><code></code></div>') +
+      '</div>';
+
+    // números
+    var lotes = 0, det = 0, soma = 0, temSoma = false;
+    ls.forEach(function (l) {
+      var t = l.charAt(7);
+      if (t === '1') lotes++;
+      else if (t === '3') det++;
+      else if (t === '5') { var v = p(l, 24, 41); if (/^\d{18}$/.test(v)) { soma += parseInt(v, 10); temSoma = true; } }
+    });
+    $('nums').innerHTML = [
+      ['Linhas', ls.length], ['Lotes', lotes], ['Detalhes', det],
+      ['Valor total (trailers de lote)', temSoma ? (soma / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—']
+    ].map(function (n) { return '<div><small>' + n[0] + '</small><b>' + n[1] + '</b></div>'; }).join('');
+
+    // avisos
+    var w = $('cWarn');
+    w.style.background = corAviso;
+    w.innerHTML = '<div class="vr-lbl">' + (nw ? plural(nw, 'aviso', 'avisos') : 'Nenhum aviso') + '</div>' +
+      (nw ? '<button class="vr-go" type="button" data-abrir="WARN" aria-label="Ver os avisos">' + SETA + '</button>' : '') +
+      '<div class="vr-wl">' + (nw ? c.avisos.slice(0, 3).map(function (o) {
+        var f = campoDa(o);
+        return '<button type="button" data-foco="' + atual.res.iss.indexOf(o) + '">' + esc(semPrefixo(o.msg)) + '<small>' +
+          [o.line ? 'Linha ' + o.line : 'Arquivo', o.seg, f ? 'col. ' + f.pi + '–' + f.pf : ''].filter(Boolean).map(function (x) { return '<span>' + esc(x) + '</span>'; }).join(' · ') + '</small></button>';
+      }).join('') + (nw > 3 ? '<button type="button" data-abrir="WARN">Ver todos os ' + nw + ' avisos</button>' : '')
+        : '<p>Nenhum campo pedindo conferência.</p>') + '</div>';
+
+    // linhas sem ocorrência e tipos de registro
+    var comProblema = {};
+    c.erros.concat(c.avisos).forEach(function (o) { if (o.line) comProblema[o.line] = 1; });
+    var limpas = ls.length - Object.keys(comProblema).length;
+    var tipos = [['Headers e trailers', 0], ['Segmento A', 0], ['Segmento B', 0], ['Segmento J', 0], ['Outros', 0]];
+    ls.forEach(function (l) {
+      var t = l.charAt(7), s = l.charAt(13);
+      if (t !== '3') tipos[0][1]++; else if (s === 'A') tipos[1][1]++; else if (s === 'B') tipos[2][1]++; else if (s === 'J') tipos[3][1]++; else tipos[4][1]++;
+    });
+    tipos = tipos.filter(function (t) { return t[1] > 0; });
+    var tons = [1, .78, .56, .38, .24];
+    var k = $('cOk');
+    k.style.background = corOk;
+    k.innerHTML = '<div><div class="vr-lbl">Sem ocorrência</div><div class="vr-big">' + plural(limpas, 'linha', 'linhas') + '<span>de ' + ls.length + ' no arquivo · ' + plural(c.oks.length, 'verificação OK', 'verificações OK') + '</span></div></div>' +
+      '<div><div class="vr-bar">' + tipos.map(function (t, i) { return '<i style="flex:' + t[1] + ';opacity:' + tons[i] + '"></i>'; }).join('') + '</div>' +
+      '<div class="vr-legend">' + tipos.map(function (t, i) { return '<span><i style="opacity:' + tons[i] + '"></i>' + t[0] + ' ' + t[1] + '</span>'; }).join('') + '</div></div>';
+
+    if (window.CnabServicos) window.CnabServicos.montar(atual.codigo);
+    mostrar('v-resumo');
+  }
+  $('bento').addEventListener('click', function (e) {
+    var g = e.target.closest('[data-abrir]'); if (g) return detalhe(g.getAttribute('data-abrir'));
+    var f = e.target.closest('[data-foco]'); if (f) { var o = atual.res.iss[+f.getAttribute('data-foco')]; return detalhe(o.sev, o); }
+  });
+
+  /* ---------- menu "Trocar banco" ---------- */
+  function menuBancos(btn, marcado, escolher) {
+    var menu = document.createElement('div');
+    menu.className = 'vr-troca__menu'; menu.hidden = true; menu.setAttribute('role', 'menu');
+    menu.innerHTML = CODIGOS.map(function (c) {
+      return '<button type="button" role="menuitem" data-c="' + c + '"' + (c === marcado ? ' aria-current="true"' : '') + '><img src="' + V[c].logo + '" alt="">' + esc(V[c].nome) + '<small>' + c + '</small></button>';
+    }).join('');
+    btn.parentNode.appendChild(menu);
+    function abrir(sim) { menu.hidden = !sim; btn.setAttribute('aria-expanded', sim ? 'true' : 'false'); }
+    btn.addEventListener('click', function (e) { e.stopPropagation(); abrir(menu.hidden); });
+    menu.addEventListener('click', function (e) {
+      var it = e.target.closest('[data-c]'); if (!it) return;
+      abrir(false); escolher(it.getAttribute('data-c'));
+    });
+    document.addEventListener('click', function () { abrir(false); });
+  }
+
+  /* ---------- apontamentos ---------- */
+  var aba = 'ERROR', paginas = {};
+  function detalhe(qual, foco) {
+    var b = V[atual.codigo], c = contar();
+    aba = qual === 'WARN' ? 'WARN' : qual === 'CAMPOS' ? 'CAMPOS' : qual === 'EST' ? 'EST' : 'ERROR';
+    paginas = {};
+    var d = $('det');
+    d.style.background = b.cor; d.style.color = b.tinta;
+    d.innerHTML =
+      '<div class="vr-det__top"><div><div class="vr-lbl"><img src="' + b.logo + '" alt="">' + esc(b.nome) + ' · ' + atual.codigo + '</div>' +
+      '<h2>Apontamentos</h2><p>' + c.erros.length + ' erros e ' + c.avisos.length + ' avisos em ' + esc(atual.nome) + '</p></div>' +
+      '<div class="vr-det__acoes"><button class="vr-btb" type="button" id="copiar">' + COPIA + 'Copiar relatório</button>' +
+      '<button class="vr-btb" type="button" id="voltar">' + VOLTA + 'Voltar ao resumo</button></div></div>' +
+      '<div class="vr-janela"><div class="vr-janela__bar"><i></i><i></i><i></i><span>' + esc(atual.nome) + '</span>' +
+      '<div class="vr-abas" role="group" aria-label="Mostrar">' +
+      [['ERROR', 'Erros', c.erros.length], ['WARN', 'Avisos', c.avisos.length], ['CAMPOS', 'Campos', atual.res.fr.length], ['EST', 'Estrutura', atual.res.recs.length]].map(function (t) {
+        return '<button type="button" data-aba="' + t[0] + '" aria-pressed="' + (t[0] === aba) + '">' + t[1] + '<em>' + t[2] + '</em></button>';
+      }).join('') + '</div></div><div id="corpo"></div></div>';
+    $('voltar').onclick = function () { mostrar('v-resumo'); };
+    $('copiar').onclick = copiar;
+    d.querySelector('.vr-abas').onclick = function (e) { var t = e.target.closest('[data-aba]'); if (t) { aba = t.getAttribute('data-aba'); abas(); } };
+    abas(foco);
+    mostrar('v-detalhe');
+  }
+  function abas(foco) {
+    document.querySelectorAll('.vr-abas [data-aba]').forEach(function (x) { x.setAttribute('aria-pressed', String(x.getAttribute('data-aba') === aba)); });
+    var corpo = $('corpo'), c = contar();
+    if (aba === 'ERROR' || aba === 'WARN') {
+      var lista = aba === 'ERROR' ? c.erros : c.avisos;
+      var n = paginas[aba] || POR_PAGINA;
+      if (foco) { var i = lista.indexOf(foco); if (i >= n) n = i + 1; paginas[aba] = n; }
+      corpo.innerHTML = '<section class="vr-sec"><div class="vr-sec__h"><h3>' + (aba === 'ERROR' ? 'Erros' : 'Avisos') + '</h3><p>' + (aba === 'ERROR' ? 'Impedem o envio' : 'Não impedem o envio') + '</p></div>' +
+        (lista.length ? lista.slice(0, n).map(bloco).join('') : '<p class="vr-vazio">Nenhum ' + (aba === 'ERROR' ? 'erro' : 'aviso') + '.</p>') +
+        (lista.length > n ? '<button class="vr-pl vr-mais" type="button" id="mais">Mostrar mais ' + Math.min(POR_PAGINA, lista.length - n) + ' de ' + (lista.length - n) + '</button>' : '') + '</section>';
+    } else if (aba === 'CAMPOS') {
+      campos(corpo);
+    } else {
+      estrutura(corpo);
+    }
+    var mais = $('mais');
+    if (mais) mais.onclick = function () { paginas[aba] = (paginas[aba] || POR_PAGINA) + POR_PAGINA; abas(); };
+    if (foco) {
+      var el = document.querySelector('[data-oc="' + atual.res.iss.indexOf(foco) + '"]');
+      if (el) setTimeout(function () {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('foco');
+        setTimeout(function () { el.classList.remove('foco'); }, 1600);
+      }, 60);
+    }
+  }
+
+  function trecho(linha, pi, pf) {
+    if (!linha) return '';
+    var a = Math.max(0, pi - 1 - 14), z = Math.min(linha.length, pf + 14);
+    return '<div class="vr-raw"><small>Linha no arquivo · posições ' + (a + 1) + '–' + z + '</small>' +
+      (a > 0 ? '…' : '') + esc(linha.slice(a, pi - 1)) + '<mark>' + esc(linha.slice(pi - 1, pf)) + '</mark>' + esc(linha.slice(pf, z)) + (z < linha.length ? '…' : '') + '</div>';
+  }
+  // Fita byte a byte (Atual × Manual) quando há correção sugerida e o campo é curto.
+  function fita(f) {
+    if (typeof f.fix !== 'string' || f.enc.length > 24 || f.fix.length !== f.enc.length) return '';
+    var pos = '', at = '', ma = '';
+    for (var i = 0; i < f.enc.length; i++) {
+      var x = f.enc[i], y = f.fix[i], dif = x !== y ? ' dif' : '';
+      pos += '<td>' + (f.pi + i) + '</td>';
+      at += '<td class="' + (x === ' ' ? 'sp' : '') + dif + '">' + (x === ' ' ? '' : esc(x)) + '</td>';
+      ma += '<td class="' + (y === ' ' ? 'sp' : '') + dif + '">' + (y === ' ' ? '' : esc(y)) + '</td>';
+    }
+    return '<div class="vr-fita"><table><tr class="pos"><th></th>' + pos + '</tr><tr><th>Atual</th>' + at + '</tr><tr class="man"><th>Manual</th>' + ma + '</tr></table></div>';
+  }
+  function bloco(o) {
+    var f = campoDa(o), i = atual.res.iss.indexOf(o);
+    return '<article class="vr-oc' + (o.sev === 'WARN' ? ' aviso' : '') + '" data-oc="' + i + '">' +
+      '<div class="vr-oc__n">' + (o.line ? '<small>Linha</small><b>' + o.line + '</b>' : '<small>Escopo</small><b class="arq">Arquivo</b>') + '</div>' +
+      '<div class="vr-oc__m"><h4>' + esc(semPrefixo(o.msg)) + '</h4>' +
+      (o.seg ? '<span class="vr-tag">' + esc(o.seg) + '</span>' : '') + (f ? '<span class="vr-tag">Colunas ' + f.pi + '–' + f.pf + '</span>' : '') +
+      (f ? '<p>' + esc(f.campo) + '</p>' : '') + '</div>' +
+      (f ? '<div class="vr-oc__d"><dl><div><dt>Esperado</dt><dd>' + esc(f.esp) + '</dd></div>' +
+        '<div><dt>Encontrado</dt><dd class="bad">' + (f.enc.trim() ? esc(vis(f.enc)) : '(vazio: só espaços)') + '</dd></div>' +
+        (typeof f.fix === 'string' ? '<div><dt>Como deve ficar</dt><dd class="fix">' + esc(vis(f.fix)) + '</dd></div>' : '') + '</dl>' +
+        trecho(atual.linhas[f.ln - 1], f.pi, f.pf) + fita(f) + '</div>'
+        : (o.line ? '<div class="vr-oc__d">' + trecho(atual.linhas[o.line - 1], 1, 0) + '</div>' : '')) +
+      '</article>';
+  }
+
+  var filtroCampos = 'PROB';
+  function campos(corpo) {
+    var b = V[atual.codigo];
+    var todos = atual.res.fr;
+    var lista = filtroCampos === 'PROB' ? todos.filter(function (f) { return f.st !== 'OK'; }) : filtroCampos === 'TODOS' ? todos : todos.filter(function (f) { return f.st === filtroCampos; });
+    var n = paginas.CAMPOS || 100;
+    corpo.innerHTML = '<section class="vr-sec"><div class="vr-sec__h"><h3>Campos</h3><p>Cada campo conferido, com posição e valor no arquivo</p></div>' +
+      '<div class="vr-filtro" role="group" aria-label="Filtrar campos">' +
+      [['PROB', 'Com problema'], ['ERROR', 'Erros'], ['WARN', 'Avisos'], ['OK', 'OK'], ['TODOS', 'Todos']].map(function (x) {
+        return '<button type="button" data-f="' + x[0] + '" aria-pressed="' + (x[0] === filtroCampos) + '">' + x[1] + '</button>';
+      }).join('') + '</div>' +
+      (lista.length ? lista.slice(0, n).map(function (f) {
+        return '<div class="vr-cp"><span class="ln">L' + f.ln + '</span><span>' + esc(f.campo) + '</span><code class="pos">' + f.pi + '–' + f.pf + '</code>' +
+          '<code>' + (f.enc.trim() ? esc(vis(f.enc)) : '(vazio)') + '</code><span class="vr-st ' + f.st + '">' + (f.st === 'ERROR' ? 'Erro' : f.st === 'WARN' ? 'Aviso' : 'OK') + '</span>' +
+          (f.st !== 'OK' ? '<span class="esp" style="grid-column:2/-1">' + esc(f.det || f.esp) + '</span>' : '') + '</div>';
+      }).join('') : '<p class="vr-vazio">Nenhum campo neste filtro.</p>') +
+      (lista.length > n ? '<button class="vr-pl vr-mais" type="button" id="mais">Mostrar mais ' + Math.min(100, lista.length - n) + ' de ' + (lista.length - n) + '</button>' : '') +
+      (b.nota ? '<div class="vr-regras">' + b.nota + '</div>' : '') + '</section>';
+    corpo.querySelector('.vr-filtro').onclick = function (e) { var t = e.target.closest('[data-f]'); if (t) { filtroCampos = t.getAttribute('data-f'); paginas.CAMPOS = 100; abas(); } };
+    var mais = $('mais'); if (mais) mais.onclick = function () { paginas.CAMPOS = n + 100; abas(); };
+  }
+  function estrutura(corpo) {
+    var recs = atual.res.recs, n = paginas.EST || 200;
+    corpo.innerHTML = '<section class="vr-sec"><div class="vr-sec__h"><h3>Estrutura</h3><p>Registros na ordem do arquivo</p></div>' +
+      recs.slice(0, n).map(function (r) {
+        return '<div class="vr-rec' + (r.ind ? ' i' + r.ind : '') + (r.ok ? '' : ' er') + '"><span class="ln">L' + r.ln + '</span><i></i><span>' + esc(r.desc) + '</span></div>';
+      }).join('') +
+      (recs.length > n ? '<button class="vr-pl vr-mais" type="button" id="mais">Mostrar mais ' + Math.min(200, recs.length - n) + ' de ' + (recs.length - n) + '</button>' : '') + '</section>';
+    var mais = $('mais'); if (mais) mais.onclick = function () { paginas.EST = n + 200; abas(); };
+  }
+
+  // Mesmo formato do relatório das páginas antigas.
+  function copiar() {
+    var txt = atual.res.iss.map(function (i) { return '[' + i.sev + '] Ln ' + (i.line || 0) + ' | ' + i.seg + ' | ' + i.msg; }).join('\n');
+    var b = $('copiar');
+    navigator.clipboard.writeText(txt).then(function () {
+      b.lastChild.textContent = 'Copiado';
+      setTimeout(function () { b.lastChild.textContent = 'Copiar relatório'; }, 2000);
+    });
+  }
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('v-detalhe').hidden) mostrar('v-resumo'); });
+
+  /* ---------- entrada pela central ---------- */
+  // #banco=033: banco escolhido no menu da central, usado se o header não for reconhecido.
+  function lerHash() {
+    var m = /banco=(\d{3})/.exec(location.hash);
+    preferido = m && V[m[1]] ? m[1] : null;
+  }
+  lerHash();
+  window.addEventListener('hashchange', lerHash);
+  // A central lê o arquivo escolhido no botão "Validar arquivo" do cabeçalho e manda o texto.
+  window.addEventListener('message', function (e) {
+    var a = e.data && e.data.cnabArquivo;
+    if (a && typeof a.texto === 'string') { inicio(); ler(a.texto, a.nome || 'arquivo.rem', a.bytes || a.texto.length); }
+  });
+  // Para testes: window.validarRemessa(texto, nome)
+  window.validarRemessa = function (texto, nome) { return ler(texto, nome || 'teste.rem', texto.length); };
+
+  if (window.self === window.top && window.CnabTema) $('soloTema').appendChild(window.CnabTema.botao());
+  corDoBanco(null);
+})();
+</script>
+<script src="docs/cnab/catalogo.js"></script>
+<script src="assets/docs-cnab.js" data-banco="auto"></script>
+<script src="configs/servicos.js"></script>
+<script src="assets/servicos-cnab.js" data-banco="auto"></script>
+</body>
+</html>

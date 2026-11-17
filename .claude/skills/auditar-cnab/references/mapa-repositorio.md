@@ -3,18 +3,23 @@
 Como as regras CNAB estão escritas no repositório, para achar rápido o que
 comparar com o manual.
 
-## Validadores (`Validador_CNAB240_<Banco>.html`)
+## Validadores (`validadores/<codigo>-<banco>.js`)
 
-Página única com HTML e um `<script>` com toda a lógica; o visual vem de
-`assets/ui.css`, comum a todas as páginas. O padrão é o
-mesmo em todos os bancos.
+As regras de remessa de cada banco ficam num módulo próprio, sem tela:
+`validadores/001-bb.js`, `033-santander.js`, `237-bradesco.js`, `341-itau.js`,
+`748-sicredi.js`, `756-sicoob.js`. Cada um registra
+`window.CNAB_REMESSA['<codigo>'] = { nome, produto, versao, ..., validar }`.
+A tela é uma só, `Validador_CNAB240.html`: reconhece o banco pelo header do
+arquivo (posições 1–3) e chama `validar(linhas)`. As páginas antigas
+`Validador_CNAB240_<Banco>.html` só redirecionam. O padrão do código é o mesmo
+em todos os bancos.
 
 ### Código do banco e versão declarada
 
-- `const BANCO='033';` no início do script.
+- `const BANCO='033';` no início do módulo.
 - A versão do manual em que o validador se baseia aparece em três lugares, que
   devem ser atualizados juntos quando o validador for corrigido:
-  - etiqueta do cabeçalho: `<span class="htag">Banco 033 · YLEC_2403 V.11.6 · ...`;
+  - `versao` no registro do fim do módulo: `"versao": "Banco 033 · YLEC_2403 V.11.7 · ..."`;
   - comentário antes das funções: `VALIDATORS — SANTANDER CNAB240 YLEC_2403 V.11.6`;
   - mensagens/esperados que citam a versão, ex. `'"060" (Santander V.11.6)'`.
   - e `baseDoValidador` em `docs/cnab/catalogo.js`.
@@ -90,7 +95,7 @@ aceita (tipo, tamanho, dígito verificador).
 
 ```json
 { "codigo": "033", "nome": "Santander", "pasta": "033-santander",
-  "validador": "Validador_CNAB240_Santander.html",
+  "validador": "validadores/033-santander.js",
   "baseDoValidador": "YLEC_2403 V.11.6 (07/2024)",
   "documentos": [ { "titulo": "...", "versao": "V11.7", "data": "2026-06",
     "arquivo": "....pdf", "url": "https://...", "bytes": 1323406,

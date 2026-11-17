@@ -61,6 +61,23 @@
     aoMudar: function (f) { ouvintes.push(f); }
   };
 
+  // Dentro da central: marca o <html> (a página pode esconder o que só faz
+  // sentido aberta sozinha) e avisa a central da cor do banco (--bk), para o
+  // fundo em volta do iframe acompanhar o tom da página.
+  if (window.self !== window.top) {
+    root.classList.add('na-central');
+    var ultimaCor = '';
+    var avisarCor = function () {
+      var c = (getComputedStyle(root).getPropertyValue('--bk') || '').trim();
+      if (c && c !== ultimaCor) {
+        ultimaCor = c;
+        try { window.parent.postMessage({ cnabCor: c }, '*'); } catch (e) {}
+      }
+    };
+    document.addEventListener('DOMContentLoaded', avisarCor);
+    if (window.MutationObserver) new MutationObserver(avisarCor).observe(root, { attributes: true, attributeFilter: ['style'] });
+  }
+
   // Página aberta sozinha (fora da central): botão no fim do cabeçalho.
   if (window.self === window.top) {
     document.addEventListener('DOMContentLoaded', function () {

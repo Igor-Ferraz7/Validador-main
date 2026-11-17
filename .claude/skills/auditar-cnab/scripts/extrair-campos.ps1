@@ -1,7 +1,7 @@
 ﻿<#
   Lista os campos que o sistema implementa, sem precisar ler o arquivo todo.
 
-    extrair-campos.ps1 <Validador_CNAB240_X.html>
+    extrair-campos.ps1 <validadores/033-santander.js>
         Para cada função de registro/segmento (vHA, vHL, vSA, ..., vTA): os
         campos validados via CF(ctx,'rótulo',ini,fim,...), com a linha no
         código. Aponta:
@@ -15,7 +15,7 @@
 
   -Funcao vSA   limita a uma função (validador) ou bloco (template).
 
-    extrair-campos.ps1 <Validador_CNAB240_X.html> -Buscar 'chkCNPJ|\\d\{14\}'
+    extrair-campos.ps1 <validadores/033-santander.js> -Buscar 'chkCNPJ|\\d\{14\}'
         Em vez da tabela: linhas que casam com a regex, com o número da linha
         e a função onde estão (ex.: onde o código trata CNPJ, GARE, um código
         de domínio).
@@ -71,7 +71,7 @@ if ($Buscar) {
   exit
 }
 
-if ($ext -eq '.html' -or $ext -eq '.htm') {
+if ($ext -eq '.js' -or $ext -eq '.html' -or $ext -eq '.htm') {
   # Agrupa pelo nome real da função que contém o CF: além de vHA, vSA...,
   # há validações feitas dentro de validate() (ex.: segmentos de retorno).
   $reFn  = [regex]'^\s*function\s+(\w+)\s*\('

@@ -18,7 +18,7 @@ window.CNAB_DOCS = {
       "codigo": "001",
       "nome": "Banco do Brasil",
       "pasta": "001-banco-do-brasil",
-      "validador": "Validador_CNAB240_BancoDoBrasil.html",
+      "validador": "validadores/001-bb.js",
       "baseDoValidador": "Arquivo de Pagamentos, jun/2026",
       "documentos": [
         {
@@ -37,7 +37,7 @@ window.CNAB_DOCS = {
       "codigo": "033",
       "nome": "Santander",
       "pasta": "033-santander",
-      "validador": "Validador_CNAB240_Santander.html",
+      "validador": "validadores/033-santander.js",
       "baseDoValidador": "YLEC_2403 V.11.7 (06/2026)",
       "documentos": [
         {
@@ -56,7 +56,7 @@ window.CNAB_DOCS = {
       "codigo": "237",
       "nome": "Bradesco",
       "pasta": "237-bradesco",
-      "validador": "Validador_CNAB240_Bradesco_Multipag.html",
+      "validador": "validadores/237-bradesco.js",
       "baseDoValidador": "Multipag v6 (07/2023)",
       "documentos": [
         {
@@ -75,7 +75,7 @@ window.CNAB_DOCS = {
       "codigo": "341",
       "nome": "Itaú",
       "pasta": "341-itau",
-      "validador": "Validador_CNAB240_Itau.html",
+      "validador": "validadores/341-itau.js",
       "baseDoValidador": "SISPAG v086 (02/2024)",
       "documentos": [
         {
@@ -94,7 +94,7 @@ window.CNAB_DOCS = {
       "codigo": "748",
       "nome": "Sicredi",
       "pasta": "748-sicredi",
-      "validador": "Validador_CNAB240_Sicredi - v2 1.html",
+      "validador": "validadores/748-sicredi.js",
       "baseDoValidador": "Pagfor V1.4 (04/2024)",
       "documentos": [
         {
@@ -113,7 +113,7 @@ window.CNAB_DOCS = {
       "codigo": "756",
       "nome": "Sicoob",
       "pasta": "756-sicoob",
-      "validador": "Validador_CNAB240_Sicoob.html",
+      "validador": "validadores/756-sicoob.js",
       "baseDoValidador": "v3.3 (05/2025) + Folha v1.0 (05/2025)",
       "documentos": [
         {

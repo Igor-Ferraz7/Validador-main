@@ -1,0 +1,347 @@
+/* Regras do validador de remessa CNAB240 — Sicredi (748).
+ *
+ * Movidas de Validador_CNAB240_Sicredi - v2 1.html sem mudança de regra: o código abaixo é o mesmo
+ * daquela página, sem a parte de tela. A tela é Validador_CNAB240.html,
+ * que reconhece o banco pelo header do arquivo (posições 1-3) e chama
+ * window.CNAB_REMESSA['748'].validar(linhas).
+ *
+ * validar(linhas) devolve { iss, fr, recs }:
+ *   iss   ocorrências  { line, sev: 'ERROR'|'WARN'|'OK', seg, msg }
+ *   fr    campos       { ln, seg, campo, pi, pf, esp, enc, st, det, fix }
+ *   recs  estrutura    { ln, desc, ind, ok }
+ */
+(function () {
+const BANCO='748';
+
+/* helpers */
+function p(l,a,b){return l.substring(a-1,b);}
+function isBl(s){return/^\s*$/.test(s);}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function chkDt(s){
+  if(!/^\d{8}$/.test(s))return{ok:false,msg:`Formato inválido (DDMMAAAA): "${s}"`};
+  const d=+s.slice(0,2),m=+s.slice(2,4),y=+s.slice(4);
+  const mx=[0,31,29,31,30,31,30,31,31,30,31,30,31];
+  if(m<1||m>12)return{ok:false,msg:`Mês inválido: ${m}`};
+  if(d<1||d>mx[m])return{ok:false,msg:`Dia ${d} inválido para mês ${m}`};
+  if(y<2000||y>2099)return{ok:false,msg:`Ano ${y} fora de 2000–2099`};
+  return{ok:true};
+}
+function chkCPF(s){const n=s.replace(/\D/g,'');if(n.length!==11||/^(\d)\1{10}$/.test(n))return false;let a=0;for(let i=0;i<9;i++)a+=+n[i]*(10-i);let r=(a*10)%11;if(r>=10)r=0;if(r!==+n[9])return false;let b=0;for(let i=0;i<10;i++)b+=+n[i]*(11-i);let s2=(b*10)%11;if(s2>=10)s2=0;return s2===+n[10];}
+function chkCNPJ(s){const n=s.replace(/\D/g,'');if(n.length!==14||/^(\d)\1{13}$/.test(n))return false;const c=(str,l)=>{let sm=0,pp=l-7;for(let i=l;i>=1;i--){sm+=+str[l-i]*pp--;if(pp<2)pp=9;}return sm%11<2?0:11-sm%11;};return c(n,12)===+n[12]&&c(n,13)===+n[13];}
+
+/* CF = checkField */
+function CF(ctx,campo,ini,fim,ln,checks,esp,fix=null){
+  const val=p(ln,ini,fim);let st='OK',det='',af=fix;
+  for(const c of checks){
+    if(!c.test){
+      st=c.sev==='ERROR'?'ERROR':(st!=='ERROR'?'WARN':'ERROR');
+      det=c.msg;if(c.fix!==undefined)af=c.fix;
+      ctx.iss.push({line:ctx.ln,sev:c.sev,seg:ctx.seg,msg:`[${campo}] ${c.msg}`});
+    }
+  }
+  ctx.fr.push({ln:ctx.ln,seg:ctx.seg,campo,pi:ini,pf:fim,esp,enc:val,st,det,fix:af});
+}
+
+/* ── validators ─────────────────────────────────────────────── */
+function vHA(ctx,ln){
+  CF(ctx,'01.0 Código do Banco',1,3,ln,[{test:p(ln,1,3)===BANCO,sev:'ERROR',msg:`Deve ser "${BANCO}", encontrado "${p(ln,1,3)}"`}],'"748"',BANCO);
+  CF(ctx,'02.0 Lote de Serviço',4,7,ln,[{test:p(ln,4,7)==='0000',sev:'ERROR',msg:`Deve ser "0000", encontrado "${p(ln,4,7)}"`}],'"0000"','0000');
+  CF(ctx,'03.0 Tipo de Registro',8,8,ln,[{test:p(ln,8,8)==='0',sev:'ERROR',msg:`Deve ser "0", encontrado "${p(ln,8,8)}"`}],'"0"','0');
+  CF(ctx,'04.0 Uso FEBRABAN (9–17)',9,17,ln,[{test:isBl(p(ln,9,17)),sev:'WARN',msg:`Deve ser 9 brancos, encontrado: "${p(ln,9,17).trim()}"`}],'9 brancos','         ');
+  const ti=p(ln,18,18);
+  CF(ctx,'05.0 Tipo de Inscrição',18,18,ln,[{test:['1','2'].includes(ti),sev:'ERROR',msg:`Deve ser "1"(CPF) ou "2"(CNPJ), encontrado "${ti}"`}],'"1"=CPF / "2"=CNPJ');
+  const ni=p(ln,19,32);
+  CF(ctx,'06.0 Número de Inscrição (19–32)',19,32,ln,[
+    {test:/^\d{14}$/.test(ni),sev:'ERROR',msg:`Deve ter 14 dígitos, encontrado "${ni}"`},
+    {test:!(ti==='1'&&!chkCPF(ni.slice(-11))),sev:'WARN',msg:`CPF "${ni.slice(-11)}" com DV inválido`},
+    {test:!(ti==='2'&&!chkCNPJ(ni)),sev:'WARN',msg:`CNPJ "${ni}" com DV inválido`}
+  ],'14 dígitos numéricos (CPF preenchido c/ zeros à esq. ou CNPJ)');
+  CF(ctx,'07.0 Código do Convênio (33–36)',33,36,ln,[{test:p(ln,33,36).trim().length>0,sev:'WARN',msg:'Código de convênio não informado'}],'Código do convênio Sicredi (3 ou 4 dígitos)');
+  CF(ctx,'07b.0 Filler (37–52)',37,52,ln,[{test:isBl(p(ln,37,52)),sev:'WARN',msg:'Filler 37-52 deve ser branco'}],'16 brancos','                ');
+  CF(ctx,'08.0 Agência Mantenedora (53–57)',53,57,ln,[{test:/^\d{5}$/.test(p(ln,53,57)),sev:'ERROR',msg:`Deve ser 5 dígitos, encontrado "${p(ln,53,57)}"`}],'5 dígitos numéricos');
+  CF(ctx,'10.0 Conta Corrente (59–70)',59,70,ln,[{test:/^\d{12}$/.test(p(ln,59,70)),sev:'ERROR',msg:`Deve ter 12 dígitos, encontrado "${p(ln,59,70)}"`}],'12 dígitos numéricos');
+  CF(ctx,'13.0 Nome da Empresa (73–102)',73,102,ln,[{test:p(ln,73,102).trim().length>0,sev:'ERROR',msg:'Nome da empresa não pode ser vazio'}],'Alfanumérico, não vazio, alinhado à esquerda');
+  CF(ctx,'14.0 Nome do Banco (103–132)',103,132,ln,[{test:p(ln,103,132).toUpperCase().includes('SICREDI'),sev:'WARN',msg:`Deve conter "SICREDI", encontrado "${p(ln,103,132).trim()}"`}],'"SICREDI" (30 posições, brancos à direita)','SICREDI                       ');
+  CF(ctx,'15.0 Filler (133–142)',133,142,ln,[{test:isBl(p(ln,133,142)),sev:'WARN',msg:'Deve ser branco'}],'10 brancos','          ');
+  const rr=p(ln,143,143);
+  CF(ctx,'16.0 Código Remessa/Retorno (143)',143,143,ln,[{test:['1','2'].includes(rr),sev:'ERROR',msg:`Deve ser "1"(Remessa) ou "2"(Retorno), encontrado "${rr}"`}],'"1"=Remessa / "2"=Retorno','1');
+  const dg=p(ln,144,151);
+  CF(ctx,'17.0 Data de Geração (144–151)',144,151,ln,[
+    {test:/^\d{8}$/.test(dg),sev:'ERROR',msg:`Deve ser DDMMAAAA, encontrado "${dg}"`},
+    {test:dg==='00000000'||!(/^\d{8}$/.test(dg))||chkDt(dg).ok,sev:'ERROR',msg:/^\d{8}$/.test(dg)&&dg!=='00000000'?chkDt(dg).msg||'':''}
+  ].filter(c=>c.msg!==''),'DDMMAAAA (ex: 15032025)');
+  CF(ctx,'18.0 Hora de Geração (152–157)',152,157,ln,[{test:/^\d{6}$/.test(p(ln,152,157))||p(ln,152,157)==='      ',sev:'WARN',msg:`Deve ser HHMMSS, encontrado "${p(ln,152,157)}"`}],'HHMMSS (ex: 143022)');
+  CF(ctx,'19.0 NSA Número Sequencial (158–163)',158,163,ln,[{test:/^\d{6}$/.test(p(ln,158,163)),sev:'WARN',msg:`Deve ser 6 dígitos, encontrado "${p(ln,158,163)}"`}],'6 dígitos, incremental');
+  CF(ctx,'20.0 Versão do Layout (164–166)',164,166,ln,[{test:/^\d{3}$/.test(p(ln,164,166)),sev:'WARN',msg:`Deve ser 3 dígitos, encontrado "${p(ln,164,166)}"`}],'3 dígitos numéricos (livre)');
+  CF(ctx,'21.0 Densidade de Gravação (167–171)',167,171,ln,[{test:/^\d{5}$/.test(p(ln,167,171)),sev:'WARN',msg:`Deve ser 5 dígitos, encontrado "${p(ln,167,171)}"`}],'5 dígitos numéricos (livre)');
+}
+
+function vHL(ctx,ln){
+  CF(ctx,'01.1 Código do Banco',1,3,ln,[{test:p(ln,1,3)===BANCO,sev:'ERROR',msg:`Deve ser "${BANCO}", encontrado "${p(ln,1,3)}"`}],'"748"',BANCO);
+  CF(ctx,'04.1 Tipo da Operação (9)',9,9,ln,[{test:p(ln,9,9)==='C',sev:'ERROR',msg:`Deve ser "C", encontrado "${p(ln,9,9)}"`}],'"C" (crédito)','C');
+  const ts=p(ln,10,11);
+  CF(ctx,'05.1 Tipo de Serviço (10–11)',10,11,ln,[{test:['03','20','22'].includes(ts),sev:'WARN',msg:`Tipo "${ts}" incomum. Válidos: 03=Boleto/PIX QR, 20=Fornecedor, 22=Tributos`}],'03=Boleto/PIX QR · 20=Fornecedor · 22=Tributos');
+  const fo=p(ln,12,13);
+  const fok=['01','10','11','16','17','18','30','31','41','45','47'];
+  CF(ctx,'06.1 Forma de Lançamento (12–13)',12,13,ln,[{test:fok.includes(fo),sev:'WARN',msg:`Forma "${fo}" incomum. Sicredi aceita: 01=CCtaCte 10=OP 11=TribCB 16=DARF 17=GPS 18=DARFSim 30=BoletoSicredi 31=OutrosBancos 41=TED 45=PIX 47=PIXQR`}],'01 10 11 16 17 18 30 31 41 45 47');
+  if(fo==='47'&&ts!=='03')ctx.iss.push({line:ctx.ln,sev:'ERROR',seg:ctx.seg,msg:'[Sicredi] PIX QR CODE (Forma 47) requer Tipo de Serviço "03" — deve estar em lote separado.'});
+  if(fo==='45'&&ts!=='20')ctx.iss.push({line:ctx.ln,sev:'WARN',seg:ctx.seg,msg:'[Sicredi] PIX Transferência (Forma 45) é esperado no Tipo de Serviço "20".'});
+  const ve=p(ln,14,16);
+  const vesp=ts==='03'||ts==='20'?'045':ts==='22'?'012':'040';
+  CF(ctx,'07.1 Versão Layout do Lote (14–16)',14,16,ln,[
+    {test:/^\d{3}$/.test(ve),sev:'WARN',msg:`Deve ser 3 dígitos, encontrado "${ve}"`},
+    {test:ve===vesp,sev:'WARN',msg:`Para Tipo de Serviço "${ts}" o esperado é "${vesp}" (045=PAGFOR/PIX 012=Tributos 040=Boletos). Encontrado: "${ve}"`}
+  ].filter(c=>c.msg!==''),'045=PAGFOR/PIX · 012=Tributos · 040=Boletos',vesp);
+  CF(ctx,'08.1 Filler (17)',17,17,ln,[{test:p(ln,17,17)===' ',sev:'WARN',msg:`Deve ser branco, encontrado "${p(ln,17,17)}"`}],'1 branco',' ');
+  CF(ctx,'09.1 Tipo de Inscrição (18)',18,18,ln,[{test:['1','2'].includes(p(ln,18,18)),sev:'WARN',msg:`Deve ser "1"(CPF) ou "2"(CNPJ), encontrado "${p(ln,18,18)}"`}],'"1"=CPF / "2"=CNPJ');
+  CF(ctx,'10.1 Número de Inscrição (19–32)',19,32,ln,[{test:/^\d{14}$/.test(p(ln,19,32)),sev:'ERROR',msg:`Deve ter 14 dígitos, encontrado "${p(ln,19,32)}"`}],'14 dígitos numéricos');
+  CF(ctx,'11.1 Código do Convênio (33–36)',33,36,ln,[{test:p(ln,33,36).trim().length>0,sev:'WARN',msg:'Código de convênio não informado (pos.33-36)'}],'Código do convênio Sicredi (3 ou 4 dígitos)');
+  CF(ctx,'12.1 Agência (53–57)',53,57,ln,[{test:/^\d{5}$/.test(p(ln,53,57)),sev:'ERROR',msg:`Deve ser 5 dígitos, encontrado "${p(ln,53,57)}"`}],'5 dígitos numéricos');
+  CF(ctx,'14.1 Conta Corrente (59–70)',59,70,ln,[{test:/^\d{12}$/.test(p(ln,59,70)),sev:'ERROR',msg:`Deve ter 12 dígitos, encontrado "${p(ln,59,70)}"`}],'12 dígitos numéricos');
+  CF(ctx,'17.1 Nome da Empresa (73–102)',73,102,ln,[{test:p(ln,73,102).trim().length>0,sev:'ERROR',msg:'Nome da empresa obrigatório'}],'Alfanumérico, obrigatório');
+  CF(ctx,'25.1 Ocorrências Retorno (231–240)',231,240,ln,[{test:isBl(p(ln,231,240)),sev:'WARN',msg:'Ocorrências devem ser brancos na remessa'}],'10 brancos na remessa','          ');
+  return{ts,fo};
+}
+
+function vTL(ctx,ln,regs,soma){
+  CF(ctx,'01.5 Código do Banco',1,3,ln,[{test:p(ln,1,3)===BANCO,sev:'ERROR',msg:`Deve ser "${BANCO}", encontrado "${p(ln,1,3)}"`}],'"748"',BANCO);
+  CF(ctx,'03.5 Tipo de Registro (8)',8,8,ln,[{test:p(ln,8,8)==='5',sev:'ERROR',msg:`Deve ser "5", encontrado "${p(ln,8,8)}"`}],'"5"','5');
+  CF(ctx,'04.5 Filler (9–17)',9,17,ln,[{test:isBl(p(ln,9,17)),sev:'WARN',msg:'Filler 9-17 deve ser branco'}],'9 brancos','         ');
+  const qr=parseInt(p(ln,18,23),10),qe=regs+2;
+  const qrStr=p(ln,18,23);
+  if(qr!==qe){ctx.iss.push({line:ctx.ln,sev:'ERROR',seg:ctx.seg,msg:`[05.5 Qtd. Registros] Informado: ${qr}, calculado: ${qe} (Header+Detalhes+Trailer)`});ctx.fr.push({ln:ctx.ln,seg:ctx.seg,campo:'05.5 Qtd. Registros do Lote (18–23)',pi:18,pf:23,esp:`${qe} (auto-calculado)`,enc:qrStr,st:'ERROR',det:`Calculado: Header(1) + Detalhes(${regs}) + Trailer(1) = ${qe}`,fix:String(qe).padStart(6,'0')});}
+  else{ctx.iss.push({line:ctx.ln,sev:'OK',seg:ctx.seg,msg:`[05.5 Qtd. Registros] Correto: ${qr}`});ctx.fr.push({ln:ctx.ln,seg:ctx.seg,campo:'05.5 Qtd. Registros do Lote (18–23)',pi:18,pf:23,esp:`${qe}`,enc:qrStr,st:'OK',det:'',fix:null});}
+  const si=parseInt(p(ln,24,41),10)||0;
+  const siStr=p(ln,24,41);
+  if(si!==soma&&soma>0){ctx.iss.push({line:ctx.ln,sev:'WARN',seg:ctx.seg,msg:`[06.5 Somatório] Informado: ${si}, calculado: ${soma}`});ctx.fr.push({ln:ctx.ln,seg:ctx.seg,campo:'06.5 Somatória dos Valores (24–41)',pi:24,pf:41,esp:`${soma} (auto-calculado, centavos)`,enc:siStr,st:'WARN',det:`Soma calculada dos valores de todos os registros de detalhe: ${soma}`,fix:String(soma).padStart(18,'0')});}
+  CF(ctx,'07.5 Somatória Qtd. Moeda (42–59)',42,59,ln,[{test:p(ln,42,59)==='000000000000000000',sev:'WARN',msg:'Deve ser 18 zeros para pagamentos em BRL'}],'000000000000000000 (18 zeros)','000000000000000000');
+}
+
+function vTA(ctx,ln,tL,tR){
+  CF(ctx,'01.9 Código do Banco',1,3,ln,[{test:p(ln,1,3)===BANCO,sev:'ERROR',msg:`Deve ser "${BANCO}", encontrado "${p(ln,1,3)}"`}],'"748"',BANCO);
+  CF(ctx,'02.9 Lote de Serviço (4–7)',4,7,ln,[{test:p(ln,4,7)==='9999',sev:'ERROR',msg:`Deve ser "9999", encontrado "${p(ln,4,7)}"`}],'"9999"','9999');
+  CF(ctx,'03.9 Tipo de Registro (8)',8,8,ln,[{test:p(ln,8,8)==='9',sev:'ERROR',msg:`Deve ser "9", encontrado "${p(ln,8,8)}"`}],'"9"','9');
+  const qlStr=p(ln,18,23);const ql=parseInt(qlStr,10);
+  if(ql!==tL){ctx.iss.push({line:ctx.ln,sev:'ERROR',seg:ctx.seg,msg:`[05.9 Qtd. Lotes] Informado: ${ql}, calculado: ${tL}`});ctx.fr.push({ln:ctx.ln,seg:ctx.seg,campo:'05.9 Qtd. Lotes do Arquivo (18–23)',pi:18,pf:23,esp:`${tL} (auto-calculado)`,enc:qlStr,st:'ERROR',det:`Total de lotes encontrados: ${tL}`,fix:String(tL).padStart(6,'0')});}
+  else{ctx.iss.push({line:ctx.ln,sev:'OK',seg:ctx.seg,msg:`[05.9 Qtd. Lotes] Correto: ${ql}`});ctx.fr.push({ln:ctx.ln,seg:ctx.seg,campo:'05.9 Qtd. Lotes do Arquivo (18–23)',pi:18,pf:23,esp:`${tL}`,enc:qlStr,st:'OK',det:'',fix:null});}
+  const qrStr=p(ln,24,29);const qr=parseInt(qrStr,10);
+  if(qr!==tR){ctx.iss.push({line:ctx.ln,sev:'ERROR',seg:ctx.seg,msg:`[06.9 Qtd. Registros] Informado: ${qr}, calculado: ${tR}`});ctx.fr.push({ln:ctx.ln,seg:ctx.seg,campo:'06.9 Qtd. Registros do Arquivo (24–29)',pi:24,pf:29,esp:`${tR} (auto-calculado)`,enc:qrStr,st:'ERROR',det:`Total de registros tipos 0,1,3,5,9: ${tR}`,fix:String(tR).padStart(6,'0')});}
+  else{ctx.iss.push({line:ctx.ln,sev:'OK',seg:ctx.seg,msg:`[06.9 Qtd. Registros] Correto: ${qr}`});ctx.fr.push({ln:ctx.ln,seg:ctx.seg,campo:'06.9 Qtd. Registros do Arquivo (24–29)',pi:24,pf:29,esp:`${tR}`,enc:qrStr,st:'OK',det:'',fix:null});}
+  CF(ctx,'07.9 Qtd. Contas p/ Conciliação (30–35)',30,35,ln,[{test:p(ln,30,35)==='000000',sev:'WARN',msg:`Deve ser "000000" (Sicredi), encontrado "${p(ln,30,35)}"`}],'"000000" (Sicredi)','000000');
+}
+
+function vSA(ctx,ln,fo){
+  CF(ctx,'01.3A Código do Banco',1,3,ln,[{test:p(ln,1,3)===BANCO,sev:'ERROR',msg:`Deve ser "${BANCO}", encontrado "${p(ln,1,3)}"`}],'"748"',BANCO);
+  CF(ctx,'06.3A Tipo de Movimento (15)',15,15,ln,[{test:['0','9'].includes(p(ln,15,15)),sev:'ERROR',msg:`Deve ser "0"(Inclusão) ou "9"(Exclusão), encontrado "${p(ln,15,15)}"`}],'"0"=Inclusão / "9"=Exclusão','0');
+  CF(ctx,'07.3A Código de Instrução (16–17)',16,17,ln,[{test:['00','99'].includes(p(ln,16,17)),sev:'WARN',msg:`Deve ser "00"(Inclusão) ou "99"(Exclusão), encontrado "${p(ln,16,17)}"`}],'"00"=Inclusão / "99"=Exclusão','00');
+  const cm=p(ln,18,20);
+  CF(ctx,'08.3A Câmara de Compensação (18–20)',18,20,ln,[{test:['000','018','009'].includes(cm),sev:'WARN',msg:`Câmara "${cm}" incomum. 000=CCtaCte/OP · 018=TED · 009=PIX`}],'000=CCtaCte/OP · 018=TED · 009=PIX');
+  if(fo==='41'&&cm!=='018')ctx.iss.push({line:ctx.ln,sev:'WARN',seg:ctx.seg,msg:`[Sicredi] TED (Forma 41) usa Câmara 018. Encontrado: "${cm}"`});
+  if(fo==='45'&&cm!=='009')ctx.iss.push({line:ctx.ln,sev:'WARN',seg:ctx.seg,msg:`[Sicredi] PIX (Forma 45) usa Câmara 009. Encontrado: "${cm}"`});
+  if(fo==='01'&&cm!=='000')ctx.iss.push({line:ctx.ln,sev:'WARN',seg:ctx.seg,msg:`[Sicredi] Crédito CC (Forma 01) usa Câmara 000. Encontrado: "${cm}"`});
+  CF(ctx,'09.3A Banco Favorecido (21–23)',21,23,ln,[{test:/^\d{3}$/.test(p(ln,21,23)),sev:'ERROR',msg:`Deve ter 3 dígitos, encontrado "${p(ln,21,23)}"`}],'3 dígitos (código BACEN)');
+  CF(ctx,'10.3A Agência Favorecido (24–28)',24,28,ln,[{test:/^\d{5}$/.test(p(ln,24,28)),sev:'ERROR',msg:`Deve ter 5 dígitos, encontrado "${p(ln,24,28)}"`}],'5 dígitos numéricos');
+  const cf=p(ln,30,41);
+  CF(ctx,'12.3A Conta do Favorecido (30–41)',30,41,ln,[{test:/^\d{12}$/.test(cf),sev:'ERROR',msg:`Deve ter 12 dígitos, encontrado "${cf}"`}],'12 dígitos numéricos');
+  if(fo==='01'&&cf.replace(/^0+/,'').length>6)ctx.iss.push({line:ctx.ln,sev:'WARN',seg:ctx.seg,msg:`[Sicredi] Crédito CC (Forma 01) aceita só contas de até 6 dígitos. Conta tem ${cf.replace(/^0+/,'').length} dígitos — para Woop/Plataforma use PIX Dados Bancários (Forma 45).`});
+  CF(ctx,'13.3A DV Conta Favorecido (42)',42,42,ln,[{test:p(ln,42,42).trim().length>0,sev:'WARN',msg:'DV não informado'}],'1 caractere (obrigatório)');
+  CF(ctx,'15.3A Nome do Favorecido (44–73)',44,73,ln,[{test:p(ln,44,73).trim().length>0,sev:'ERROR',msg:'Nome do favorecido obrigatório — não pode ser vazio'}],'Alfanumérico, obrigatório');
+  const dp=p(ln,94,101);
+  CF(ctx,'17.3A Data do Pagamento (94–101)',94,101,ln,[
+    {test:/^\d{8}$/.test(dp),sev:'ERROR',msg:`Deve ser DDMMAAAA, encontrado "${dp}"`},
+    {test:!(/^\d{8}$/.test(dp))||chkDt(dp).ok,sev:'ERROR',msg:/^\d{8}$/.test(dp)?chkDt(dp).msg||'':''}
+  ].filter(c=>c.msg!==''),'DDMMAAAA (ex: 15032025)');
+  CF(ctx,'18.3A Tipo da Moeda (102–104)',102,104,ln,[{test:p(ln,102,104)==='BRL',sev:'WARN',msg:`Deve ser "BRL", encontrado "${p(ln,102,104)}"`}],'"BRL"','BRL');
+  CF(ctx,'19.3A Quantidade de Moeda (105–119)',105,119,ln,[{test:p(ln,105,119)==='000000000000000',sev:'WARN',msg:'Deve ser 15 zeros para pagamentos BRL'}],'000000000000000 (15 zeros)','000000000000000');
+  const vp=p(ln,120,134);
+  CF(ctx,'20.3A Valor do Pagamento (120–134)',120,134,ln,[
+    {test:/^\d{15}$/.test(vp),sev:'ERROR',msg:`Deve ter 15 dígitos, encontrado "${vp}"`},
+    {test:parseInt(vp,10)>0,sev:'WARN',msg:'Valor zerado'}
+  ],'15 dígitos numéricos (centavos, sem separador decimal)');
+  CF(ctx,'22.3A Data Real do Pagamento (155–162)',155,162,ln,[{test:/^\d{8}$/.test(p(ln,155,162))||isBl(p(ln,155,162))||p(ln,155,162)==='00000000',sev:'WARN',msg:'Na remessa deve ser 00000000 (zeros)'}],'00000000 na remessa / DDMMAAAA no retorno','00000000');
+  if(fo==='41')CF(ctx,'26.3A Finalidade TED (220–224)',220,224,ln,[{test:/^\d{5}$/.test(p(ln,220,224))&&parseInt(p(ln,220,224),10)>0,sev:'WARN',msg:`Finalidade TED obrigatória para Forma 41. Encontrado: "${p(ln,220,224)}"`}],'5 dígitos: 00005=Fornecedores · 00010=Crédito em Conta');
+  CF(ctx,'29.3A Aviso ao Favorecido (230)',230,230,ln,[{test:p(ln,230,230)==='0',sev:'WARN',msg:`Sicredi usa "0" (sem aviso), encontrado "${p(ln,230,230)}"`}],'"0" — Sicredi não emite aviso','0');
+}
+
+function vSBn(ctx,ln){
+  const ti=p(ln,18,18);
+  CF(ctx,'07.3B Tipo Inscrição Favorecido (18)',18,18,ln,[{test:['0','1','2'].includes(ti),sev:'WARN',msg:`Deve ser "0","1" ou "2", encontrado "${ti}"`}],'"0"=Isento / "1"=CPF / "2"=CNPJ');
+  const ni=p(ln,19,32);
+  if(ti==='1'&&!chkCPF(ni.slice(-11)))ctx.iss.push({line:ctx.ln,sev:'WARN',seg:ctx.seg,msg:`[08.3B CPF/CNPJ] CPF "${ni.slice(-11)}" com DV inválido`});
+  if(ti==='2'&&!chkCNPJ(ni))ctx.iss.push({line:ctx.ln,sev:'WARN',seg:ctx.seg,msg:`[08.3B CPF/CNPJ] CNPJ "${ni}" com DV inválido`});
+  CF(ctx,'17.3B Data de Vencimento (128–135)',128,135,ln,[{test:/^\d{8}$/.test(p(ln,128,135))||p(ln,128,135)==='00000000',sev:'WARN',msg:`DDMMAAAA ou zeros, encontrado "${p(ln,128,135)}"`}],'DDMMAAAA ou 00000000','00000000');
+  CF(ctx,'24.3B Aviso ao Favorecido (226)',226,226,ln,[{test:p(ln,226,226)==='0',sev:'WARN',msg:`Deve ser "0" (Sicredi), encontrado "${p(ln,226,226)}"`}],'"0" (Sicredi não emite aviso)','0');
+}
+
+function vSBp(ctx,ln){
+  const tk=p(ln,15,16).trim();
+  CF(ctx,'06.3B-PIX Tipo Chave PIX — G022 (15–16)',15,16,ln,[{test:['01','02','03','04','05'].includes(tk),sev:'ERROR',msg:`Código inválido: "${tk}". Válidos: 01=Telefone 02=E-mail 03=CPF/CNPJ 04=Aleatória 05=Dados Bancários`}],'01=Telefone · 02=E-mail · 03=CPF/CNPJ · 04=Aleatória · 05=Dados Bancários');
+  CF(ctx,'07.3B-PIX Tipo Inscrição Favorecido (18)',18,18,ln,[{test:['0','1','2'].includes(p(ln,18,18)),sev:'WARN',msg:`Deve ser "0","1" ou "2", encontrado "${p(ln,18,18)}"`}],'"0"=Não Inf / "1"=CPF / "2"=CNPJ');
+  if(tk==='01'){const ch=p(ln,128,226).trim();CF(ctx,'Chave PIX Telefone (128–226)',128,226,ln,[{test:ch.length>0,sev:'ERROR',msg:'Chave telefone deve estar nas posições 128-226'},{test:!ch||/^\+\d{13}$/.test(ch),sev:'WARN',msg:`Formato: +55DDDXXXXXXXXX. Encontrado: "${ch}"`}],'Formato: +55DDDXXXXXXXXX (ex: +5511987654321)');}
+  if(tk==='02'){const ch=p(ln,128,226).trim();CF(ctx,'Chave PIX E-mail (128–226)',128,226,ln,[{test:ch.length>0,sev:'ERROR',msg:'Chave e-mail deve estar nas posições 128-226'},{test:!ch||/^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$/.test(ch),sev:'ERROR',msg:`[Sicredi G024] E-mail deve ser em MINÚSCULAS. Encontrado: "${ch}"`}],'E-mail em letras minúsculas (obrigatório Sicredi G024)',ch?ch.toLowerCase():null);if(ch&&ch!==ch.toLowerCase())ctx.iss.push({line:ctx.ln,sev:'ERROR',seg:ctx.seg,msg:`[Sicredi G024] E-mail DEVE ser minúsculo. Encontrado: "${ch}" → Correto: "${ch.toLowerCase()}"`});}
+  if(tk==='03'){const cpf=p(ln,19,32);CF(ctx,'Chave PIX CPF/CNPJ — posição 19–32',19,32,ln,[{test:/^\d{14}$/.test(cpf)&&parseInt(cpf,10)>0,sev:'ERROR',msg:`Para tipo 03, posições 19-32 devem conter CPF/CNPJ. Encontrado: "${cpf}"`}],'CPF/CNPJ nas posições 19-32 (pos 128-226 ficam em branco)');CF(ctx,'Chave PIX CPF/CNPJ — brancos (128–226)',128,226,ln,[{test:isBl(p(ln,128,226)),sev:'WARN',msg:'Para chave tipo 03, posições 128-226 devem ser brancos (chave fica nas posições 19-32)'}],'99 brancos (chave fica nas posições 19-32)');}
+  if(tk==='04'){const ch=p(ln,128,226).trim();CF(ctx,'Chave PIX Aleatória (128–226)',128,226,ln,[{test:ch.length>0,sev:'ERROR',msg:'Chave aleatória deve estar nas posições 128-226'},{test:!ch||/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(ch),sev:'WARN',msg:`UUID esperado (XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX). Encontrado: "${ch}"`}],'UUID hexadecimal: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX (36 chars)');}
+  if(tk==='05'){const ch=p(ln,68,91).trim();CF(ctx,'Chave PIX Dados Bancários (68–91)',68,91,ln,[{test:ch.length>0,sev:'ERROR',msg:'Para PIX Dados Bancários (05), campo 68-91 deve ter CPF/CNPJ+ISPB+TipoConta'},{test:!ch||ch.length===24,sev:'WARN',msg:`Campo 68-91: CPF/CNPJ(14)+ISPB(8)+TipoConta(2) = 24 chars. Encontrado ${ch.length}: "${ch}"`}],'CPF/CNPJ(14) + ISPB Banco(8) + TipoConta(2): 01=CC 02=Pgto 03=Poupança');}
+}
+
+function vSJ(ctx,ln,fo){
+  const isQR=fo==='47',cb=p(ln,18,61);
+  if(!isQR)CF(ctx,'08.3J Código de Barras (18–61)',18,61,ln,[{test:/^\d{44}$/.test(cb),sev:'ERROR',msg:`Deve ter 44 dígitos numéricos, encontrado ${cb.trim().length} chars`}],'44 dígitos numéricos');
+  else CF(ctx,'08.3J Código de Barras PIX QR (18–61)',18,61,ln,[{test:isBl(cb)||/^0+$/.test(cb.trim()),sev:'WARN',msg:'Para PIX QR, deve ser zeros ou brancos (URL fica no J52-PIX)'}],'Zeros ou brancos (URL no J52-PIX, posições 132-210)','00000000000000000000000000000000000000000000');
+  CF(ctx,'09.3J Nome do Beneficiário (62–91)',62,91,ln,[{test:p(ln,62,91).trim().length>0,sev:'ERROR',msg:'Nome do beneficiário obrigatório'}],'Alfanumérico, obrigatório');
+  const dv=p(ln,92,99);CF(ctx,'10.3J Data do Vencimento (92–99)',92,99,ln,[{test:/^\d{8}$/.test(dv)||dv==='00000000',sev:'WARN',msg:`DDMMAAAA ou zeros, encontrado: "${dv}"`}],'DDMMAAAA ou 00000000');
+  CF(ctx,'11.3J Valor Nominal (100–114)',100,114,ln,[{test:/^\d{15}$/.test(p(ln,100,114)),sev:'ERROR',msg:`Deve ter 15 dígitos, encontrado "${p(ln,100,114)}"`}],'15 dígitos (zeros se não houver)');
+  CF(ctx,'12.3J Valor Desconto+Abatimento (115–129)',115,129,ln,[{test:/^\d{15}$/.test(p(ln,115,129)),sev:'ERROR',msg:`Deve ter 15 dígitos, encontrado "${p(ln,115,129)}"`}],'15 dígitos (000000000000000 se não houver)');
+  CF(ctx,'13.3J Valor Multa+Juros (130–144)',130,144,ln,[{test:/^\d{15}$/.test(p(ln,130,144)),sev:'ERROR',msg:`Deve ter 15 dígitos, encontrado "${p(ln,130,144)}"`}],'15 dígitos (000000000000000 se não houver)');
+  const dp=p(ln,145,152);
+  CF(ctx,'14.3J Data do Pagamento (145–152)',145,152,ln,[{test:/^\d{8}$/.test(dp),sev:'ERROR',msg:`Deve ser DDMMAAAA, encontrado "${dp}"`},{test:!(/^\d{8}$/.test(dp))||chkDt(dp).ok,sev:'ERROR',msg:/^\d{8}$/.test(dp)?chkDt(dp).msg||'':''}].filter(c=>c.msg!==''),'DDMMAAAA');
+  const vp=p(ln,153,167);
+  CF(ctx,'15.3J Valor do Pagamento (153–167)',153,167,ln,[{test:/^\d{15}$/.test(vp),sev:'ERROR',msg:`Deve ter 15 dígitos, encontrado "${vp}"`},{test:parseInt(vp,10)>0,sev:'WARN',msg:'Valor zerado'}],'15 dígitos (centavos — valor final a pagar)');
+  CF(ctx,'19.3J Código da Moeda (223–224)',223,224,ln,[{test:p(ln,223,224)==='09',sev:'WARN',msg:`Deve ser "09" (Real), encontrado "${p(ln,223,224)}"`}],'"09" (Real)','09');
+}
+
+function vSJ52(ctx,ln){
+  CF(ctx,'08.J52 Identificação Registro (18–19)',18,19,ln,[{test:p(ln,18,19)==='52',sev:'ERROR',msg:`Deve ser "52", encontrado "${p(ln,18,19)}"`}],'"52" (obrigatório para boletos Sicredi)','52');
+  CF(ctx,'09.J52 Tipo Inscrição Pagador (20)',20,20,ln,[{test:['1','2'].includes(p(ln,20,20)),sev:'WARN',msg:`Deve ser "1"(CPF) ou "2"(CNPJ), encontrado "${p(ln,20,20)}"`}],'"1"=CPF / "2"=CNPJ');
+  CF(ctx,'10.J52 CPF/CNPJ Pagador (21–35)',21,35,ln,[{test:/^\d{15}$/.test(p(ln,21,35)),sev:'ERROR',msg:`Deve ter 15 dígitos (com zeros iniciais), encontrado "${p(ln,21,35)}"`}],'15 dígitos com zeros iniciais');
+  CF(ctx,'11.J52 Nome do Pagador (36–75)',36,75,ln,[{test:p(ln,36,75).trim().length>0,sev:'ERROR',msg:'Nome do pagador obrigatório'}],'Alfanumérico, obrigatório');
+  CF(ctx,'12.J52 Tipo Inscrição Beneficiário (76)',76,76,ln,[{test:['1','2'].includes(p(ln,76,76)),sev:'WARN',msg:`Deve ser "1" ou "2", encontrado "${p(ln,76,76)}"`}],'"1"=CPF / "2"=CNPJ');
+  CF(ctx,'13.J52 CPF/CNPJ Beneficiário (77–91)',77,91,ln,[{test:/^\d{15}$/.test(p(ln,77,91)),sev:'ERROR',msg:`Deve ter 15 dígitos, encontrado "${p(ln,77,91)}"`}],'15 dígitos com zeros iniciais');
+  CF(ctx,'14.J52 Nome do Beneficiário (92–131)',92,131,ln,[{test:p(ln,92,131).trim().length>0,sev:'ERROR',msg:'Nome do beneficiário obrigatório'}],'Alfanumérico, obrigatório');
+}
+
+function vSJ52p(ctx,ln){
+  CF(ctx,'08.J52-PIX Identificação Registro (18–19)',18,19,ln,[{test:p(ln,18,19)==='52',sev:'ERROR',msg:`Deve ser "52", encontrado "${p(ln,18,19)}"`}],'"52"','52');
+  CF(ctx,'09.J52-PIX Tipo Inscrição Devedor (20)',20,20,ln,[{test:['1','2'].includes(p(ln,20,20)),sev:'WARN',msg:`Deve ser "1" ou "2", encontrado "${p(ln,20,20)}"`}],'"1"=CPF / "2"=CNPJ');
+  const cpf=p(ln,21,35);
+  CF(ctx,'10.J52-PIX CPF/CNPJ Devedor (21–35)',21,35,ln,[{test:/^\d{15}$/.test(cpf)&&parseInt(cpf,10)>0,sev:'ERROR',msg:`CPF/CNPJ devedor obrigatório e não pode ser zeros — VALIDADO pelo Sicredi. Encontrado: "${cpf}"`}],'15 dígitos — será validado no pagamento PIX QR Code');
+  CF(ctx,'11.J52-PIX Nome Devedor/Pagador (36–75)',36,75,ln,[{test:p(ln,36,75).trim().length>0,sev:'ERROR',msg:'Nome do devedor obrigatório'}],'Alfanumérico, obrigatório');
+  CF(ctx,'12.J52-PIX Tipo Inscrição Favorecido (76)',76,76,ln,[{test:['1','2'].includes(p(ln,76,76)),sev:'WARN',msg:`Deve ser "1" ou "2", encontrado "${p(ln,76,76)}"`}],'"1"=CPF / "2"=CNPJ');
+  CF(ctx,'13.J52-PIX CPF/CNPJ Favorecido (77–91)',77,91,ln,[{test:/^\d{15}$/.test(p(ln,77,91)),sev:'ERROR',msg:`Deve ter 15 dígitos, encontrado "${p(ln,77,91)}"`}],'15 dígitos com zeros iniciais');
+  CF(ctx,'14.J52-PIX Nome Favorecido (92–131)',92,131,ln,[{test:p(ln,92,131).trim().length>0,sev:'ERROR',msg:'Nome do favorecido obrigatório'}],'Alfanumérico, obrigatório');
+  const url=p(ln,132,210).trim();
+  // Manual V1.4, itens 5.10.1/5.10.2: QR dinâmico → URL extraída do QR
+  // (Payload Location); QR estático → chave Pix extraída do QR.
+  CF(ctx,'15.J52-PIX URL/Chave Endereçamento (132–210)',132,210,ln,[
+    {test:url.length>0,sev:'ERROR',msg:'URL ou chave de endereçamento PIX QR obrigatória nas posições 132-210 (G102)'},
+    {test:!/^000201|br\.gov\.bcb\.pix/i.test(url),sev:'ERROR',msg:'Informe só a URL (QR dinâmico) ou a chave Pix (QR estático) extraída do QR Code, não o código "copia e cola" inteiro (Manual Sicredi V1.4, itens 5.10.1 e 5.10.2)'},
+    {test:!/^https?:\/\//i.test(url),sev:'WARN',msg:'A URL do QR dinâmico vai como está no QR Code, sem "https://" (ex.: pix-qrcode-h.sicredi.com.br/qr/v2/...)'}
+  ],'QR dinâmico: URL do QR (Payload Location), ex. pix-qrcode-h.sicredi.com.br/qr/v2/... · QR estático: chave Pix extraída do QR');
+  const txid=p(ln,211,240).trim();
+  CF(ctx,'16.J52-PIX TXID (211–240)',211,240,ln,[{test:!txid||/^[A-Za-z0-9]{1,25}$/.test(txid),sev:'WARN',msg:`O TXID tem até 25 caracteres alfanuméricos. Encontrado: "${txid}"`}],'Opcional: TXID do QR estático, quando houver (até 25 caracteres)');
+}
+
+function vSO(ctx,ln){
+  CF(ctx,'08.3O Código de Barras (18–61)',18,61,ln,[{test:p(ln,18,61).trim().length>0,sev:'ERROR',msg:'Código de barras obrigatório'}],'Alfanumérico, obrigatório');
+  CF(ctx,'09.3O Nome Concessionária/Órgão (62–91)',62,91,ln,[{test:p(ln,62,91).trim().length>0,sev:'ERROR',msg:'Nome obrigatório'}],'Alfanumérico, obrigatório');
+  const dp=p(ln,100,107);
+  CF(ctx,'11.3O Data do Pagamento (100–107)',100,107,ln,[{test:/^\d{8}$/.test(dp),sev:'ERROR',msg:`Deve ser DDMMAAAA, encontrado "${dp}"`},{test:!(/^\d{8}$/.test(dp))||chkDt(dp).ok,sev:'ERROR',msg:/^\d{8}$/.test(dp)?chkDt(dp).msg||'':''}].filter(c=>c.msg!==''),'DDMMAAAA');
+  const vp=p(ln,108,122);
+  CF(ctx,'12.3O Valor Total (108–122)',108,122,ln,[{test:/^\d{15}$/.test(vp),sev:'ERROR',msg:`Deve ter 15 dígitos, encontrado "${vp}"`},{test:parseInt(vp,10)>0,sev:'WARN',msg:'Valor zerado'}],'15 dígitos (formato 9(13)V2 — 2 casas decimais implícitas)');
+}
+
+function vSN(ctx,ln){
+  CF(ctx,'10.3N Nome do Contribuinte (58–87)',58,87,ln,[{test:p(ln,58,87).trim().length>0,sev:'ERROR',msg:'Nome obrigatório'}],'Alfanumérico, obrigatório');
+  const dp=p(ln,88,95);
+  CF(ctx,'11.3N Data do Pagamento (88–95)',88,95,ln,[{test:/^\d{8}$/.test(dp),sev:'ERROR',msg:`DDMMAAAA, encontrado "${dp}"`},{test:!(/^\d{8}$/.test(dp))||chkDt(dp).ok,sev:'ERROR',msg:/^\d{8}$/.test(dp)?chkDt(dp).msg||'':''}].filter(c=>c.msg!==''),'DDMMAAAA');
+  const vp=p(ln,96,110);
+  CF(ctx,'12.3N Valor Total (96–110)',96,110,ln,[{test:/^\d{15}$/.test(vp),sev:'ERROR',msg:`15 dígitos, encontrado "${vp}"`},{test:parseInt(vp,10)>0,sev:'WARN',msg:'Valor zerado'}],'15 dígitos (centavos)');
+  const ct=p(ln,133,134).trim();
+  if(ct==='17'){
+    CF(ctx,'N1.GPS Código da Receita (111–114)',111,114,ln,[{test:/^\d{4}$/.test(p(ln,111,114)),sev:'ERROR',msg:`4 dígitos, encontrado "${p(ln,111,114)}"`}],'4 dígitos (código receita INSS)');
+    CF(ctx,'N1.GPS Tipo ID Contribuinte (117–118)',117,118,ln,[{test:/^\d{2}$/.test(p(ln,117,118)),sev:'ERROR',msg:`2 dígitos, encontrado "${p(ln,117,118)}"`}],'2 dígitos (1=CNPJ 2=CPF 3=PIS/NIT 4=CEI)');
+    CF(ctx,'N1.GPS Competência MMAAAA (135–140)',135,140,ln,[{test:/^\d{6}$/.test(p(ln,135,140)),sev:'ERROR',msg:`MMAAAA, encontrado "${p(ln,135,140)}"`}],'MMAAAA (6 dígitos)');
+    CF(ctx,'N1.GPS Valor Previsto INSS (141–155)',141,155,ln,[{test:/^\d{15}$/.test(p(ln,141,155)),sev:'ERROR',msg:`15 dígitos, encontrado "${p(ln,141,155)}"`}],'15 dígitos (centavos)');
+  } else if(ct==='16'){
+    CF(ctx,'N2.DARF Período de Apuração (135–142)',135,142,ln,[{test:/^\d{8}$/.test(p(ln,135,142)),sev:'ERROR',msg:`DDMMAAAA, encontrado "${p(ln,135,142)}"`}],'DDMMAAAA');
+    CF(ctx,'N2.DARF Número de Referência (143–159)',143,159,ln,[{test:/^\d{17}$/.test(p(ln,143,159)),sev:'ERROR',msg:`17 dígitos obrigatórios, encontrado "${p(ln,143,159)}"`}],'17 dígitos numéricos (obrigatório)');
+    CF(ctx,'N2.DARF Valor Principal (160–174)',160,174,ln,[{test:/^\d{15}$/.test(p(ln,160,174)),sev:'ERROR',msg:`15 dígitos, encontrado "${p(ln,160,174)}"`}],'15 dígitos (centavos)');
+  } else if(ct==='18'){
+    CF(ctx,'N3.DARF Simples Código Receita (111–114)',111,114,ln,[{test:p(ln,111,114)==='6106',sev:'WARN',msg:`DARF Simples usa código "6106", encontrado "${p(ln,111,114)}"`}],'"6106" (DARF Simples)','6106');
+    CF(ctx,'N3.DARF Simples Período de Apuração (135–142)',135,142,ln,[{test:/^\d{8}$/.test(p(ln,135,142)),sev:'ERROR',msg:`DDMMAAAA, encontrado "${p(ln,135,142)}"`}],'DDMMAAAA');
+  }
+}
+
+/* ═══ VALIDATE ════════════════════════════════════════════════ */
+function validate(lines){
+  const iss=[],fr=[],recs=[];
+  let lotsOpen=0,loteCur=0,regsInLote=0,somaLote=0,totalRegs=0,totalLotes=0,seqLote=1,seqReg=0;
+  let hdrFound=false,trlFound=false,loteForma='',loteTipoS='';
+  // Composição da remessa (Manual Sicredi V1.4, item 4.3): todo segmento A
+  // vem seguido do B, e todo J de boleto/Pix QR Code vem seguido do J-52.
+  let pend=null,isRem=true;
+  const fechaPend=()=>{
+    if(pend&&isRem)addI(pend.ln,'ERROR',`SEG ${pend.sc}`,pend.sc==='A'
+      ?'Segmento A sem o segmento B obrigatório logo em seguida: crédito em conta, TED, OP e Pix exigem A + B (Manual Sicredi V1.4, item 4.3).'
+      :'Segmento J sem o segmento J-52 obrigatório logo em seguida: boletos e Pix QR Code exigem J + J-52 (Manual Sicredi V1.4, item 4.3).');
+    pend=null;
+  };
+  const movLote={};
+  const addI=(ln,sev,seg,msg)=>iss.push({line:ln,sev,seg,msg});
+  if(!lines.length){addI(0,'ERROR','ARQUIVO','Arquivo vazio.');return{iss,fr,recs};}
+  lines.forEach((raw,idx)=>{
+    const ln=idx+1;const line=raw.padEnd(240,' ');
+    if(raw.length!==240)addI(ln,'ERROR','ESTRUTURA',`Linha ${ln} tem ${raw.length} chars (esperado: 240). CNAB240 = 240 bytes + CRLF.`);
+    const rt=p(line,8,8);
+    if(rt==='0'){
+      hdrFound=true;if(idx!==0)addI(ln,'ERROR','HEADER ARQ','Header do arquivo deve ser a primeira linha.');totalRegs++;
+      const ctx={iss,fr,ln,seg:'HEADER ARQ'};vHA(ctx,line);isRem=p(line,143,143)!=='2';
+      recs.push({ln,desc:`Header do Arquivo · Sicredi 748 · Layout: ${p(line,164,166)} · ${p(line,143,143)==='1'?'Remessa':'Retorno'}`,ok:true});
+    } else if(rt==='1'){
+      fechaPend();totalRegs++;const lN=parseInt(p(line,4,7),10);
+      if(lN!==seqLote)addI(ln,'ERROR','HEADER LOTE',`Lote fora de sequência: "${p(line,4,7)}" (esperado: ${String(seqLote).padStart(4,'0')})`);
+      lotsOpen++;totalLotes++;loteCur=lN;seqLote++;seqReg=0;regsInLote=0;somaLote=0;movLote[lN]=0;
+      const ctx={iss,fr,ln,seg:`HEADER LOTE #${String(lN).padStart(4,'0')}`};
+      const r=vHL(ctx,line);loteTipoS=r.ts;loteForma=r.fo;
+      recs.push({ln,desc:`Header Lote #${p(line,4,7)} · Serviço: ${loteTipoS} · Forma: ${loteForma}`,ind:1,ok:['03','20','22'].includes(loteTipoS)});
+    } else if(rt==='5'&&p(line,4,7)!=='9999'){
+      fechaPend();totalRegs++;if(p(line,4,7)!==String(loteCur).padStart(4,'0'))addI(ln,'ERROR','TRAILER LOTE',`Lote "${p(line,4,7)}" diverge do lote aberto "${String(loteCur).padStart(4,'0')}".`);
+      lotsOpen--;if((movLote[loteCur]||0)>10000)addI(ln,'ERROR','TRAILER LOTE',`[Sicredi] Máx. 10.000 movimentos por lote. Este lote tem ${movLote[loteCur]}.`);
+      const ctx={iss,fr,ln,seg:`TRAILER LOTE #${p(line,4,7)}`};vTL(ctx,line,regsInLote,somaLote);
+      recs.push({ln,desc:`Trailer Lote #${p(line,4,7)} · Registros: ${parseInt(p(line,18,23),10)}`,ind:1,ok:true});
+    } else if(rt==='9'){
+      fechaPend();trlFound=true;totalRegs++;if(ln!==lines.length)addI(ln,'WARN','TRAILER ARQ','Trailer não é a última linha.');
+      if(p(line,4,7)!=='9999')addI(ln,'ERROR','TRAILER ARQ',`Lote deve ser "9999", encontrado "${p(line,4,7)}".`);
+      if(lotsOpen!==0)addI(ln,'ERROR','TRAILER ARQ',`${lotsOpen} lote(s) sem trailer.`);
+      if(totalLotes>70)addI(ln,'ERROR','TRAILER ARQ',`[Sicredi] Máx. 70 lotes por arquivo. Encontrado: ${totalLotes}.`);
+      const ctx={iss,fr,ln,seg:'TRAILER ARQ'};vTA(ctx,line,totalLotes,totalRegs);
+      recs.push({ln,desc:`Trailer do Arquivo · Lotes: ${parseInt(p(line,18,23),10)} · Registros: ${parseInt(p(line,24,29),10)}`,ok:true});
+    } else if(rt==='3'){
+      totalRegs++;regsInLote++;seqReg++;movLote[loteCur]=(movLote[loteCur]||0)+1;
+      const sc=p(line,14,14).toUpperCase();const sr=parseInt(p(line,9,13),10);
+      if(sr!==seqReg)addI(ln,'ERROR',`SEG ${sc}`,`Seq: ${sr} (esperado: ${seqReg}). Inicia em 00001 em cada lote.`);
+      const ctx={iss,fr,ln,seg:`SEG ${sc}`};
+      if(sc==='A'){fechaPend();pend={sc,ln};}
+      else if(sc==='B'){if(pend&&pend.sc==='A')pend=null;}
+      else if(sc==='J'){if(p(line,18,19)==='52'){if(pend&&pend.sc==='J')pend=null;}else{fechaPend();pend={sc,ln};}}
+      else fechaPend();
+      if(sc==='A'){vSA(ctx,line,loteForma);somaLote+=parseInt(p(line,120,134),10)||0;recs.push({ln,desc:`Seg. A — ${loteForma==='45'?'PIX':loteForma==='41'?'TED':'Crédito/OP'} · Lote: ${p(line,4,7)} · Seq: ${String(sr).padStart(5,'0')}`,ind:2,ok:true});}
+      else if(sc==='B'){const tk=p(line,15,16).trim();const isP=['01','02','03','04','05'].includes(tk);if(isP){vSBp(ctx,line);recs.push({ln,desc:`Seg. B PIX (chave ${tk}) · Lote: ${p(line,4,7)} · Seq: ${String(sr).padStart(5,'0')}`,ind:2,ok:true});}else{vSBn(ctx,line);recs.push({ln,desc:`Seg. B — Dados Complementares · Lote: ${p(line,4,7)} · Seq: ${String(sr).padStart(5,'0')}`,ind:2,ok:true});}}
+      else if(sc==='J'){const id=p(line,18,19);if(id==='52'){const url=p(line,132,210).trim();const isQR=url.length>5||loteForma==='47';if(isQR){vSJ52p(ctx,line);recs.push({ln,desc:`Seg. J52-PIX QR Code · Lote: ${p(line,4,7)} · Seq: ${String(sr).padStart(5,'0')}`,ind:2,ok:true});}else{vSJ52(ctx,line);recs.push({ln,desc:`Seg. J52 — Pagador/Beneficiário · Lote: ${p(line,4,7)} · Seq: ${String(sr).padStart(5,'0')}`,ind:2,ok:true});}}else{vSJ(ctx,line,loteForma);somaLote+=parseInt(p(line,153,167),10)||0;recs.push({ln,desc:`Seg. J — ${loteForma==='47'?'PIX QR':'Boleto'} · Lote: ${p(line,4,7)} · Seq: ${String(sr).padStart(5,'0')}`,ind:2,ok:true});}}
+      else if(sc==='O'){vSO(ctx,line);somaLote+=parseInt(p(line,108,122),10)||0;recs.push({ln,desc:`Seg. O — Tributos c/ Barras · Lote: ${p(line,4,7)} · Seq: ${String(sr).padStart(5,'0')}`,ind:2,ok:true});}
+      else if(sc==='N'){vSN(ctx,line);somaLote+=parseInt(p(line,96,110),10)||0;const ct=p(line,133,134).trim();const dn=ct==='16'?'DARF Normal':ct==='17'?'GPS':ct==='18'?'DARF Simples':`Tributo(${ct})`;recs.push({ln,desc:`Seg. N — ${dn} · Lote: ${p(line,4,7)} · Seq: ${String(sr).padStart(5,'0')}`,ind:2,ok:true});}
+      else if(sc==='Z')recs.push({ln,desc:`Seg. Z — Autenticação (Retorno) · Lote: ${p(line,4,7)} · Seq: ${String(sr).padStart(5,'0')}`,ind:2,ok:true});
+      else{addI(ln,'WARN',`SEG ${sc}`,`Segmento desconhecido: "${sc}". Sicredi suporta: A,B,J,J52,O,N,Z.`);recs.push({ln,desc:`Seg. ${sc} — Desconhecido`,ind:2,ok:false});}
+    } else if(rt!=='5')addI(ln,'ERROR','ESTRUTURA',`Tipo de registro inválido: "${rt}" (válidos: 0,1,3,5,9).`);
+  });
+  fechaPend();
+  if(!hdrFound)addI(0,'ERROR','ARQUIVO','Header do arquivo (tipo 0) não encontrado — deve ser a primeira linha.');
+  if(!trlFound)addI(0,'ERROR','ARQUIVO','Trailer do arquivo (tipo 9) não encontrado — deve ser a última linha.');
+  if(lotsOpen>0)addI(0,'ERROR','ARQUIVO',`${lotsOpen} lote(s) sem trailer correspondente.`);
+  return{iss,fr,recs};
+}
+
+window.CNAB_REMESSA = window.CNAB_REMESSA || {};
+window.CNAB_REMESSA['748'] = Object.assign({
+    "codigo": "748",
+    "nome": "Sicredi",
+    "produto": "Pagfor · Pagamento a Fornecedor",
+    "versao": "Banco 748 · V1.4 (04/2024) · PIX · QR Code",
+    "suporta": "Suporta arquivos .REM e .TXT de remessa Pagfor Sicredi Codificação ASCII (DOS/Windows) · Linhas de 240 bytes + CRLF · Banco 748",
+    "cor": "#009A44",
+    "tinta": "#16140f",
+    "logo": "logos/Sicredi/logo-svg2.svg",
+    "pagina": "Validador_CNAB240_Sicredi - v2 1.html",
+    "nota": "<strong>Como usar a Inspeção de Campos:</strong><br> Cada campo exibe duas fitas CNAB empilhadas: a fita <span style=\"color:var(--er);font-weight:700\">atual</span> mostra os bytes exatos do seu arquivo; a fita <span style=\"color:var(--ok);font-weight:700\">manual</span> mostra como deve ficar segundo o manual Sicredi. Células <span style=\"display:inline-block;width:10px;height:10px;background:var(--erb);border:1px solid var(--er);border-radius:2px;vertical-align:middle\"></span> são bytes errados no arquivo; células <span style=\"display:inline-block;width:10px;height:10px;background:var(--okm);border:1px solid var(--ok);border-radius:2px;vertical-align:middle\"></span> são a correção exata. Campos ✓ OK ficam compactos. Para campos longos é exibida uma comparação de texto.<br> <strong>Regras Sicredi:</strong> PIX QR em lote separado (Tipo 03/Forma 47) · Crédito CC aceita conta ≤ 6 dígitos · E-mail PIX em minúsculas · Máx. 70 lotes · 10.000 movimentos por lote."
+  }, { validar: validate });
+})();

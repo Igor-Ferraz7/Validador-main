@@ -17,9 +17,11 @@ discordam, com evidência dos dois lados, para o usuário decidir o que corrigir
   arquivo, URL oficial, SHA-256). É JSON depois de `window.CNAB_DOCS =`.
 - `docs/cnab/<pasta>/*.pdf` e `*.txt` — manuais e texto extraído. Só existem no
   disco (fora do git); se faltarem, baixe (abaixo).
-- `Validador_CNAB240_<Banco>.html` — uma função por registro/segmento (`vHA`,
-  `vHL`, `vSA`, `vSJ52`, `vTL`, `vTA`...) e uma chamada
-  `CF(ctx,'NN.N Campo (ini–fim)',ini,fim,ln,[checks],esperado,fix)` por campo.
+- `validadores/<codigo>-<banco>.js` — as regras de remessa de cada banco: uma
+  função por registro/segmento (`vHA`, `vHL`, `vSA`, `vSJ52`, `vTL`, `vTA`...)
+  e uma chamada `CF(ctx,'NN.N Campo (ini–fim)',ini,fim,ln,[checks],esperado,fix)`
+  por campo. A tela é uma só, `Validador_CNAB240.html`; as antigas
+  `Validador_CNAB240_<Banco>.html` só redirecionam.
 - Preenchedor `.srb`: `Placeholders/*.TXT` (template com as posições de cada
   campo) e `configs/<banco>.js` (regras dos tokens `<Campo_InsertIA>`).
 
@@ -36,11 +38,11 @@ Rode da raiz do repositório com
 | `tools/baixar-docs.ps1 -Verificar` | Checa se algum banco publicou versão nova ou tirou o manual do ar (só cabeçalho HTTP, quase sem custo). |
 | `tools/baixar-docs.ps1 [-Banco 033]` | Baixa/atualiza PDFs e gera os `.txt`. Arquivo diferente do catálogo vira `<arquivo>.NOVO.pdf`, sem sobrescrever. |
 | `.claude/skills/auditar-cnab/scripts/buscar-manual.ps1 -Banco 033` | Sumário do manual. Com `-Padrao 'regex'`, as páginas onde aparece; com `-Pagina 8,9`, o texto dessas páginas. |
-| `.claude/skills/auditar-cnab/scripts/extrair-campos.ps1 <validador.html \| template.TXT> [-Funcao vSA]` | Tabela do que o sistema implementa: campos com posição e linha no código, lacunas em 1–240, sobreposições, rótulo com posição diferente dos argumentos. |
-| `... extrair-campos.ps1 <validador.html> -Buscar 'regex'` | Onde o código trata algo (CNPJ, um código de domínio, um serviço), com linha e função. Use para achar **todos** os pontos afetados por uma mudança, não só o primeiro. |
+| `.claude/skills/auditar-cnab/scripts/extrair-campos.ps1 <validadores/033-santander.js \| template.TXT> [-Funcao vSA]` | Tabela do que o sistema implementa: campos com posição e linha no código, lacunas em 1–240, sobreposições, rótulo com posição diferente dos argumentos. |
+| `... extrair-campos.ps1 <validadores/033-santander.js> -Buscar 'regex'` | Onde o código trata algo (CNPJ, um código de domínio, um serviço), com linha e função. Use para achar **todos** os pontos afetados por uma mudança, não só o primeiro. |
 
 Use os scripts em vez de abrir os arquivos inteiros: os `.txt` dos manuais têm
-de 100 a 600 KB e os validadores, 700–1000 linhas. Ler tudo gasta o contexto e
+de 100 a 600 KB e os módulos de validador, 500–800 linhas. Ler tudo gasta o contexto e
 enterra a comparação; com a tabela do implementado em mãos, você abre só as
 páginas do manual e as linhas do código que importam.
 
@@ -127,7 +129,7 @@ Escopo: <o que foi auditado e o que ficou de fora>
 
 ### 🔴 <título curto>
 - **Manual:** p. N — "trecho curto"
-- **Código:** `Validador_CNAB240_X.html:LINHA` — o que o código faz hoje
+- **Código:** `validadores/<codigo>-<banco>.js:LINHA` — o que o código faz hoje
 - **Impacto:** o que acontece com um arquivo real
 - **Sugestão:** a correção
 
@@ -144,8 +146,9 @@ valores, uma frase curta).
 
 Não altere validadores, templates ou configs por conta própria: apresente o
 resumo e pergunte o que corrigir. Ao corrigir, atualize também a versão
-declarada (texto do cabeçalho `.htag`, comentários e mensagens que citam a
-versão, e `baseDoValidador` no catálogo) e teste a página no navegador.
+declarada (`versao` no fim do módulo, comentários e mensagens que citam a
+versão, e `baseDoValidador` no catálogo) e teste `Validador_CNAB240.html` no
+navegador com um arquivo do banco.
 
 ## Armadilhas conhecidas
 

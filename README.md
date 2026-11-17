@@ -1,7 +1,36 @@
 # Validador-main
 
-Central de validadores CNAB240 por banco e Preenchedor de Remessa `.srb`.
-Abra o `index.html` (no navegador, direto do disco, ou pelo GitHub Pages).
+Central CNAB240: validador de remessa, Analisador de retorno e Preenchedor de
+Remessa `.srb`. Abra o `index.html` (no navegador, direto do disco, ou pelo
+GitHub Pages).
+
+## Validador de remessa
+
+`Validador_CNAB240.html` valida a remessa de qualquer banco atendido: o banco
+é reconhecido pelo próprio arquivo (header, posições 1–3), sem precisar
+escolher antes. Bancos: Banco do Brasil (001), Santander (033), Bradesco (237),
+Itaú (341), Sicredi (748) e Sicoob (756). Caixa (104) e Credisis (097) ainda
+não têm validador de remessa; a página avisa e aponta o Preenchedor e o
+Analisador de retorno. **Trocar banco** força outro banco, quando o header
+estiver errado.
+
+A tela mostra o resumo (erros, avisos, números do arquivo, linhas sem
+ocorrência) e, ao abrir os apontamentos, cada erro com a linha, as colunas, o
+esperado, o encontrado, o trecho do arquivo e, quando há correção sugerida, a
+comparação byte a byte. As abas **Campos** e **Estrutura** listam tudo o que foi
+conferido; **Copiar relatório** copia as ocorrências em texto.
+
+- **Regras por banco:** `validadores/<codigo>-<banco>.js`. Cada módulo tem as
+  funções de um banco (`vHA`, `vSA`, `validate`…) e se registra em
+  `window.CNAB_REMESSA['<codigo>']` com nome, produto, versão do layout, cor e
+  logo. A página só reconhece o banco, chama `validar(linhas)` e mostra o
+  resultado.
+- **Banco novo:** crie o módulo (copie um parecido), inclua o `<script>` em
+  `Validador_CNAB240.html` e, se houver manual, a entrada em
+  `docs/cnab/catalogo.js`.
+- **Endereços antigos:** cada banco tinha a sua página
+  (`Validador_CNAB240_Santander.html`, `index.html#santander`…). Elas continuam
+  funcionando e abrem o validador único com o banco já escolhido.
 
 ## Preenchedor de Remessa .srb
 
@@ -89,8 +118,8 @@ Credisis em `docs/cnab`. A página avisa isso na tela.
 
 ## Tipos de serviço e finalidades
 
-No rodapé de cada validador e do Preenchedor há um quadro com o que o banco
-homologou para o ERP em cada segmento: os tipos de serviço (posições 10-11 do
+No resumo do validador (do banco reconhecido) e no rodapé do Preenchedor há
+um quadro com o que o banco homologou para o ERP em cada segmento: os tipos de serviço (posições 10-11 do
 header de lote) e as finalidades (15-16). **Expandir** abre em tamanho cheio e
 **Baixar PNG** salva a figura em 3x.
 
@@ -115,8 +144,8 @@ Para um banco novo, acrescente o bloco em `configs/servicos.js` e inclua os dois
 Todas as páginas usam o mesmo sistema visual, em `assets/ui.css`: cores,
 tipos, botões, etiquetas, listas e tabelas. O fundo, as linhas e os destaques
 são derivados da cor do banco, então cada página assume o tom dele, no tema
-claro e no escuro (`assets/tema.js`; o botão fica no rodapé do menu). Cada página
-define só essa cor, logo depois do link para o `ui.css`:
+claro e no escuro (`assets/tema.js`; o botão fica no cabeçalho da central). Cada
+página define só essa cor, logo depois do link para o `ui.css`:
 
 ```html
 <link rel="stylesheet" href="assets/ui.css">
@@ -127,16 +156,21 @@ define só essa cor, logo depois do link para o `ui.css`:
 `#16140f` quando o branco não dá contraste, como no amarelo do BB). No
 Preenchedor as duas vêm do `cor` em `configs/<banco>.js`.
 
-Para um validador novo, copie o `<head>` de um existente e inclua o link no
-menu do `index.html`. A central abre cada ferramenta por endereço próprio
-(`index.html#santander`, `#preenchedor`…) e lembra a última usada.
+A central (`index.html`) tem um cabeçalho com **Validadores** (remessa e
+retorno), **Ferramentas** (Preenchedor), **Manuais** (os links oficiais do
+catálogo), o tema e **Validar arquivo**, que abre o seletor e entrega o
+arquivo ao validador. No celular, os menus viram uma folha. Cada ferramenta tem
+endereço próprio (`#validar`, `#retorno`, `#preenchedor`) e a central lembra a
+última usada. A página aberta avisa a cor do banco (`assets/tema.js`), e o fundo
+em volta acompanha.
 
 ## Manuais oficiais
 
 `docs/cnab/catalogo.js` lista o manual oficial de cada banco (e o padrão
-FEBRABAN): versão, data, link e SHA-256. Cada validador tem o botão
-**Manuais oficiais**, que abre esses links (e a cópia local, quando a página
-é aberta do disco).
+FEBRABAN): versão, data, link e SHA-256. O validador (na barra do arquivo), o
+Preenchedor e o Analisador de retorno têm o botão **Manuais oficiais** do
+banco em uso, e o menu **Manuais** da central lista todos. Os links levam à
+fonte oficial (e à cópia local, quando a página é aberta do disco).
 
 O que mudou em cada manual desde a versão em que o validador se baseia está
 explicado em [docs/cnab/diferencas-entre-versoes.md](docs/cnab/diferencas-entre-versoes.md).
