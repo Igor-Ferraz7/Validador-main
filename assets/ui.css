@@ -87,6 +87,7 @@ header{position:relative;z-index:10;display:flex;align-items:center;justify-cont
 .dz:hover,.dz.over{border-color:var(--ac);}
 .dz.over{background:var(--cd2);}
 .bank-logo-large{display:block;width:56px;height:56px;margin:0 auto 20px;object-fit:contain;border-radius:12px;}
+.bank-logo-large[hidden]{display:none;}
 .dz h2{font-weight:600;font-size:22px;line-height:1.25;letter-spacing:-.015em;margin-bottom:8px;}
 .dz p{max-width:84ch;margin:0 auto;font-size:14px;color:var(--txd);line-height:1.6;text-wrap:balance;}
 .dz p strong{color:var(--ac);font-weight:500;}
@@ -304,7 +305,10 @@ header.hero{justify-content:flex-start;gap:12px 20px;padding-top:20px;padding-bo
 header.hero :focus-visible{outline-color:#fff;}
 .hlogo{display:flex;align-items:center;justify-content:center;width:56px;height:56px;flex-shrink:0;background:#fff;border-radius:var(--r-lg);overflow:hidden;}
 .hlogo img{width:100%;height:100%;object-fit:contain;}
-.hlogo img[hidden]{display:none;}
+.hlogo img[hidden],.hlogo b[hidden],.bsw-item .mlogo b:empty{display:none;}
+/* banco sem logo no repositório: mostra o código */
+.hlogo b,.bsw-item .mlogo b{font-family:var(--mono);font-size:15px;font-weight:600;color:var(--tx);}
+.bsw-item .mlogo b{font-size:12px;}
 .ht{min-width:0;margin-right:auto;}
 .ht .hk{font-size:13px;font-weight:500;}
 .ht h1{font-weight:600;font-size:26px;line-height:1.2;letter-spacing:-.015em;}

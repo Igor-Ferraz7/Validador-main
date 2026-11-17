@@ -32,23 +32,45 @@ nome, logo e cor; use os existentes como modelo) e inclua o `<script>`
 correspondente em `Preenchedor_SRB.html`. O banco do template é identificado
 pelo campo `CodOficial` (ou `BancoCompensacao`) do próprio arquivo.
 
-## Analisador de Retorno (Santander)
+## Analisador de Retorno
 
-`Retorno_CNAB240_Santander.html` lê um arquivo de retorno do Santander
-(Pagamento a Fornecedores) e diz se ele é:
+`Retorno_CNAB240.html` lê um arquivo de retorno e diz se ele é:
 
 - **retorno de crítica** (o "pré-retorno"): o banco só aceitou ou recusou os
-  registros. Ocorrências BD/BE (agendado), B1–B8 (bloqueado), BF (excluído)
-  ou erros. Nada foi pago ainda;
+  registros (agendado, bloqueado, excluído ou erro). Nada foi pago ainda;
 - **retorno de movimento** (o definitivo): o banco informa o resultado do
-  pagamento. Só a ocorrência 00 ou 03 confirma o pagamento; 01/02 e ZA indicam
-  que não foi pago ou foi devolvido.
+  pagamento. Só a ocorrência de pagamento efetivado permite dar baixa.
 
 O header não diferencia os dois (posição 143 = 2 em ambos); a decisão vem das
 ocorrências de cada registro (posições 231–240), do segmento Z (autenticação)
-e do aviso de débito no trailer de lote. Base: manual Santander V11.7, itens
-2.6 e 5, p. 4 e nota G020. A página mostra o status de cada pagamento e exporta
-um CSV para a baixa. O arquivo é lido só no navegador.
+e do aviso de débito no trailer de lote. A página mostra o status de cada
+pagamento e exporta um CSV para a baixa. O arquivo é lido só no navegador.
+
+O banco é reconhecido pelo próprio arquivo (header, posições 1–3); o botão
+**Trocar banco** força outro. Bancos atendidos: Banco do Brasil (001),
+Santander (033), Credisis (097), Caixa (104), Bradesco (237), Itaú (341),
+Sicredi (748) e Sicoob (756).
+
+### Regras por banco
+
+As tabelas do padrão FEBRABAN (ocorrências da nota G059, tipo de serviço,
+forma de lançamento e posições dos segmentos) ficam em
+`configs/retorno-base.js`. Cada banco entra em
+`configs/retorno-<codigo>-<banco>.js` e declara só o que difere — o cabeçalho
+desse arquivo lista os campos aceitos. Para um banco novo, copie o arquivo de
+um banco parecido e inclua o `<script>` em `Retorno_CNAB240.html`.
+
+Isso importa porque o mesmo código significa coisas diferentes em cada banco:
+
+| Código | FEBRABAN | No banco |
+| --- | --- | --- |
+| `BD` | Inclusão efetuada com sucesso | Itaú: **pagamento agendado** |
+| `BF` | Exclusão efetuada com sucesso | Sicoob: **rejeitado** por pendência de assinatura |
+| `ZA` | Informativo | Santander: **transferência devolvida**; Bradesco e Sicredi: conta do favorecido substituída |
+
+Banco do Brasil, Caixa e Credisis usam a tabela da FEBRABAN: o manual do BB
+remete a uma planilha de ocorrências à parte, e não há manual da Caixa nem da
+Credisis em `docs/cnab`. A página avisa isso na tela.
 
 ## Visual
 
