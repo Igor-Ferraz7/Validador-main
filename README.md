@@ -87,6 +87,29 @@ Banco do Brasil, Caixa e Credisis usam a tabela da FEBRABAN: o manual do BB
 remete a uma planilha de ocorrências à parte, e não há manual da Caixa nem da
 Credisis em `docs/cnab`. A página avisa isso na tela.
 
+## Tipos de serviço e finalidades
+
+No rodapé de cada validador e do Preenchedor há um quadro com o que o banco
+homologou para o ERP em cada segmento: os tipos de serviço (posições 10-11 do
+header de lote) e as finalidades (15-16). **Expandir** abre em tamanho cheio e
+**Baixar PNG** salva a figura em 3x.
+
+O quadro é desenhado na hora, num `<canvas>`, a partir de `configs/servicos.js`
+— não é uma imagem pronta guardada no repositório. Assim a figura nunca descola
+dos dados, acompanha o tema claro/escuro e a cor do banco, e continua sendo
+baixável. Junto vai uma versão em texto, escondida da tela, para leitor de tela
+e para copiar os códigos.
+
+- **Dados:** `configs/servicos.js`, um bloco por banco, com os segmentos e seus
+  itens. O cabeçalho do arquivo descreve o formato.
+- **Desenho:** `assets/servicos-cnab.js`, nos mesmos moldes de
+  `assets/docs-cnab.js`: `data-banco="<código>"` numa página de banco, ou
+  `data-banco="auto"` com `window.CnabServicos.montar(código)` quando a página
+  troca de banco, como faz o Preenchedor.
+
+Para um banco novo, acrescente o bloco em `configs/servicos.js` e inclua os dois
+`<script>` na página. Bancos sem bloco simplesmente não mostram o quadro.
+
 ## Visual
 
 Todas as páginas usam o mesmo sistema visual, em `assets/ui.css`: cores,

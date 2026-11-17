@@ -619,6 +619,7 @@ function aplicarBanco(code){
   document.documentElement.setAttribute('data-banco', code);
   document.title = 'Preenchedor de Remessa .srb — ' + nome + ' ' + code;
   if(window.CnabDocs) window.CnabDocs.montar(code);
+  if(window.CnabServicos) window.CnabServicos.montar(code);
 }
 
 function loadTemplate(tpl){
@@ -742,5 +743,7 @@ function showBanners(){
 
 <script src="docs/cnab/catalogo.js"></script>
 <script src="assets/docs-cnab.js" data-banco="auto"></script>
+<script src="configs/servicos.js"></script>
+<script src="assets/servicos-cnab.js" data-banco="auto"></script>
 </body>
 </html>
