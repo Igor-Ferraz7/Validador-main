@@ -8,7 +8,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600&family=Mona+Sans:wght@300..800&display=swap" rel="stylesheet">
 <link rel="icon" href="assets/favicon.svg">
-<script src="assets/tema.js"></script>
+<script>if (window.self !== window.top) document.documentElement.classList.add('na-central');</script>
+<script src="assets/tema.js?v=2026-11-17"></script>
 <link rel="stylesheet" href="assets/ui.css">
 <style>
 /* Validador de remessa, um para todos os bancos.
@@ -274,7 +275,7 @@ html:not(.na-central) .vr-solo{display:flex;}
 </head>
 <body>
 
-<div class="vr-solo"><a href="index.html">← Central CNAB240</a><span id="soloTema"></span></div>
+<div class="vr-solo"><a href="index.html" target="_top">← Central CNAB240</a><span id="soloTema"></span></div>
 
 <main class="vr">
 
@@ -747,7 +748,7 @@ html:not(.na-central) .vr-solo{display:flex;}
 })();
 </script>
 <script src="docs/cnab/catalogo.js"></script>
-<script src="assets/docs-cnab.js" data-banco="auto"></script>
+<script src="assets/docs-cnab.js?v=2026-11-17" data-banco="auto"></script>
 <script src="configs/servicos.js"></script>
 <script src="assets/servicos-cnab.js" data-banco="auto"></script>
 </body>
