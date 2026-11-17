@@ -61,6 +61,25 @@ foreach ($f in $files) {
   $rebuilt = ($lines -join $eol) + $(if ($finalNewline) { $eol } else { '' })
   if ($rebuilt -ne $text) { throw "$($f.Name): reconstrução não bate com o original." }
 
+  # Trava de dados do cliente. Os templates nascem de arquivos reais, com a
+  # agência, a conta, o CPF/CNPJ e o nome de um cliente de verdade nos campos
+  # de identificação. Este repositório é público, então nenhum desses campos
+  # pode entrar com valor fixo: ou é um token <Campo_InsertIA>, ou é vazio /
+  # zeros / brancos (preenchimento estrutural). Campos com FIXO=N não entram na
+  # conta — quem preenche é o motor, e a coluna 11 ali é só descrição.
+  $camposIdent = 'Inscricao|TipoInscricao|NomeEmpresa|Agencia|DVAgencia|CtaBanc|DVBanc|Convenio|NContBCO|OpConta|SacadorAvalista|Cedente|CPFCNPJ'
+  $vazou = @()
+  for ($i = 0; $i -lt $lines.Count; $i++) {
+    $p = $lines[$i] -split '\|'
+    if ($p.Count -ne 13 -or $p[10] -ne 'S') { continue }
+    if ($p[9] -notmatch "^($camposIdent)$") { continue }
+    if ($p[11] -match '^(<\w+_InsertIA>|[0\s]*)$') { continue }
+    $vazou += ("  linha {0}: {1}" -f ($i + 1), $lines[$i])
+  }
+  if ($vazou.Count -gt 0) {
+    throw ("{0}: campo de identificação com valor fixo em vez de token — dado de cliente?`n{1}`nTroque o valor por <Campo_InsertIA> antes de versionar." -f $f.Name, ($vazou -join "`n"))
+  }
+
   $jsLines = ($lines | ForEach-Object { '      ' + (ConvertTo-JsString $_) }) -join ",`n"
   $entries += @"
   {

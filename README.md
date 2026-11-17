@@ -7,9 +7,15 @@ Abra o `index.html` (no navegador, direto do disco, ou pelo GitHub Pages).
 
 `Preenchedor_SRB.html` já abre com o template de cada banco carregado: basta
 escolher o banco, preencher os dados do cliente e clicar em **Gerar .srb**.
-Templates disponíveis: Banco do Brasil, Itaú, Santander, Sicoob e Sicredi. A página assume o
-logo, a cor e os manuais oficiais do banco escolhido e lembra o último banco
-usado no navegador.
+Templates disponíveis: Banco do Brasil, Bradesco, Caixa, Credisis, Itaú,
+Santander, Sicoob e Sicredi. A página assume o logo, a cor e os manuais
+oficiais do banco escolhido e lembra o último banco usado no navegador.
+
+Cada banco pede só os campos que o seu template deixa como token, então o
+formulário muda de banco para banco: o Bradesco não pede o nome do titular
+(nesse template o motor preenche as posições 73-102), e a Caixa é a única que
+pede a operação da conta, porque separa operação (59-62) e conta (63-70) onde
+os outros usam 59-70 para a conta inteira.
 
 - **Templates:** os arquivos em `Placeholders/` são a fonte. A página lê uma
   cópia embutida em `templates/templates.js`, gerada a partir deles.
@@ -26,6 +32,15 @@ usado no navegador.
    ```
 
 3. Faça commit do template e do `templates/templates.js` juntos.
+
+**Nenhum dado de cliente nos templates.** Os templates nascem de arquivos reais,
+com a agência, a conta, o CPF/CNPJ e o nome de um cliente de verdade nos campos
+de identificação, e este repositório é público. Mantenha os arquivos de origem
+fora dele e troque todo campo de identificação por um token antes de versionar.
+O gerador recusa o arquivo se achar valor fixo em `Inscricao`, `NomeEmpresa`,
+`Agencia`, `CtaBanc`, `Convenio` e afins — só passa token, vazio, zeros ou
+brancos. Campos com `FIXO=N` ficam de fora da trava: ali quem preenche é o
+motor, e a coluna 11 é apenas descrição.
 
 Para um banco novo, crie também `configs/<banco>.js` (regras de cada token,
 nome, logo e cor; use os existentes como modelo) e inclua o `<script>`
