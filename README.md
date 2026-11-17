@@ -7,7 +7,7 @@ Abra o `index.html` (no navegador, direto do disco, ou pelo GitHub Pages).
 
 `Preenchedor_SRB.html` já abre com o template de cada banco carregado: basta
 escolher o banco, preencher os dados do cliente e clicar em **Gerar .srb**.
-Templates disponíveis: Itaú, Santander, Sicoob e Sicredi. A página assume o
+Templates disponíveis: Banco do Brasil, Itaú, Santander, Sicoob e Sicredi. A página assume o
 logo, a cor e os manuais oficiais do banco escolhido e lembra o último banco
 usado no navegador.
 

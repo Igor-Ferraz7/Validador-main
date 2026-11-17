@@ -357,6 +357,21 @@ function montarGuia(){
 }
 
 /* ---------- Troca de banco ---------- */
+// Cor da faixa do banco: escurece a cor da marca até o texto branco ter
+// contraste de 4.5:1. Sem isso, bancos claros (o amarelo do BB) ficam ilegíveis.
+function corDaFaixa(hex){
+  const m=/^#?([0-9a-f]{6})$/i.exec(String(hex).trim());
+  if(!m)return hex;
+  const n=parseInt(m[1],16),r=n>>16&255,g=n>>8&255,b=n&255;
+  const lin=v=>{v/=255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4);};
+  const contraste=k=>1.05/(0.2126*lin(r*k)+0.7152*lin(g*k)+0.0722*lin(b*k)+0.05);
+  // começa em 0.92: a faixa fica sempre um pouco mais escura que a marca, para
+  // o logo do banco não se fundir ao fundo
+  let k=0.92;
+  while(k>0.1&&contraste(k)<4.5)k-=0.05;
+  const hx=v=>('0'+Math.round(v*k).toString(16)).slice(-2);
+  return '#'+hx(r)+hx(g)+hx(b);
+}
 function aplicarBanco(code,manual){
   cfg=window.RET_RESOLVE(code);
   if(!cfg)return;
@@ -367,6 +382,7 @@ function aplicarBanco(code,manual){
   document.getElementById('hProduto').textContent=cfg.produto||'';
   document.getElementById('dzTitulo').textContent='Arraste o arquivo de retorno do '+cfg.name+' aqui';
   document.documentElement.style.setProperty('--bk',cfg.cor);
+  document.documentElement.style.setProperty('--bkh',corDaFaixa(cfg.cor));
   document.documentElement.setAttribute('data-banco',code);
   document.title='Analisador de Retorno CNAB240 — '+cfg.name+' '+cfg.code;
   document.querySelectorAll('#bankMenu .bsw-item').forEach(it=>{

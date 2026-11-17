@@ -301,7 +301,9 @@ details.guia .tw{margin:16px 0 8px;}
    Os botões de manuais e de tema são anexados ao <header> pelos scripts. */
 /* Texto sempre branco; o degradê escurece o tom do banco para dar leitura
    mesmo em cores claras (ex.: laranja do Itaú). */
-header.hero{justify-content:flex-start;gap:12px 20px;padding-top:20px;padding-bottom:20px;background:linear-gradient(135deg,color-mix(in srgb,var(--bk) 92%,#000),color-mix(in srgb,var(--bk) 72%,#000));color:#fff;border-bottom:none;}
+/* --bkh é a cor do banco já escurecida pelo script até o branco ter contraste
+   de 4.5:1 — sem isso, bancos de cor clara (o amarelo do BB) ficariam ilegíveis. */
+header.hero{justify-content:flex-start;gap:12px 20px;padding-top:20px;padding-bottom:20px;background:linear-gradient(135deg,var(--bkh,var(--bk)),color-mix(in srgb,var(--bkh,var(--bk)) 80%,#000));color:#fff;border-bottom:none;}
 header.hero :focus-visible{outline-color:#fff;}
 .hlogo{display:flex;align-items:center;justify-content:center;width:56px;height:56px;flex-shrink:0;background:#fff;border-radius:var(--r-lg);overflow:hidden;}
 .hlogo img{width:100%;height:100%;object-fit:contain;}
